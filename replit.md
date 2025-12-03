@@ -10,7 +10,7 @@ Le système permet de jouer sur plusieurs tables simultanément avec des décisi
 - Gestionnaire multi-tables pour jouer sur plusieurs tables simultanément
 - Interface de contrôle en temps réel avec WebSocket
 - Mode simulation GTO fonctionnel (en attente d'intégration API réelle)
-- Configuration plateforme poker préparée pour intégration future
+- **Adaptateur plateforme GGClub implémenté avec système anti-détection**
 
 ## Architecture
 
@@ -20,6 +20,10 @@ Le système permet de jouer sur plusieurs tables simultanément avec des décisi
 - `server/bot/gto-engine.ts` - Moteur de décision GTO (simulation + adaptateur API)
 - `server/bot/humanizer.ts` - Système de comportement humain (délais, mouvements souris)
 - `server/bot/table-manager.ts` - Gestion des sessions multi-tables
+- `server/bot/platform-adapter.ts` - Interface abstraite d'adaptateur plateforme
+- `server/bot/platform-manager.ts` - Gestionnaire d'intégration plateforme
+- `server/bot/platforms/` - Adaptateurs spécifiques par plateforme
+  - `ggclub.ts` - Adaptateur GGClub avec vision par ordinateur et anti-détection
 
 ### Frontend (client/)
 - `client/src/pages/dashboard.tsx` - Tableau de bord principal
@@ -83,6 +87,16 @@ Le système permet de jouer sur plusieurs tables simultanément avec des décisi
 - `GET/PATCH /api/gto-config` - Config GTO Wizard
 - `GET/PATCH /api/platform-config` - Config plateforme
 
+### Plateforme
+- `GET /api/platform/supported` - Plateformes supportées
+- `GET /api/platform/status` - État de connexion et tables gérées
+- `POST /api/platform/connect` - Connexion à la plateforme
+- `POST /api/platform/disconnect` - Déconnexion de la plateforme
+- `POST /api/platform/pause` - Pause du bot
+- `POST /api/platform/resume` - Reprise du bot
+- `POST /api/platform/action` - Action manuelle sur une table
+- `PATCH /api/platform/anti-detection` - Config anti-détection
+
 ### WebSocket
 - `/ws` - Connexion temps réel pour updates
 
@@ -91,11 +105,38 @@ Le système permet de jouer sur plusieurs tables simultanément avec des décisi
 - Design dark mode avec accents verts (primary)
 - Style futuriste/cyberpunk
 
+## Platform Adapter System
+
+### Architecture
+- **PlatformAdapter** - Classe abstraite définissant l'interface pour tous les adaptateurs
+- **PlatformAdapterRegistry** - Registre pour la découverte et création d'adaptateurs
+- **PlatformManager** - Gestionnaire haut niveau intégrant l'adaptateur avec le table-manager
+
+### GGClub Adapter Features
+- Connexion et authentification au compte
+- Détection automatique des fenêtres de tables
+- Lecture d'écran via capture et OCR
+- Détection des cartes (héros et communautaires)
+- Détection du pot, stacks, positions des joueurs
+- Détection du tour d'action (isHeroTurn)
+- Exécution d'actions (fold, call, check, raise, bet, allin)
+- Gestion multi-tables via identifiants de fenêtres (jusqu'à 24 tables)
+- Système anti-détection avec surveillance des patterns
+
+### Anti-Detection System
+- Jitter de souris configurable
+- Pauses aléatoires entre actions
+- Variation de timing des actions
+- Monitoring du taux d'actions par minute
+- Niveau de suspicion calculé en temps réel
+- Pause d'urgence automatique si suspicion élevée
+- Analyse des patterns d'action et de timing
+
 ## Next Steps (Integration)
 1. Configurer clé API GTO Wizard quand disponible
-2. Choisir et intégrer plateforme poker
-3. Développer adaptateur spécifique à la plateforme choisie
-4. Tests en conditions réelles
+2. Implémenter capture d'écran réelle (computer vision)
+3. Intégrer OCR pour reconnaissance de texte/cartes
+4. Tests en conditions réelles sur GGClub
 
 ## Recent Changes
 - Création de l'architecture complète du bot
@@ -104,3 +145,6 @@ Le système permet de jouer sur plusieurs tables simultanément avec des décisi
 - Gestionnaire multi-tables
 - Interface de configuration
 - WebSocket pour mises à jour temps réel
+- **Adaptateur plateforme GGClub avec système anti-détection**
+- **API routes pour gestion de la plateforme**
+- **Gestionnaire de plateforme intégré avec table-manager**

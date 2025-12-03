@@ -5,8 +5,40 @@ import { storage } from "./storage";
 import { getTableManager, TableEvent, TableState } from "./bot/table-manager";
 import { getGtoAdapter, initializeGtoAdapter } from "./bot/gto-engine";
 import { getHumanizer, updateHumanizerFromConfig } from "./bot/humanizer";
+import { getPlatformManager, getSupportedPlatforms, PlatformManagerConfig } from "./bot/platform-manager";
 import { insertHumanizerConfigSchema, insertGtoConfigSchema, insertPlatformConfigSchema } from "@shared/schema";
 import { z } from "zod";
+
+const platformConnectSchema = z.object({
+  platformName: z.string().min(1, "Platform name is required"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+  autoReconnect: z.boolean().optional().default(true),
+  enableAutoAction: z.boolean().optional().default(true),
+});
+
+const platformActionSchema = z.object({
+  windowHandle: z.number().int().positive("Window handle must be a positive integer"),
+  action: z.string().min(1, "Action is required"),
+  amount: z.number().optional(),
+});
+
+const antiDetectionConfigSchema = z.object({
+  enableMouseJitter: z.boolean().optional(),
+  mouseJitterRange: z.number().optional(),
+  enableRandomPauses: z.boolean().optional(),
+  pauseMinMs: z.number().optional(),
+  pauseMaxMs: z.number().optional(),
+  enableWindowFocusSwitching: z.boolean().optional(),
+  focusSwitchIntervalMs: z.number().optional(),
+  enableProcessMasking: z.boolean().optional(),
+  enableTimingVariation: z.boolean().optional(),
+  timingVariationPercent: z.number().optional(),
+  enableMemoryPatternRandomization: z.boolean().optional(),
+  enableApiCallObfuscation: z.boolean().optional(),
+  maxActionsPerMinute: z.number().optional(),
+  actionPatternVariation: z.number().optional(),
+});
 
 interface WebSocketMessage {
   type: string;
@@ -354,6 +386,270 @@ export async function registerRoutes(
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
+  });
+  
+  app.get("/api/platform/supported", async (req, res) => {
+    try {
+      const platforms = getSupportedPlatforms();
+      res.json({ platforms });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.get("/api/platform/status", async (req, res) => {
+    try {
+      const platformManager = getPlatformManager();
+      const adapter = platformManager.getAdapter();
+      
+      res.json({
+        status: platformManager.getStatus(),
+        suspicionLevel: platformManager.getSuspicionLevel(),
+        connectionStatus: adapter?.getConnectionStatus() || "disconnected",
+        capabilities: adapter?.getCapabilities() || null,
+        antiDetectionConfig: adapter?.getAntiDetectionConfig() || null,
+        managedTables: platformManager.getManagedTables().map(t => ({
+          windowHandle: t.windowHandle,
+          windowId: t.windowId,
+          tableId: t.tableSession.getId(),
+          isProcessingAction: t.isProcessingAction,
+          lastActionTime: t.lastActionTime,
+          queuedActions: t.actionQueue.length,
+        })),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/platform/connect", async (req, res) => {
+    try {
+      const parseResult = platformConnectSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Validation échouée", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const { platformName, username, password, autoReconnect, enableAutoAction } = parseResult.data;
+      
+      const supportedPlatforms = getSupportedPlatforms();
+      if (!supportedPlatforms.includes(platformName.toLowerCase())) {
+        return res.status(400).json({ 
+          error: `Plateforme non supportée: ${platformName}`,
+          supportedPlatforms 
+        });
+      }
+      
+      const platformManager = getPlatformManager();
+      
+      const config: PlatformManagerConfig = {
+        platformName,
+        credentials: {
+          username,
+          password,
+        },
+        autoReconnect: autoReconnect ?? true,
+        reconnectDelayMs: 5000,
+        maxReconnectAttempts: 3,
+        scanIntervalMs: 200,
+        actionDelayMs: 100,
+        enableAutoAction: enableAutoAction ?? true,
+      };
+      
+      const connected = await platformManager.initialize(config);
+      
+      if (connected) {
+        await storage.updatePlatformConfig({
+          platformName,
+          username,
+          enabled: true,
+          connectionStatus: "connected",
+          lastConnectionAt: new Date(),
+        });
+        
+        broadcastToClients({
+          type: "platform_connected",
+          payload: { platformName, status: platformManager.getStatus() }
+        });
+      }
+      
+      res.json({ 
+        success: connected, 
+        status: platformManager.getStatus(),
+        message: connected ? "Connexion réussie" : "Échec de la connexion"
+      });
+    } catch (error: any) {
+      console.error("Erreur connexion plateforme:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/platform/disconnect", async (req, res) => {
+    try {
+      const platformManager = getPlatformManager();
+      await platformManager.stop();
+      
+      await storage.updatePlatformConfig({
+        enabled: false,
+        connectionStatus: "disconnected",
+      });
+      
+      broadcastToClients({
+        type: "platform_disconnected",
+        payload: { status: "disconnected" }
+      });
+      
+      res.json({ success: true, status: platformManager.getStatus() });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/platform/pause", async (req, res) => {
+    try {
+      const platformManager = getPlatformManager();
+      await platformManager.pause();
+      
+      broadcastToClients({
+        type: "platform_paused",
+        payload: { status: platformManager.getStatus() }
+      });
+      
+      res.json({ success: true, status: platformManager.getStatus() });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/platform/resume", async (req, res) => {
+    try {
+      const platformManager = getPlatformManager();
+      await platformManager.resume();
+      
+      broadcastToClients({
+        type: "platform_resumed",
+        payload: { status: platformManager.getStatus() }
+      });
+      
+      res.json({ success: true, status: platformManager.getStatus() });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/platform/action", async (req, res) => {
+    try {
+      const parseResult = platformActionSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Validation échouée", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const { windowHandle, action, amount } = parseResult.data;
+      
+      const platformManager = getPlatformManager();
+      
+      if (platformManager.getStatus() !== "running") {
+        return res.status(400).json({ 
+          error: "Plateforme non connectée ou en pause",
+          status: platformManager.getStatus()
+        });
+      }
+      
+      const managedTable = platformManager.getTableByWindowHandle(windowHandle);
+      if (!managedTable) {
+        return res.status(404).json({ 
+          error: `Table avec windowHandle ${windowHandle} non trouvée`,
+          availableTables: platformManager.getManagedTables().map(t => ({
+            windowHandle: t.windowHandle,
+            tableId: t.tableSession.getId()
+          }))
+        });
+      }
+      
+      await platformManager.manualAction(windowHandle, action, amount);
+      
+      res.json({ success: true, message: "Action en file d'attente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.patch("/api/platform/anti-detection", async (req, res) => {
+    try {
+      const parseResult = antiDetectionConfigSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Validation échouée", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const updates = parseResult.data;
+      
+      const platformManager = getPlatformManager();
+      const adapter = platformManager.getAdapter();
+      
+      if (!adapter) {
+        return res.status(400).json({ error: "Aucun adaptateur de plateforme initialisé" });
+      }
+      
+      platformManager.updateAntiDetectionConfig(updates);
+      
+      broadcastToClients({
+        type: "anti_detection_updated",
+        payload: { config: adapter.getAntiDetectionConfig() }
+      });
+      
+      res.json({ 
+        success: true, 
+        config: adapter.getAntiDetectionConfig()
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  const platformManager = getPlatformManager();
+  
+  platformManager.on("statusChange", (status) => {
+    broadcastToClients({ type: "platform_status_change", payload: { status } });
+  });
+  
+  platformManager.on("tableAdded", (data) => {
+    broadcastToClients({ type: "platform_table_added", payload: data });
+  });
+  
+  platformManager.on("tableRemoved", (data) => {
+    broadcastToClients({ type: "platform_table_removed", payload: data });
+  });
+  
+  platformManager.on("actionQueued", (data) => {
+    broadcastToClients({ type: "platform_action_queued", payload: data });
+  });
+  
+  platformManager.on("actionExecuted", (data) => {
+    broadcastToClients({ type: "platform_action_executed", payload: data });
+  });
+  
+  platformManager.on("warning", (data) => {
+    broadcastToClients({ type: "platform_warning", payload: data });
+  });
+  
+  platformManager.on("emergencyPause", (data) => {
+    broadcastToClients({ type: "platform_emergency_pause", payload: data });
+  });
+  
+  platformManager.on("banned", (data) => {
+    broadcastToClients({ type: "platform_banned", payload: data });
+  });
+  
+  platformManager.on("platformEvent", (event) => {
+    broadcastToClients({ type: "platform_event", payload: event });
   });
   
   app.get("/api/logs", async (req, res) => {
