@@ -355,10 +355,89 @@ export class CalibrationManager {
       colorSignatures: { ...baseProfile.colorSignatures, ...colors } as ColorSignatures,
     });
 
+    // Validation automatique du profil
+    const validationResult = this.validateProfile(newProfile);
+    if (!validationResult.isValid) {
+      console.warn("[Calibration] Profile validation issues:", validationResult.warnings);
+    }
+
     this.calibrationMode = false;
     this.calibrationPoints = [];
 
     return newProfile;
+  }
+
+  validateProfile(profile: CalibrationProfile): { 
+    isValid: boolean; 
+    score: number; 
+    warnings: string[];
+    recommendations: string[];
+  } {
+    const warnings: string[] = [];
+    const recommendations: string[] = [];
+    let score = 100;
+
+    // Vérifier les régions critiques
+    const criticalRegions = ['heroCards', 'communityCards', 'actionButtons', 'pot'] as const;
+    for (const regionName of criticalRegions) {
+      const region = profile.regions[regionName];
+      if (!region || region.width <= 0 || region.height <= 0) {
+        warnings.push(`Missing or invalid region: ${regionName}`);
+        score -= 20;
+      }
+
+      // Vérifier si les régions sont hors limites
+      if (region && (region.x < 0 || region.y < 0 || 
+          region.x + region.width > profile.windowSize.width ||
+          region.y + region.height > profile.windowSize.height)) {
+        warnings.push(`Region ${regionName} is out of window bounds`);
+        score -= 10;
+      }
+    }
+
+    // Vérifier les overlaps critiques
+    if (this.regionsOverlap(profile.regions.heroCards, profile.regions.communityCards)) {
+      warnings.push("Hero cards and community cards regions overlap");
+      score -= 15;
+    }
+
+    // Vérifier les tailles minimales
+    if (profile.regions.heroCards && 
+        (profile.regions.heroCards.width < 80 || profile.regions.heroCards.height < 50)) {
+      recommendations.push("Hero cards region might be too small");
+      score -= 5;
+    }
+
+    if (profile.regions.actionButtons && 
+        (profile.regions.actionButtons.width < 200 || profile.regions.actionButtons.height < 40)) {
+      recommendations.push("Action buttons region might be too small");
+      score -= 5;
+    }
+
+    // Vérifier les signatures de couleurs
+    const colorCount = Object.values(profile.colorSignatures).filter(c => c !== undefined).length;
+    if (colorCount < 8) {
+      recommendations.push("Consider adding more color signatures for better detection");
+      score -= 5;
+    }
+
+    const isValid = score >= 50; // Seuil minimal de validité
+
+    return {
+      isValid,
+      score: Math.max(0, score),
+      warnings,
+      recommendations,
+    };
+  }
+
+  private regionsOverlap(r1: ScreenRegion, r2: ScreenRegion): boolean {
+    if (!r1 || !r2) return false;
+    
+    return !(r1.x + r1.width < r2.x || 
+             r2.x + r2.width < r1.x || 
+             r1.y + r1.height < r2.y || 
+             r2.y + r2.height < r1.y);
   }
 
   private expandRegion(existing: ScreenRegion, addition: ScreenRegion): ScreenRegion {
@@ -384,16 +463,109 @@ export class CalibrationManager {
     return this.calibrationMode;
   }
 
-  scaleRegionsForWindow(profile: CalibrationProfile, actualWidth: number, actualHeight: number): TableRegions {
-    const scaleX = actualWidth / profile.windowSize.width;
-    const scaleY = actualHeight / profile.windowSize.height;
+  exportProfile(id: string): string | null {
+    const profile = this.profiles.get(id);
+    if (!profile) return null;
 
-    const scaleRegion = (region: ScreenRegion): ScreenRegion => ({
-      x: Math.round(region.x * scaleX),
-      y: Math.round(region.y * scaleY),
-      width: Math.round(region.width * scaleX),
-      height: Math.round(region.height * scaleY),
-    });
+    return JSON.stringify(profile, null, 2);
+  }
+
+  importProfile(jsonData: string): CalibrationProfile | null {
+    try {
+      const data = JSON.parse(jsonData);
+      
+      // Validation basique de la structure
+      if (!data.platformName || !data.regions || !data.colorSignatures) {
+        throw new Error("Invalid profile structure");
+      }
+
+      const profile: CalibrationProfile = {
+        ...data,
+        id: `imported_${data.platformName}_${Date.now()}`,
+        createdAt: new Date(data.createdAt || new Date()),
+        updatedAt: new Date(),
+      };
+
+      this.profiles.set(profile.id, profile);
+      return profile;
+    } catch (error) {
+      console.error("[Calibration] Failed to import profile:", error);
+      return null;
+    }
+  }
+
+  getProfileStatistics(): {
+    totalProfiles: number;
+    profilesByPlatform: Record<string, number>;
+    avgValidationScore: number;
+  } {
+    const profilesByPlatform: Record<string, number> = {};
+    let totalScore = 0;
+
+    for (const profile of this.profiles.values()) {
+      profilesByPlatform[profile.platformName] = 
+        (profilesByPlatform[profile.platformName] || 0) + 1;
+      
+      const validation = this.validateProfile(profile);
+      totalScore += validation.score;
+    }
+
+    return {
+      totalProfiles: this.profiles.size,
+      profilesByPlatform,
+      avgValidationScore: this.profiles.size > 0 ? totalScore / this.profiles.size : 0,
+    };
+  }
+
+  scaleRegionsForWindow(
+    profile: CalibrationProfile, 
+    actualWidth: number, 
+    actualHeight: number,
+    dpiScale: number = 1.0
+  ): TableRegions {
+    // Gestion du scaling avec aspect ratio préservé
+    const targetAspectRatio = actualWidth / actualHeight;
+    const profileAspectRatio = profile.windowSize.width / profile.windowSize.height;
+    
+    let scaleX = actualWidth / profile.windowSize.width;
+    let scaleY = actualHeight / profile.windowSize.height;
+
+    // Ajustement si l'aspect ratio a changé (ex: ultra-wide)
+    if (Math.abs(targetAspectRatio - profileAspectRatio) > 0.1) {
+      const avgScale = (scaleX + scaleY) / 2;
+      scaleX = avgScale;
+      scaleY = avgScale;
+      
+      console.warn(
+        `[Calibration] Aspect ratio mismatch detected. ` +
+        `Using uniform scaling (${avgScale.toFixed(2)}x) instead of non-uniform.`
+      );
+    }
+
+    // Application du DPI scaling
+    scaleX *= dpiScale;
+    scaleY *= dpiScale;
+
+    const scaleRegion = (region: ScreenRegion): ScreenRegion => {
+      const scaled = {
+        x: Math.round(region.x * scaleX),
+        y: Math.round(region.y * scaleY),
+        width: Math.round(region.width * scaleX),
+        height: Math.round(region.height * scaleY),
+      };
+
+      // Vérification des limites après scaling
+      if (scaled.x < 0) scaled.x = 0;
+      if (scaled.y < 0) scaled.y = 0;
+      if (scaled.x + scaled.width > actualWidth) {
+        scaled.width = actualWidth - scaled.x;
+      }
+      if (scaled.y + scaled.height > actualHeight) {
+        scaled.height = actualHeight - scaled.y;
+      }
+
+      return scaled;
+    };
 
     return {
       heroCards: scaleRegion(profile.regions.heroCards),
@@ -407,6 +579,17 @@ export class CalibrationManager {
       timer: scaleRegion(profile.regions.timer),
       chat: scaleRegion(profile.regions.chat),
     };
+  }
+
+  autoAdjustRegions(
+    profile: CalibrationProfile, 
+    screenshot: Buffer, 
+    screenshotWidth: number
+  ): TableRegions | null {
+    // Placeholder pour future détection automatique par IA
+    // Pourrait utiliser template matching ou ML pour affiner les régions
+    console.log("[Calibration] Auto-adjustment not yet implemented");
+    return null;
   }
 }
 
