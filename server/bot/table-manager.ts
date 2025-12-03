@@ -40,6 +40,11 @@ export class TableSession extends EventEmitter {
   private isProcessingAction = false;
   private actionQueue: (() => Promise<void>)[] = [];
   private heartbeatInterval?: NodeJS.Timeout;
+  private errorCount = 0;
+  private maxErrors = 5;
+  private lastActivityTime = Date.now();
+  private responseTimeHistory: number[] = [];
+  private avgResponseTime = 0;
   
   constructor(tableConfig: {
     id: string;
@@ -67,6 +72,44 @@ export class TableSession extends EventEmitter {
       handsPlayed: 0,
       sessionProfit: 0,
     };
+  }
+  
+  incrementError(): void {
+    this.errorCount++;
+    if (this.errorCount >= this.maxErrors) {
+      this.updateState({ status: "error" });
+      this.emit("maxErrorsReached", { tableId: this.tableState.id, errorCount: this.errorCount });
+    }
+  }
+  
+  resetErrors(): void {
+    this.errorCount = 0;
+  }
+  
+  updateActivity(): void {
+    this.lastActivityTime = Date.now();
+  }
+  
+  getTimeSinceLastActivity(): number {
+    return Date.now() - this.lastActivityTime;
+  }
+  
+  trackResponseTime(duration: number): void {
+    this.responseTimeHistory.push(duration);
+    if (this.responseTimeHistory.length > 20) {
+      this.responseTimeHistory.shift();
+    }
+    this.avgResponseTime = this.responseTimeHistory.reduce((a, b) => a + b, 0) / this.responseTimeHistory.length;
+  }
+  
+  getAverageResponseTime(): number {
+    return this.avgResponseTime;
+  }
+  
+  isHealthy(): boolean {
+    return this.errorCount < this.maxErrors && 
+           this.getTimeSinceLastActivity() < 300000 && // 5 min
+           this.tableState.status !== "error";
   }
   
   getState(): TableState {
@@ -192,9 +235,12 @@ export class TableSession extends EventEmitter {
     isInPosition: boolean;
     numPlayers: number;
   }): Promise<{ action: string; humanizedAction: HumanizedAction }> {
+    const startTime = Date.now();
+    this.updateActivity();
     this.updateState({ isHeroTurn: true, facingBet: data.facingBet, currentPot: data.potSize });
     
-    const handContext: HandContext = {
+    try {
+      const handContext: HandContext = {
       heroCards: this.tableState.heroCards,
       communityCards: this.tableState.communityCards,
       street: this.tableState.currentStreet,
@@ -229,14 +275,22 @@ export class TableSession extends EventEmitter {
     
     this.updateState({ lastHumanizedAction: humanizedAction });
     
+    const processingTime = Date.now() - startTime;
+    this.trackResponseTime(processingTime);
+    this.resetErrors();
+    
     await storage.createActionLog({
       tableId: this.tableState.id,
       logType: "warning",
-      message: `Humanizer: Délai ${humanizedAction.delay}ms`,
-      metadata: { thinkingPauses: humanizedAction.thinkingPauses },
+      message: `Humanizer: Délai ${humanizedAction.delay}ms (traité en ${processingTime}ms)`,
+      metadata: { thinkingPauses: humanizedAction.thinkingPauses, processingTime },
     });
     
     return { action: selectedAction, humanizedAction };
+    } catch (error) {
+      this.incrementError();
+      throw error;
+    }
   }
   
   private selectAction(recommendation: GtoRecommendation): string {
@@ -297,10 +351,68 @@ export class MultiTableManager extends EventEmitter {
   private maxTables: number = 6;
   private sessionId?: string;
   private isRunning = false;
+  private tablePriorities: Map<string, number> = new Map(); // 0-100, higher = more important
+  private systemLoadThreshold = 0.8; // 80% CPU usage threshold
+  private autoThrottle = true;
   
   constructor(maxTables: number = 6) {
     super();
     this.maxTables = maxTables;
+  }
+  
+  setTablePriority(tableId: string, priority: number): void {
+    this.tablePriorities.set(tableId, Math.max(0, Math.min(100, priority)));
+  }
+  
+  getTablePriority(tableId: string): number {
+    return this.tablePriorities.get(tableId) ?? 50; // Default priority
+  }
+  
+  getPrioritizedTables(): TableSession[] {
+    return Array.from(this.tables.values()).sort((a, b) => {
+      const priorityA = this.getTablePriority(a.getId());
+      const priorityB = this.getTablePriority(b.getId());
+      return priorityB - priorityA;
+    });
+  }
+  
+  getHealthyTables(): TableSession[] {
+    return Array.from(this.tables.values()).filter(t => t.isHealthy());
+  }
+  
+  async optimizeLoad(): Promise<void> {
+    const healthyTables = this.getHealthyTables();
+    
+    if (this.autoThrottle && healthyTables.length > 4) {
+      const avgResponseTime = healthyTables.reduce((sum, t) => sum + t.getAverageResponseTime(), 0) / healthyTables.length;
+      
+      // Si temps de réponse moyen > 2s, on pause les tables de faible priorité
+      if (avgResponseTime > 2000) {
+        const prioritizedTables = this.getPrioritizedTables();
+        const tablesToPause = prioritizedTables.slice(Math.floor(prioritizedTables.length / 2));
+        
+        for (const table of tablesToPause) {
+          if (table.getStatus() === "playing") {
+            await table.pause();
+            this.emit("tablePausedForOptimization", { tableId: table.getId() });
+          }
+        }
+      }
+    }
+  }
+  
+  async recoverErrorTables(): Promise<void> {
+    const errorTables = Array.from(this.tables.values()).filter(t => t.getStatus() === "error");
+    
+    for (const table of errorTables) {
+      try {
+        table.resetErrors();
+        await table.resume();
+        this.emit("tableRecovered", { tableId: table.getId() });
+      } catch (error) {
+        console.error(`Failed to recover table ${table.getId()}:`, error);
+      }
+    }
   }
   
   setSessionId(sessionId: string): void {
@@ -421,14 +533,53 @@ export class MultiTableManager extends EventEmitter {
     activeTables: number;
     totalHandsPlayed: number;
     totalProfit: number;
+    healthyTables: number;
+    avgResponseTime: number;
+    tablesByStatus: Record<TableStatus, number>;
   } {
     const tables = this.getAllTables();
+    const healthyTables = this.getHealthyTables();
+    
+    const tablesByStatus: Record<TableStatus, number> = {
+      waiting: 0,
+      playing: 0,
+      paused: 0,
+      error: 0,
+      disconnected: 0,
+    };
+    
+    tables.forEach(t => {
+      tablesByStatus[t.getStatus()]++;
+    });
+    
+    const totalResponseTime = tables.reduce((sum, t) => sum + t.getAverageResponseTime(), 0);
+    const avgResponseTime = tables.length > 0 ? totalResponseTime / tables.length : 0;
+    
     return {
       totalTables: tables.length,
       activeTables: this.getActiveTableCount(),
       totalHandsPlayed: tables.reduce((sum, t) => sum + t.getState().handsPlayed, 0),
       totalProfit: tables.reduce((sum, t) => sum + t.getState().sessionProfit, 0),
+      healthyTables: healthyTables.length,
+      avgResponseTime,
+      tablesByStatus,
     };
+  }
+  
+  async performHealthCheck(): Promise<void> {
+    const tables = this.getAllTables();
+    
+    for (const table of tables) {
+      if (!table.isHealthy() && table.getStatus() !== "error") {
+        await storage.createActionLog({
+          tableId: table.getId(),
+          logType: "warning",
+          message: `Table unhealthy: ${table.getTimeSinceLastActivity()}ms inactive`,
+        });
+      }
+    }
+    
+    await this.optimizeLoad();
   }
 }
 
