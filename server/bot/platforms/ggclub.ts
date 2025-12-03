@@ -1281,6 +1281,8 @@ class AntiDetectionMonitor {
     this.checkActionDistribution();
     this.checkScreenCaptureRate();
     this.checkBurstActivity();
+    this.checkImpossibleTimings();
+    this.checkActionSequencePatterns();
   }
 
   private checkTimingRegularity(): void {
@@ -1366,12 +1368,76 @@ class AntiDetectionMonitor {
     const normalizedSuspicion = Math.min(1, total / 5);
     (this.adapter as any).suspicionLevel = normalizedSuspicion;
 
+    // Auto-ajustement des délais si suspicion élevée
+    if (normalizedSuspicion > 0.6) {
+      this.applyEmergencyRandomization(normalizedSuspicion);
+    }
+
     if (normalizedSuspicion > 0.5) {
       this.adapter["emitPlatformEvent"]("anti_detection_alert", {
         level: normalizedSuspicion,
         factors: Object.fromEntries(this.suspicionFactors),
         recommendation: normalizedSuspicion > 0.8 ? "pause_session" : "reduce_activity",
+        autoAdjusted: normalizedSuspicion > 0.6,
       });
+    }
+  }
+
+  private applyEmergencyRandomization(suspicionLevel: number): void {
+    const humanizer = (this.adapter as any).getHumanizer?.();
+    if (!humanizer) return;
+
+    const currentSettings = humanizer.getSettings();
+    
+    // Augmenter les délais et la variance proportionnellement à la suspicion
+    const multiplier = 1 + (suspicionLevel - 0.6) * 2; // 1.0x à 1.8x
+    
+    humanizer.updateSettings({
+      minDelayMs: Math.round(currentSettings.minDelayMs * multiplier),
+      maxDelayMs: Math.round(currentSettings.maxDelayMs * multiplier),
+      thinkingTimeVariance: Math.min(0.6, currentSettings.thinkingTimeVariance * 1.5),
+      enableMisclicks: suspicionLevel > 0.7 ? true : currentSettings.enableMisclicks,
+      misclickProbability: suspicionLevel > 0.7 ? 0.001 : currentSettings.misclickProbability,
+    });
+
+    console.warn(`[Anti-Detection] Emergency randomization applied (${Math.round(suspicionLevel * 100)}%)`);
+  }
+
+  private checkImpossibleTimings(): void {
+    if (this.lastActionTimestamps.length < 3) return;
+
+    const recentTimings = this.lastActionTimestamps.slice(-10);
+    const veryFastActions = recentTimings.filter((timestamp, i) => {
+      if (i === 0) return false;
+      return timestamp - recentTimings[i - 1] < 300; // <300ms = suspect
+    });
+
+    if (veryFastActions.length > 2) {
+      this.addSuspicion("impossible_timings", 0.15);
+    }
+  }
+
+  private checkActionSequencePatterns(): void {
+    if (this.patterns.length < 10) return;
+
+    const recentPatterns = this.patterns.slice(-20);
+    const actionTypes = recentPatterns.map(p => p.type);
+
+    // Détecter les séquences répétitives (fold-fold-fold ou call-call-call)
+    let maxRepetition = 1;
+    let currentRepetition = 1;
+    
+    for (let i = 1; i < actionTypes.length; i++) {
+      if (actionTypes[i] === actionTypes[i - 1]) {
+        currentRepetition++;
+        maxRepetition = Math.max(maxRepetition, currentRepetition);
+      } else {
+        currentRepetition = 1;
+      }
+    }
+
+    if (maxRepetition > 5) {
+      this.addSuspicion("repetitive_sequences", 0.1);
     }
   }
 

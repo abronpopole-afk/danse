@@ -117,10 +117,17 @@ export class Humanizer {
     let finalDelay = clamp(randomizedDelay, minDelayMs, maxDelayMs * 1.5);
     
     if (stealthModeEnabled) {
+      // Minimum absolu pour éviter détection (jamais <800ms)
       finalDelay = Math.max(finalDelay, 800);
       
+      // Forcer un délai plus long sur actions rapides
       if (finalDelay < 1000) {
         finalDelay += randomInRange(200, 500);
+      }
+
+      // Bloquer les timings "impossibles" (<500ms total)
+      if (finalDelay + this.settings.preActionDelay < 500) {
+        finalDelay = 500 - this.settings.preActionDelay + randomInRange(100, 300);
       }
     }
     
