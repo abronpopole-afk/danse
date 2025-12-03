@@ -328,12 +328,59 @@ export class PlatformManager extends EventEmitter {
     }, 5000);
 
     this.gameStatePollingInterval = setInterval(async () => {
-      await this.pollAllGameStates();
+      await this.pollAllGameStatesThrottled();
     }, this.config.scanIntervalMs);
 
     this.actionProcessingInterval = setInterval(async () => {
       await this.processActionQueues();
     }, 50);
+    
+    // Health check périodique
+    setInterval(async () => {
+      const tableManager = getTableManager();
+      await tableManager.performHealthCheck();
+      await tableManager.recoverErrorTables();
+    }, 30000);
+  }
+  
+  private async pollAllGameStatesThrottled(): Promise<void> {
+    if (!this.adapter || this.status !== "running") return;
+    
+    const tables = Array.from(this.managedTables.values());
+    const tableManager = getTableManager();
+    
+    // Récupérer les tables prioritaires en premier
+    const prioritizedTables = tableManager.getPrioritizedTables()
+      .map(session => tables.find(t => t.tableSession.getId() === session.getId()))
+      .filter(Boolean) as ManagedTable[];
+    
+    // Poll par batch de 6 tables max simultanément
+    const batchSize = 6;
+    for (let i = 0; i < prioritizedTables.length; i += batchSize) {
+      const batch = prioritizedTables.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (managedTable) => {
+        try {
+          const gameState = await this.adapter!.getGameState(managedTable.windowHandle);
+          
+          if (!gameState || !this.validateGameState(gameState)) {
+            managedTable.tableSession.incrementError();
+            return;
+          }
+          
+          managedTable.lastGameState = gameState;
+          this.updateTableSession(managedTable, gameState);
+          managedTable.tableSession.resetErrors();
+        } catch (error) {
+          managedTable.tableSession.incrementError();
+        }
+      }));
+      
+      // Petit délai entre les batchs pour réduire la charge CPU
+      if (i + batchSize < prioritizedTables.length) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
   }
 
   private stopPolling(): void {
@@ -367,21 +414,66 @@ export class PlatformManager extends EventEmitter {
     const pollPromises = Array.from(this.managedTables.values()).map(async (managedTable) => {
       try {
         const gameState = await this.adapter!.getGameState(managedTable.windowHandle);
+        
+        if (!gameState || !this.validateGameState(gameState)) {
+          managedTable.tableSession.incrementError();
+          console.warn(`Invalid game state for window ${managedTable.windowHandle}`);
+          return;
+        }
+        
         managedTable.lastGameState = gameState;
-
         this.updateTableSession(managedTable, gameState);
+        managedTable.tableSession.resetErrors();
       } catch (error) {
         console.error(`Error polling game state for window ${managedTable.windowHandle}:`, error);
+        managedTable.tableSession.incrementError();
+        
+        if (!managedTable.tableSession.isHealthy()) {
+          this.emit("tableUnhealthy", { 
+            windowHandle: managedTable.windowHandle,
+            tableId: managedTable.tableSession.getId() 
+          });
+        }
       }
     });
 
     await Promise.all(pollPromises);
   }
+  
+  private validateGameState(gameState: GameTableState): boolean {
+    return gameState.potSize >= 0 && 
+           gameState.heroStack >= 0 &&
+           gameState.players.length > 0 &&
+           gameState.heroCards.length <= 2;
+  }
 
   private updateTableSession(managedTable: ManagedTable, gameState: GameTableState): void {
     const tableState = managedTable.tableSession.getState();
 
+    // Détection nouvelle main
+    const isNewHand = gameState.currentStreet === "preflop" && 
+                      tableState.currentStreet !== "preflop" &&
+                      gameState.heroCards.length === 2;
+    
+    if (isNewHand) {
+      managedTable.tableSession.processNewHand({
+        heroCards: gameState.heroCards.map(c => cardInfoToNotation(c)),
+        heroPosition: gameState.heroPosition,
+        heroStack: gameState.heroStack,
+        players: gameStateToPlayerData(gameState.players),
+        currentPot: gameState.potSize,
+      }).catch(error => console.error("Error processing new hand:", error));
+    }
+
+    // Détection changement de street
     if (gameState.currentStreet !== "unknown" && gameState.currentStreet !== tableState.currentStreet) {
+      const communityCards = gameState.communityCards.map(c => cardInfoToNotation(c));
+      
+      if (communityCards.length > 0) {
+        managedTable.tableSession.processCommunityCards(communityCards, gameState.currentStreet)
+          .catch(error => console.error("Error processing community cards:", error));
+      }
+      
       managedTable.tableSession.updateState({
         currentStreet: gameState.currentStreet,
       });
@@ -392,6 +484,8 @@ export class PlatformManager extends EventEmitter {
       currentPot: gameState.potSize,
       facingBet: gameState.facingBet,
     });
+    
+    managedTable.tableSession.updateActivity();
   }
 
   private async processActionQueues(): Promise<void> {
