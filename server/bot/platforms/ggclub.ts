@@ -19,6 +19,9 @@ import { TemplateMatcher, templateMatcher } from "../template-matching";
 import { CombinedCardRecognizer, combinedRecognizer } from "../card-classifier";
 import { debugVisualizer, createDebugSession, DebugFrame, GtoDebugInfo } from "../debug-visualizer";
 import { AdvancedGtoAdapter, advancedGtoAdapter, PlayerProfiler } from "../gto-advanced";
+import { diffDetector, DiffDetector } from "../diff-detector";
+import { ocrCache, OCRCache } from "../ocr-cache";
+import { ocrPool, OCRWorkerPool } from "../ocr-pool";
 
 let Tesseract: any = null;
 let screenshotDesktop: any = null;
@@ -125,6 +128,9 @@ export class GGClubAdapter extends PlatformAdapter {
   private gtoAdapter: AdvancedGtoAdapter;
   private playerProfiler: PlayerProfiler;
   private debugMode: boolean = false;
+  private diffDetector: DiffDetector;
+  private ocrCache: OCRCache;
+  private criticalRegions: string[] = ['heroCardsRegion', 'actionButtonsRegion', 'potRegion'];
 
   constructor() {
     super("GGClub", {
@@ -144,7 +150,10 @@ export class GGClubAdapter extends PlatformAdapter {
     this.cardRecognizer = new CombinedCardRecognizer();
     this.gtoAdapter = new AdvancedGtoAdapter();
     this.playerProfiler = new PlayerProfiler();
+    this.diffDetector = diffDetector;
+    this.ocrCache = ocrCache;
     this.initializeTesseract();
+    ocrPool.initialize();
   }
 
   enableDebugMode(enabled: boolean = true): void {
@@ -488,6 +497,52 @@ export class GGClubAdapter extends PlatformAdapter {
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
     const screenBuffer = await this.captureScreen(windowHandle);
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+    const imageWidth = window?.width || 880;
+
+    // Détection différentielle
+    const regions = {
+      heroCardsRegion: this.screenLayout.heroCardsRegion,
+      communityCardsRegion: this.screenLayout.communityCardsRegion,
+      potRegion: this.screenLayout.potRegion,
+      actionButtonsRegion: this.screenLayout.actionButtonsRegion,
+    };
+
+    const diff = this.diffDetector.detectChanges(windowHandle, screenBuffer, imageWidth, regions);
+
+    // Si rien n'a changé dans les régions critiques, réutiliser le cache
+    const hasCriticalChanges = this.criticalRegions.some(r => diff.changedRegions.includes(r));
+    
+    if (!hasCriticalChanges && (this as any).lastGameState) {
+      return (this as any).lastGameState;
+    }
+
+    // Sinon, recalculer uniquement les régions qui ont changé
+    const tasks: Promise<any>[] = [];
+
+    if (diff.changedRegions.includes('heroCardsRegion')) {
+      tasks.push(this.detectHeroCards(windowHandle));
+    } else {
+      tasks.push(Promise.resolve((this as any).lastGameState?.heroCards || []));
+    }
+
+    if (diff.changedRegions.includes('communityCardsRegion')) {
+      tasks.push(this.detectCommunityCards(windowHandle));
+    } else {
+      tasks.push(Promise.resolve((this as any).lastGameState?.communityCards || []));
+    }
+
+    if (diff.changedRegions.includes('potRegion')) {
+      tasks.push(this.detectPot(windowHandle));
+    } else {
+      tasks.push(Promise.resolve((this as any).lastGameState?.potSize || 0));
+    }
+
+    // Players et actions toujours recalculés (changent fréquemment)
+    tasks.push(this.detectPlayers(windowHandle));
+    tasks.push(this.detectBlinds(windowHandle));
+    tasks.push(this.isHeroTurn(windowHandle));
+    tasks.push(this.detectAvailableActions(windowHandle));
 
     const [
       heroCards,
@@ -497,15 +552,7 @@ export class GGClubAdapter extends PlatformAdapter {
       blinds,
       isHeroTurn,
       availableActions,
-    ] = await Promise.all([
-      this.detectHeroCards(windowHandle),
-      this.detectCommunityCards(windowHandle),
-      this.detectPot(windowHandle),
-      this.detectPlayers(windowHandle),
-      this.detectBlinds(windowHandle),
-      this.isHeroTurn(windowHandle),
-      this.detectAvailableActions(windowHandle),
-    ]);
+    ] = await Promise.all(tasks);
 
     const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
     const currentStreet = this.determineStreet(communityCards.length);
@@ -528,6 +575,9 @@ export class GGClubAdapter extends PlatformAdapter {
       betSliderRegion: this.screenLayout.betSliderRegion,
       timestamp: Date.now(),
     };
+
+    // Cache last state
+    (this as any).lastGameState = gameState;
 
     this.emitPlatformEvent("game_state", { gameState });
 
@@ -1188,6 +1238,16 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private async performOCR(screenBuffer: Buffer, region: ScreenRegion): Promise<OCRResult> {
+    // Check cache first
+    const cached = this.ocrCache.get(screenBuffer, region);
+    if (cached) {
+      return {
+        text: cached.text,
+        confidence: cached.confidence,
+        bounds: region,
+      };
+    }
+
     await this.addRandomDelay(20);
 
     if (this.tesseractWorker && screenBuffer.length > 0) {
@@ -1201,9 +1261,15 @@ export class GGClubAdapter extends PlatformAdapter {
           },
         });
         
+        const text = result.data.text.trim();
+        const confidence = result.data.confidence / 100;
+        
+        // Cache result
+        this.ocrCache.set(screenBuffer, region, text, confidence);
+        
         return {
-          text: result.data.text.trim(),
-          confidence: result.data.confidence / 100,
+          text,
+          confidence,
           bounds: region,
         };
       } catch (error) {
@@ -1610,6 +1676,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.stopWindowPolling();
     this.stopHeartbeat();
     this.antiDetectionMonitor.stop();
+    ocrPool.shutdown();
     super.cleanup();
   }
 }
