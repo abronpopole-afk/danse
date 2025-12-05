@@ -154,6 +154,9 @@ npm install -g drizzle-kit tsx
 
 # Pousser le schéma vers la base de données
 npm run db:push
+
+# Appliquer la migration du profil joueur
+psql -U poker_bot -d poker_bot -f script/migrate-player-profile.sql
 ```
 
 ---
@@ -184,6 +187,9 @@ npm list screenshot-desktop
 
 # Vérifier node-window-manager
 npm list node-window-manager
+
+# Vérifier helmet
+npm list helmet
 ```
 
 Si un module échoue, le réinstaller individuellement :
@@ -246,6 +252,7 @@ Vérifier dans la console :
 ✓ robotjs loaded
 ✓ node-window-manager loaded
 ✓ Database connected
+✓ Player profile initialized from database
 ✓ serving on port 5000
 ```
 
@@ -269,28 +276,43 @@ Si des modules ne chargent pas :
 Dans le dashboard (http://localhost:5000) :
 
 1. **Onglet Settings** :
-   - Configurer les paramètres Humanizer (délais, comportement)
-   - Activer/désactiver le mode furtif
-   - Configurer la clé API GTO Wizard (optionnel)
+   - **Player Profile** : Configurer la personnalité initiale (balanced recommandé)
+   - **Humanizer** : Configurer les délais et le comportement
+   - **GTO Engine** : Activer/désactiver le mode simulation, configurer la clé API (optionnel)
+   - **Anti-Detection** : Activer le mode furtif
 
 2. **Onglet Calibration** :
    - Créer un profil de calibration pour GGClub
    - Calibrer les régions de détection
    - Tester la détection sur une table ouverte
 
-### 6.2 Connexion à une table
+### 6.2 Configuration du Player Profile
+
+Le système de profil simule un joueur humain avec :
+- **Tilt** : Se déclenche après bad beats ou losing streaks
+- **Fatigue** : Augmente après 2 heures, suit le rythme circadien
+- **Focus** : Diminue avec la fatigue
+- **Personnalité** : Change automatiquement selon l'état émotionnel
+
+Recommandations :
+- Commencer avec "balanced" pour un jeu optimal
+- Laisser le système gérer les transitions automatiques
+- Surveiller le niveau de tilt (pause si >60%)
+
+### 6.3 Connexion à une table
 
 1. Ouvrir GGClub et rejoindre une table de poker
 2. Dans le dashboard, cliquer sur "Détecter Tables"
 3. Le bot devrait détecter la fenêtre GGClub
 4. Cliquer sur "Connecter" pour lier la table au bot
 
-### 6.3 Démarrage de la session
+### 6.4 Démarrage de la session
 
 1. Vérifier que la table est bien détectée (indicateur vert)
 2. Cliquer sur "Démarrer Session"
 3. Le bot commence à observer et à jouer
 4. Surveiller les logs dans l'onglet "Logs"
+5. Observer le profil joueur dans le panneau "Player Profile"
 
 ---
 
@@ -299,14 +321,11 @@ Dans le dashboard (http://localhost:5000) :
 ### 7.1 Mode Simulation (sans risque)
 
 Pour tester sans jouer réellement :
-```bash
-# Créer un fichier de test
-touch test-simulation.ts
-```
 
 Dans le dashboard :
-1. Activer "Mode Simulation"
-2. Le bot simulera des décisions sans cliquer
+1. Aller dans Settings > GTO Engine
+2. Activer "Mode Simulation"
+3. Le bot simulera des décisions sans cliquer
 
 ### 7.2 Tests sur Tables de Jeu Gratuit
 
@@ -317,13 +336,16 @@ Dans le dashboard :
    - Détection correcte des cartes
    - Timing humain des actions
    - Décisions cohérentes
+   - Évolution du profil (tilt, fatigue)
 
 ### 7.3 Monitoring en temps réel
 
 Surveiller dans le dashboard :
 - **Stats Grid** : Statistiques de session
+- **Player Profile** : État émotionnel (tilt, fatigue, focus)
 - **Table Visualizer** : État des tables actives
 - **Action Log** : Historique des actions
+- **Task Scheduler Stats** : Performance du système de tâches
 - **Anti-Detection** : Score de suspicion
 
 ---
@@ -339,11 +361,16 @@ Surveiller dans le dashboard :
 
 ### 8.2 Optimisation des performances
 
-Pour améliorer les performances multi-tables :
+Le Task Scheduler optimise automatiquement :
+- **Priorisation** : Actions critiques traitées en priorité
+- **Throttling** : Max 6 tables traitées simultanément
+- **Batching** : Polling par groupes pour réduire la charge CPU
+- **Health Check** : Surveillance automatique toutes les 30s
 
-1. **Priorisation** : Configurer les priorités des tables
-2. **Throttling** : Le bot traite max 6 tables en parallèle
-3. **Health Check** : Surveillance automatique des tables
+Pour surveiller les performances :
+- Aller dans Settings > Platform Status
+- Consulter "Scheduler Stats"
+- Vérifier que avgExecutionTime < intervalMs
 
 ---
 
@@ -359,19 +386,90 @@ Dans Settings > Anti-Detection :
 - Emergency Auto-Adjust: ACTIVÉ
 ```
 
+Dans Settings > Player Profile :
+```
+- Initial Personality: balanced
+- Auto Personality Switch: ACTIVÉ
+- Tilt Threshold: 60 (pause automatique)
+- Fatigue Threshold: 80 (pause automatique)
+```
+
 ### 9.2 Bonnes pratiques
 
-1. **Ne pas jouer 24/7** : Faire des pauses régulières
-2. **Varier les horaires** : Ne pas jouer aux mêmes heures
+1. **Ne pas jouer 24/7** : Faire des pauses régulières (le profil simule la fatigue)
+2. **Varier les horaires** : Le rythme circadien aide mais ne pas jouer aux mêmes heures
 3. **Limiter les tables** : Max 6-8 tables simultanées
-4. **Sessions courtes** : 2-3 heures maximum
-5. **Surveiller le score** : Si >60%, arrêter immédiatement
+4. **Sessions courtes** : 2-3 heures maximum (fatigue exponentielle après 2h)
+5. **Surveiller le profil** : Si tilt >60% ou fatigue >80%, arrêter
+6. **Laisser le système s'adapter** : Les transitions automatiques sont plus réalistes
 
 ---
 
-## 🐛 Étape 10 : Dépannage
+## 🧠 Étape 10 : Comprendre le Player Profile
 
-### 10.1 Problèmes Courants
+### 10.1 Dimensions émotionnelles
+
+Le profil simule 3 dimensions :
+- **Tilt (0-100)** : Augmente avec bad beats et losing streaks, décroît avec le temps
+- **Fatigue (0-100)** : Augmente exponentiellement après 2h, suit le rythme circadien
+- **Focus (0-100)** : = 100 - fatigue
+
+### 10.2 Personnalités
+
+Chaque personnalité affecte le jeu différemment :
+
+**Balanced** (recommandé)
+- Jeu GTO optimal
+- Délais normaux
+- Pas d'erreurs intentionnelles
+
+**Aggressive**
+- Bet sizing +20%
+- Ranges plus larges
+- Actions plus rapides
+
+**Passive**
+- Bet sizing -20%
+- Ranges plus serrées
+- Actions plus lentes
+
+**Thinking**
+- Délais x1.5
+- Variance x1.3
+- Jeu réfléchi
+
+**Tired** (auto-activé si fatigue >70%)
+- Délais x2
+- 5% d'erreurs
+- Micro-pauses sur gros pots
+
+**Tilted** (auto-activé si tilt >60%)
+- Délais x0.7 (actions rapides)
+- 10% d'erreurs
+- Ranges x1.5 plus larges
+- Bet sizing +30%
+
+### 10.3 Événements déclencheurs
+
+**Tilt augmente** :
+- Bad beat : +15
+- Perte grosse main : +10
+- 3 pertes consécutives : +20
+
+**Tilt diminue** :
+- Temps qui passe : -1 par minute
+- Main gagnée : -5
+
+**Fatigue augmente** :
+- Linéaire : 0-2h
+- Exponentielle : après 2h
+- Rythme circadien : moins de fatigue pendant peak hours (14h-22h)
+
+---
+
+## 🐛 Étape 11 : Dépannage
+
+### 11.1 Problèmes Courants
 
 #### Le bot ne détecte pas les fenêtres GGClub
 ```bash
@@ -409,7 +507,25 @@ sudo systemctl status postgresql  # Linux
 psql -U poker_bot -d poker_bot -h localhost
 ```
 
-### 10.2 Logs de debug
+#### Le Task Scheduler ralentit
+```bash
+# Consulter les stats via l'API
+curl http://localhost:5000/api/platform/scheduler-stats
+
+# Vérifier les tâches lentes (>80% interval)
+# Réduire le nombre de tables si nécessaire
+```
+
+#### Le profil ne se charge pas
+```bash
+# Vérifier la table player_profile_state
+psql -U poker_bot -d poker_bot -c "SELECT * FROM player_profile_state;"
+
+# Réappliquer la migration si nécessaire
+psql -U poker_bot -d poker_bot -f script/migrate-player-profile.sql
+```
+
+### 11.2 Logs de debug
 
 Activer les logs détaillés :
 ```bash
@@ -420,7 +536,7 @@ DEBUG=* npm run dev
 DEBUG=bot:* npm run dev
 ```
 
-### 10.3 Réinitialisation complète
+### 11.3 Réinitialisation complète
 
 En cas de problème majeur :
 ```bash
@@ -430,6 +546,7 @@ npm install
 
 # Réinitialiser la base de données
 npm run db:push
+psql -U poker_bot -d poker_bot -f script/migrate-player-profile.sql
 
 # Supprimer les fichiers de build
 rm -rf dist
@@ -437,34 +554,50 @@ rm -rf dist
 
 ---
 
-## 📊 Étape 11 : Monitoring et Statistiques
+## 📊 Étape 12 : Monitoring et Statistiques
 
-### 11.1 Dashboard en temps réel
+### 12.1 Dashboard en temps réel
 
 Accéder aux statistiques via http://localhost:5000 :
 - **Profit/Loss** : Gains/pertes par session
 - **Hands Played** : Nombre de mains jouées
 - **Win Rate** : Taux de victoire
 - **Table Health** : État des connexions
+- **Player State** : Tilt, fatigue, focus en temps réel
+- **Scheduler Stats** : Performance du système de tâches
 
-### 11.2 Logs et historique
+### 12.2 API Endpoints
+
+```bash
+# État du profil
+curl http://localhost:5000/api/player-profile
+
+# Stats du scheduler
+curl http://localhost:5000/api/platform/scheduler-stats
+
+# État général
+curl http://localhost:5000/api/stats
+```
+
+### 12.3 Logs et historique
 
 Les logs sont stockés dans :
 - **Base de données** : Table `action_logs`
 - **Console** : Affichage en temps réel
-- **Fichiers** : (à configurer si nécessaire)
+- **Player Profile State** : Table `player_profile_state`
 
 ---
 
-## 🔒 Étape 12 : Sécurité et Recommandations
+## 🔒 Étape 13 : Sécurité et Recommandations
 
-### 12.1 Sécurité des identifiants
+### 13.1 Sécurité des identifiants
 
 1. **Ne jamais commiter .env** : Ajouter à .gitignore
 2. **Clés API** : Stocker dans des variables d'environnement
 3. **Mots de passe** : Utiliser des mots de passe forts
+4. **Encryption** : Les mots de passe sont chiffrés en AES-256-GCM
 
-### 12.2 Utilisation responsable
+### 13.2 Utilisation responsable
 
 ⚠️ **AVERTISSEMENT IMPORTANT** :
 - L'utilisation de bots est **interdite** sur la plupart des plateformes de poker
@@ -478,12 +611,13 @@ Les logs sont stockés dans :
 1. Utiliser uniquement sur des tables de "play money"
 2. Ne pas utiliser sur des comptes avec de l'argent réel
 3. Respecter les conditions d'utilisation des plateformes
+4. Le système de profil réduit la détection mais ne la garantit pas
 
 ---
 
-## 🚀 Étape 13 : Build de Production
+## 🚀 Étape 14 : Build de Production
 
-### 13.1 Build de l'application
+### 14.1 Build de l'application
 
 Pour créer une version optimisée :
 ```bash
@@ -493,7 +627,7 @@ npm run build
 # Le build est créé dans dist/
 ```
 
-### 13.2 Démarrage en production
+### 14.2 Démarrage en production
 
 ```bash
 # Démarrer en mode production
@@ -517,11 +651,14 @@ Avant de lancer le bot, vérifier :
 - [ ] Dépendances `npm install` terminées
 - [ ] Fichier `.env` configuré
 - [ ] Base de données initialisée (`npm run db:push`)
+- [ ] Migration profil appliquée (`migrate-player-profile.sql`)
 - [ ] GGClub installé et configuré
 - [ ] Résolution d'écran 1920x1080
 - [ ] Calibration effectuée
+- [ ] Player Profile configuré (balanced recommandé)
 - [ ] Tests sur table gratuite réussis
 - [ ] Anti-détection configuré
+- [ ] Task Scheduler opérationnel
 - [ ] Dashboard accessible sur http://localhost:5000
 
 ---
@@ -530,8 +667,8 @@ Avant de lancer le bot, vérifier :
 
 ### Ressources
 - **Documentation Replit** : https://replit.com/docs
-- **Issues GitHub** : (si applicable)
 - **Logs** : Toujours vérifier les logs en premier
+- **API Endpoints** : Utiliser les endpoints pour diagnostics
 
 ### Commandes utiles
 ```bash
@@ -546,12 +683,25 @@ rm -rf node_modules && npm install
 
 # Logs détaillés
 DEBUG=* npm run dev
+
+# Stats du scheduler
+curl http://localhost:5000/api/platform/scheduler-stats
+
+# État du profil
+curl http://localhost:5000/api/player-profile
 ```
 
 ---
 
 ## ✅ Félicitations !
 
-Votre bot de poker GTO est maintenant opérationnel sur votre machine locale. N'oubliez pas d'utiliser ce système de manière **responsable et éthique**.
+Votre bot de poker GTO est maintenant opérationnel avec :
+- ✅ Task Scheduler intelligent pour gestion optimale des tâches
+- ✅ Player Profile dynamique simulant un joueur humain
+- ✅ Multi-tables avec throttling automatique
+- ✅ Anti-détection avancé
+- ✅ Monitoring temps réel
+
+N'oubliez pas d'utiliser ce système de manière **responsable et éthique**.
 
 **Bon jeu ! 🎰♠️♥️♦️♣️**
