@@ -164,8 +164,9 @@ export const playerProfileState = pgTable("player_profile_state", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const insertPlayerProfileStateSchema = createInsertSchema(playerProfileState).omit({ id: true, sessionStartTime: true, updatedAt: true });
 export type PlayerProfileState = typeof playerProfileState.$inferSelect;
-export type InsertPlayerProfileState = typeof playerProfileState.$inferInsert;
+export type InsertPlayerProfileState = z.infer<typeof insertPlayerProfileStateSchema>;
 
 export const gtoRecommendationSchema = z.object({
   actions: z.array(z.object({

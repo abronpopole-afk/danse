@@ -9,7 +9,7 @@ import {
   type ActionLog, type InsertActionLog,
   type BotStats, type InsertBotStats,
   users, botSessions, pokerTables, handHistories,
-  humanizerConfig, gtoConfig, platformConfig, actionLogs, botStats
+  humanizerConfig, gtoConfig, platformConfig, actionLogs, botStats, playerProfileState
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";

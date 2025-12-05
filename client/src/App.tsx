@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
+import RemotePage from "@/pages/remote";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/live" component={Dashboard} />
       <Route path="/logs" component={Dashboard} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/remote" component={RemotePage} />
       <Route component={NotFound} />
     </Switch>
   );

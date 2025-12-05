@@ -13,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Play, Square, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import api from "@/lib/api";
-import { HumanizerSettings } from "@/types/humanizer";
+import { getPlayerProfile, updatePlayerPersonality, resetPlayerProfile, HumanizerSettings } from "@/lib/api";
 
 
 export default function Dashboard() {
@@ -46,22 +45,17 @@ export default function Dashboard() {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadPlayerProfile = async () => {
       try {
-        const humanizerData = await api.getHumanizerSettings();
-        setHumanizerSettings(humanizerData);
-
-        const profileData = await api.getPlayerProfile();
+        const profileData = await getPlayerProfile();
         setPlayerProfile(profileData);
       } catch (err) {
-        console.error("Erreur chargement données initiales:", err);
-        toast.error("Erreur lors du chargement des données initiales.");
+        console.error("Erreur chargement profil:", err);
       }
     };
 
-    loadInitialData();
+    loadPlayerProfile();
   }, []);
 
 
@@ -102,8 +96,7 @@ export default function Dashboard() {
   const handleUpdateHumanizer = async (updates: Partial<HumanizerSettings>) => {
     setIsUpdatingHumanizer(true);
     try {
-      const updated = await api.updateHumanizerSettings(updates);
-      setHumanizerSettings(updated);
+      await updateHumanizer(updates);
     } catch (err) {
       console.error("Erreur mise à jour humanizer:", err);
     } finally {
@@ -114,7 +107,7 @@ export default function Dashboard() {
   const handleUpdatePersonality = async (personality: string) => {
     setIsUpdatingProfile(true);
     try {
-      const updated = await api.updatePlayerPersonality(personality);
+      const updated = await updatePlayerPersonality(personality);
       setPlayerProfile(updated);
     } catch (err) {
       console.error("Erreur mise à jour personnalité:", err);
@@ -126,8 +119,8 @@ export default function Dashboard() {
   const handleResetProfile = async () => {
     setIsUpdatingProfile(true);
     try {
-      await api.resetPlayerProfile();
-      const updated = await api.getPlayerProfile();
+      await resetPlayerProfile();
+      const updated = await getPlayerProfile();
       setPlayerProfile(updated);
     } catch (err) {
       console.error("Erreur reset profil:", err);
