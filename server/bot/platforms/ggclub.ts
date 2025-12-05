@@ -1106,7 +1106,9 @@ export class GGClubAdapter extends PlatformAdapter {
     const centerX = foldButton.region.x + foldButton.region.width / 2;
     const centerY = foldButton.region.y + foldButton.region.height / 2;
 
-    await this.executeClick(windowHandle, centerX, centerY);
+    // Simuler position du timer (0-100, où 100 = début, 0 = fin)
+    const timerPosition = Math.random() * 100;
+    await this.executeClick(windowHandle, centerX, centerY, timerPosition);
 
     this.emitPlatformEvent("game_state", {
       action: "fold",
@@ -1128,7 +1130,8 @@ export class GGClubAdapter extends PlatformAdapter {
     const centerX = callButton.region.x + callButton.region.width / 2;
     const centerY = callButton.region.y + callButton.region.height / 2;
 
-    await this.executeClick(windowHandle, centerX, centerY);
+    const timerPosition = Math.random() * 100;
+    await this.executeClick(windowHandle, centerX, centerY, timerPosition);
 
     this.emitPlatformEvent("game_state", {
       action: "call",
@@ -1151,7 +1154,8 @@ export class GGClubAdapter extends PlatformAdapter {
     const centerX = checkButton.region.x + checkButton.region.width / 2;
     const centerY = checkButton.region.y + checkButton.region.height / 2;
 
-    await this.executeClick(windowHandle, centerX, centerY);
+    const timerPosition = Math.random() * 100;
+    await this.executeClick(windowHandle, centerX, centerY, timerPosition);
 
     this.emitPlatformEvent("game_state", {
       action: "check",
@@ -1177,7 +1181,8 @@ export class GGClubAdapter extends PlatformAdapter {
     const centerX = raiseButton.region.x + raiseButton.region.width / 2;
     const centerY = raiseButton.region.y + raiseButton.region.height / 2;
 
-    await this.executeClick(windowHandle, centerX, centerY);
+    const timerPosition = Math.random() * 100;
+    await this.executeClick(windowHandle, centerX, centerY, timerPosition);
 
     this.emitPlatformEvent("game_state", {
       action: "raise",
@@ -1199,7 +1204,8 @@ export class GGClubAdapter extends PlatformAdapter {
     if (raiseButton) {
       const centerX = raiseButton.region.x + raiseButton.region.width / 2;
       const centerY = raiseButton.region.y + raiseButton.region.height / 2;
-      await this.executeClick(windowHandle, centerX, centerY);
+      const timerPosition = Math.random() * 100;
+      await this.executeClick(windowHandle, centerX, centerY, timerPosition);
     }
 
     this.emitPlatformEvent("game_state", {
@@ -1260,7 +1266,8 @@ export class GGClubAdapter extends PlatformAdapter {
     if (allInButton) {
       const centerX = allInButton.region.x + allInButton.region.width / 2;
       const centerY = allInButton.region.y + allInButton.region.height / 2;
-      await this.executeClick(windowHandle, centerX, centerY);
+      const timerPosition = Math.random() * 100;
+      await this.executeClick(windowHandle, centerX, centerY, timerPosition);
     } else {
       const raiseButton = buttons.find(b => b.type === "raise");
       if (raiseButton) {
@@ -1269,7 +1276,8 @@ export class GGClubAdapter extends PlatformAdapter {
 
         const centerX = raiseButton.region.x + raiseButton.region.width / 2;
         const centerY = raiseButton.region.y + raiseButton.region.height / 2;
-        await this.executeClick(windowHandle, centerX, centerY);
+        const timerPosition = Math.random() * 100;
+        await this.executeClick(windowHandle, centerX, centerY, timerPosition);
       }
     }
 
