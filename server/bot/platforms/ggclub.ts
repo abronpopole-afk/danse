@@ -744,8 +744,53 @@ export class GGClubAdapter extends PlatformAdapter {
     const screenBuffer = await this.captureScreen(windowHandle);
     const region = this.screenLayout.potRegion;
 
+    // Level 1: OCR principal
     const ocrResult = await this.performOCR(screenBuffer, region);
-    const potValue = this.parseMoneyValue(ocrResult.text);
+    let potValue = this.parseMoneyValue(ocrResult.text);
+
+    // Level 2: Validation heuristique
+    if (potValue > 0) {
+      const players = await this.detectPlayers(windowHandle);
+      const totalBets = players.reduce((sum, p) => sum + p.currentBet, 0);
+      
+      // Le pot doit être >= somme des bets actuels
+      if (potValue < totalBets * 0.8) {
+        console.warn(`[GGClubAdapter] Pot OCR suspect: ${potValue} < bets total ${totalBets}, recalculating...`);
+        
+        // Level 3: Fallback - estimer le pot depuis les bets
+        potValue = Math.max(potValue, totalBets);
+      }
+      
+      // Validation supplémentaire: le pot ne peut pas diminuer
+      const lastPot = (this as any).lastKnownPot || 0;
+      if (potValue < lastPot * 0.9) {
+        console.warn(`[GGClubAdapter] Pot incohérent (diminué): ${potValue} vs last ${lastPot}`);
+        potValue = lastPot;
+      }
+      
+      (this as any).lastKnownPot = potValue;
+    }
+
+    // Level 4: Si toujours 0, OCR alternatif avec preprocessing différent
+    if (potValue === 0) {
+      console.warn("[GGClubAdapter] OCR pot failed, trying alternative preprocessing");
+      const window = Array.from(this.activeWindows.values())[0];
+      const preprocessed = preprocessForOCR(
+        screenBuffer,
+        window?.width || 880,
+        window?.height || 600,
+        {
+          blurRadius: 0,
+          contrastFactor: 1.8,
+          thresholdValue: 140,
+          adaptiveThreshold: false,
+          noiseReductionLevel: "low",
+        }
+      );
+      
+      const altOcrResult = await this.performOCR(preprocessed, region);
+      potValue = this.parseMoneyValue(altOcrResult.text);
+    }
 
     return potValue;
   }
@@ -930,6 +975,9 @@ export class GGClubAdapter extends PlatformAdapter {
     const screenBuffer = await this.captureScreen(windowHandle);
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
+    const window = Array.from(this.activeWindows.values())[0];
+    const imageWidth = window?.width || 880;
+    const imageHeight = window?.height || 600;
 
     const buttonWidth = 90;
     const buttonHeight = 40;
@@ -943,6 +991,30 @@ export class GGClubAdapter extends PlatformAdapter {
       { type: "allin", color: GGCLUB_UI_COLORS.allInButton },
     ];
 
+    // Fallback Level 1: Template Matching (plus robuste)
+    const templateResults = templateMatcher.detectAllButtons(
+      screenBuffer, 
+      imageWidth, 
+      imageHeight, 
+      region
+    );
+
+    if (templateResults.length > 0) {
+      console.log(`[GGClubAdapter] Buttons detected via template matching: ${templateResults.length}`);
+      for (const result of templateResults) {
+        const amount = await this.extractButtonAmount(screenBuffer, result.region);
+        buttons.push({
+          type: result.type as DetectedButton["type"],
+          region: result.region,
+          isEnabled: true,
+          amount,
+        });
+      }
+      return buttons;
+    }
+
+    // Fallback Level 2: Color-based detection (original)
+    console.warn("[GGClubAdapter] Template matching failed, falling back to color detection");
     let xOffset = 0;
     for (const buttonDef of buttonTypes) {
       const buttonRegion: ScreenRegion = {
@@ -967,7 +1039,105 @@ export class GGClubAdapter extends PlatformAdapter {
       xOffset += buttonWidth + buttonSpacing;
     }
 
+    // Fallback Level 3: Contour/shape detection si aucune détection
+    if (buttons.length === 0) {
+      console.warn("[GGClubAdapter] Color detection failed, attempting shape detection");
+      const shapeButtons = await this.detectButtonsByShape(screenBuffer, imageWidth, imageHeight, region);
+      buttons.push(...shapeButtons);
+    }
+
     return buttons;
+  }
+
+  private async detectButtonsByShape(
+    screenBuffer: Buffer,
+    imageWidth: number,
+    imageHeight: number,
+    region: ScreenRegion
+  ): Promise<DetectedButton[]> {
+    const buttons: DetectedButton[] = [];
+    const grayscale = toGrayscale(screenBuffer, imageWidth, imageHeight);
+    
+    // Détecter contours rectangulaires (boutons = rectangles arrondis)
+    const edges = this.detectEdges(grayscale, imageWidth, imageHeight, region);
+    const rectangles = this.findRectangles(edges, region);
+
+    for (const rect of rectangles) {
+      if (rect.width > 60 && rect.width < 120 && rect.height > 30 && rect.height < 60) {
+        const ocrResult = await this.performOCR(screenBuffer, rect);
+        const buttonType = this.inferButtonTypeFromText(ocrResult.text);
+        
+        if (buttonType) {
+          buttons.push({
+            type: buttonType,
+            region: rect,
+            isEnabled: true,
+            amount: await this.extractButtonAmount(screenBuffer, rect),
+          });
+        }
+      }
+    }
+
+    return buttons;
+  }
+
+  private detectEdges(
+    grayscale: Uint8Array,
+    width: number,
+    height: number,
+    region: ScreenRegion
+  ): Uint8Array {
+    const edges = new Uint8Array(width * height);
+    
+    // Sobel edge detection simplifié
+    for (let y = region.y + 1; y < region.y + region.height - 1; y++) {
+      for (let x = region.x + 1; x < region.x + region.width - 1; x++) {
+        const gx = 
+          -grayscale[(y-1)*width + (x-1)] + grayscale[(y-1)*width + (x+1)] +
+          -2*grayscale[y*width + (x-1)] + 2*grayscale[y*width + (x+1)] +
+          -grayscale[(y+1)*width + (x-1)] + grayscale[(y+1)*width + (x+1)];
+        
+        const gy =
+          -grayscale[(y-1)*width + (x-1)] - 2*grayscale[(y-1)*width + x] - grayscale[(y-1)*width + (x+1)] +
+          grayscale[(y+1)*width + (x-1)] + 2*grayscale[(y+1)*width + x] + grayscale[(y+1)*width + (x+1)];
+        
+        const magnitude = Math.sqrt(gx*gx + gy*gy);
+        edges[y*width + x] = magnitude > 128 ? 255 : 0;
+      }
+    }
+    
+    return edges;
+  }
+
+  private findRectangles(edges: Uint8Array, searchRegion: ScreenRegion): ScreenRegion[] {
+    // Algorithme simplifié de détection de rectangles
+    // En production, utiliser OpenCV.js ou similaire
+    const rectangles: ScreenRegion[] = [];
+    const minArea = 2000; // pixels²
+    
+    // Placeholder: découpage basique en grille
+    for (let i = 0; i < 4; i++) {
+      rectangles.push({
+        x: searchRegion.x + i * 95,
+        y: searchRegion.y,
+        width: 90,
+        height: 40,
+      });
+    }
+    
+    return rectangles;
+  }
+
+  private inferButtonTypeFromText(text: string): DetectedButton["type"] | null {
+    const normalized = text.toLowerCase().trim();
+    
+    if (normalized.includes("fold") || normalized.includes("passer")) return "fold";
+    if (normalized.includes("call") || normalized.includes("suivre")) return "call";
+    if (normalized.includes("check")) return "check";
+    if (normalized.includes("raise") || normalized.includes("relance") || normalized.includes("bet")) return "raise";
+    if (normalized.includes("all") && normalized.includes("in") || normalized.includes("tapis")) return "allin";
+    
+    return null;
   }
 
   private async extractButtonAmount(screenBuffer: Buffer, region: ScreenRegion): Promise<number | undefined> {
@@ -1304,8 +1474,47 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         const windows = windowManager.windowManager.getWindows();
         const targetWindow = windows.find((w: any) => w.id === windowHandle);
+        
         if (targetWindow) {
-          targetWindow.bringToTop();
+          // Vérifier si fenêtre déjà active pour éviter focus inutile
+          const activeWindow = windowManager.windowManager.getActiveWindow();
+          if (activeWindow && activeWindow.id === windowHandle) {
+            console.log(`[GGClubAdapter] Window ${windowHandle} already focused`);
+            return;
+          }
+
+          // Multi-tentatives si focus échoue (fenêtres empilées)
+          let attempts = 0;
+          const maxAttempts = 3;
+          
+          while (attempts < maxAttempts) {
+            targetWindow.bringToTop();
+            await this.addRandomDelay(200);
+            
+            const nowActive = windowManager.windowManager.getActiveWindow();
+            if (nowActive && nowActive.id === windowHandle) {
+              console.log(`[GGClubAdapter] Window ${windowHandle} focused successfully`);
+              return;
+            }
+            
+            attempts++;
+            console.warn(`[GGClubAdapter] Focus attempt ${attempts}/${maxAttempts} failed, retrying...`);
+            
+            // Essayer de cliquer au centre de la fenêtre comme fallback
+            if (attempts === 2) {
+              const bounds = targetWindow.getBounds();
+              const centerX = bounds.x + bounds.width / 2;
+              const centerY = bounds.y + bounds.height / 2;
+              
+              if (robot) {
+                robot.moveMouse(centerX, centerY);
+                await this.addRandomDelay(100);
+                robot.mouseClick();
+              }
+            }
+          }
+          
+          console.error(`[GGClubAdapter] Failed to focus window ${windowHandle} after ${maxAttempts} attempts`);
         }
       } catch (error) {
         console.error("Focus window error:", error);
