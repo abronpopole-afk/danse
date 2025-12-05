@@ -35,19 +35,19 @@ async function loadNativeModules(): Promise<void> {
   } catch (e) {
     console.warn("tesseract.js not available:", e);
   }
-  
+
   try {
     screenshotDesktop = (await import("screenshot-desktop")).default;
   } catch (e) {
     console.warn("screenshot-desktop not available:", e);
   }
-  
+
   try {
     robot = (await import("robotjs")).default;
   } catch (e) {
     console.warn("robotjs not available:", e);
   }
-  
+
   try {
     windowManager = await import("node-window-manager");
   } catch (e) {
@@ -173,7 +173,7 @@ export class GGClubAdapter extends PlatformAdapter {
   getDebugVisualizer() {
     return debugVisualizer;
   }
-  
+
   private async initializeTesseract(): Promise<void> {
     try {
       if (Tesseract && Tesseract.createWorker) {
@@ -281,7 +281,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
     try {
       const loginResult = await this.performLogin(credentials);
-      
+
       if (!loginResult.success) {
         if (loginResult.reason === "banned") {
           this.updateConnectionStatus("banned");
@@ -320,7 +320,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.windowPollingInterval = setInterval(async () => {
       try {
         const windows = await this.detectTableWindows();
-        
+
         for (const [windowId, existingWindow] of this.activeWindows) {
           const stillExists = windows.some(w => w.windowId === windowId);
           if (!stillExists) {
@@ -416,7 +416,7 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         const windows = windowManager.windowManager.getWindows();
         const activeWindow = windowManager.windowManager.getActiveWindow();
-        
+
         for (const win of windows) {
           const title = win.getTitle();
           if (title && (
@@ -508,7 +508,7 @@ export class GGClubAdapter extends PlatformAdapter {
         };
 
         console.log(`[GGClubAdapter] Auto-recalibration applied for window ${windowHandle}: ${result.reason}`);
-        
+
         this.emitPlatformEvent("calibration_adjusted", {
           windowHandle,
           drift: result.drift,
@@ -524,7 +524,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
   private async performScreenCapture(windowHandle: number): Promise<Buffer> {
     await this.addRandomDelay(20);
-    
+
     if (screenshotDesktop) {
       try {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
@@ -535,14 +535,14 @@ export class GGClubAdapter extends PlatformAdapter {
           });
           return imgBuffer;
         }
-        
+
         const imgBuffer = await screenshotDesktop({ format: 'png' });
         return imgBuffer;
       } catch (error) {
         console.error("Screen capture error:", error);
       }
     }
-    
+
     return Buffer.alloc(880 * 600 * 4);
   }
 
@@ -568,7 +568,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
     // Si rien n'a changé dans les régions critiques, réutiliser le cache
     const hasCriticalChanges = this.criticalRegions.some(r => diff.changedRegions.includes(r));
-    
+
     if (!hasCriticalChanges && (this as any).lastGameState) {
       return (this as any).lastGameState;
     }
@@ -679,17 +679,40 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectHeroCards(windowHandle: number): Promise<CardInfo[]> {
-    const cacheKey = `hero_${windowHandle}_${Date.now() - (Date.now() % 1000)}`;
-    const cached = this.cardRecognitionCache.get(cacheKey);
-    if (cached) return cached;
-
     const screenBuffer = await this.captureScreen(windowHandle);
-    const region = this.screenLayout.heroCardsRegion;
+    const cards: CardInfo[] = [];
 
-    const cards = await this.recognizeCardsInRegion(screenBuffer, region);
+    for (const region of this.screenLayout.heroCardsRegion) {
+      const rank = await this.recognizeCardRank(region, screenBuffer, this.screenLayout.width);
+      const suit = await this.recognizeCardSuit(region, screenBuffer, this.screenLayout.width);
 
+      if (rank && suit) {
+        cards.push({
+          rank,
+          suit,
+          raw: `${rank}${suit[0]}`,
+        });
+      }
+    }
+
+    // Validation logique des cartes
     if (cards.length === 2) {
-      this.cardRecognitionCache.set(cacheKey, cards);
+      const { ocrErrorCorrector } = await import("../ocr-error-correction");
+      const notations = cards.map(c => c.raw);
+      const validation = ocrErrorCorrector.validateCards(notations);
+
+      if (!validation.valid) {
+        console.warn(`[GGClubAdapter] Invalid hero cards detected: ${validation.errors.join(", ")}`);
+        if (validation.fixedCards) {
+          console.log(`[GGClubAdapter] Cards corrected to: ${validation.fixedCards.join(", ")}`);
+          return validation.fixedCards.map(notation => ({
+            rank: notation.slice(0, -1),
+            suit: notation.slice(-1),
+            raw: notation,
+          }));
+        }
+        return []; // Invalide si pas de correction possible
+      }
     }
 
     return cards;
@@ -739,7 +762,7 @@ export class GGClubAdapter extends PlatformAdapter {
           suit,
           raw: `${rank}${suit.charAt(0)}`,
         });
-        
+
         if (this.debugMode) {
           debugVisualizer.addDetection("card", pattern, `${rank}${suit.charAt(0)}`, 0.8, "combined");
         }
@@ -781,24 +804,24 @@ export class GGClubAdapter extends PlatformAdapter {
         const window = Array.from(this.activeWindows.values())[0];
         const width = imageWidth || window?.width || 880;
         const height = window?.height || 600;
-        
+
         const rankRegion: ScreenRegion = {
           x: region.x,
           y: region.y,
           width: Math.min(region.width * 0.4, 25),
           height: Math.min(region.height * 0.35, 25),
         };
-        
+
         const result = this.cardRecognizer.recognizeRank(screenBuffer, width, height, rankRegion);
-        
+
         if (this.debugMode) {
           debugVisualizer.addDetection("card", rankRegion, result.rank || "?", result.confidence, result.method);
         }
-        
+
         if (result.rank && result.confidence > 0.4) {
           return result.rank;
         }
-        
+
         const templateResult = templateMatcher.matchCardRank(screenBuffer, width, height, rankRegion);
         if (templateResult.rank && templateResult.confidence > 0.5) {
           return templateResult.rank;
@@ -820,20 +843,20 @@ export class GGClubAdapter extends PlatformAdapter {
         const window = Array.from(this.activeWindows.values())[0];
         const width = imageWidth || window?.width || 880;
         const height = window?.height || 600;
-        
+
         const suitRegion: ScreenRegion = {
           x: region.x,
           y: region.y + Math.floor(region.height * 0.35),
           width: Math.min(region.width * 0.4, 20),
           height: Math.min(region.height * 0.3, 20),
         };
-        
+
         const result = detectSuitByHSV(screenBuffer, width, height, suitRegion);
-        
+
         if (this.debugMode) {
           debugVisualizer.addDetection("card", suitRegion, result.suit || "?", result.confidence, "hsv");
         }
-        
+
         if (result.suit && result.confidence > 0.3) {
           return result.suit;
         }
@@ -858,29 +881,29 @@ export class GGClubAdapter extends PlatformAdapter {
     if (potValue > 0) {
       const players = await this.detectPlayers(windowHandle);
       const totalBets = players.reduce((sum, p) => sum + p.currentBet, 0);
-      
+
       // Le pot doit être >= somme des bets actuels
       if (potValue < totalBets * 0.8) {
         console.warn(`[GGClubAdapter] Pot OCR suspect: ${potValue} < bets total ${totalBets}, recalculating...`);
-        
+
         // Level 3: Fallback - estimer le pot depuis les bets
         potValue = Math.max(potValue, totalBets);
       }
-      
+
       // Validation supplémentaire: le pot ne peut pas diminuer sauf nouveau coup
       const lastPot = (this as any).lastKnownPot || 0;
       const lastStreet = (this as any).lastKnownStreet || "preflop";
       const communityCards = await this.detectCommunityCards(windowHandle);
       const currentStreet = this.determineStreet(communityCards.length);
-      
+
       // Reset si nouveau coup (retour preflop depuis river/turn/flop)
       const isNewHand = currentStreet === "preflop" && lastStreet !== "preflop";
-      
+
       if (!isNewHand && potValue < lastPot * 0.9) {
         console.warn(`[GGClubAdapter] Pot incohérent (diminué): ${potValue} vs last ${lastPot}, keeping last value`);
         potValue = lastPot;
       }
-      
+
       (this as any).lastKnownPot = isNewHand ? potValue : Math.max(potValue, lastPot);
       (this as any).lastKnownStreet = currentStreet;
     }
@@ -901,7 +924,7 @@ export class GGClubAdapter extends PlatformAdapter {
           noiseReductionLevel: "low",
         }
       );
-      
+
       const altOcrResult = await this.performOCR(preprocessed, region);
       potValue = this.parseMoneyValue(altOcrResult.text);
     }
@@ -1018,20 +1041,20 @@ export class GGClubAdapter extends PlatformAdapter {
     if (screenBuffer.length === 0) {
       return false;
     }
-    
+
     try {
       const window = Array.from(this.activeWindows.values())[0];
       const imageWidth = window?.width || 880;
-      
+
       const colorRange = {
         r: colorSignature.r,
         g: colorSignature.g,
         b: colorSignature.b,
         tolerance: colorSignature.tolerance,
       };
-      
+
       const result = findColorInRegion(screenBuffer, imageWidth, region, colorRange);
-      
+
       const threshold = (region.width * region.height) * 0.05;
       return result.matchCount > threshold;
     } catch (error) {
@@ -1171,7 +1194,7 @@ export class GGClubAdapter extends PlatformAdapter {
   ): Promise<DetectedButton[]> {
     const buttons: DetectedButton[] = [];
     const grayscale = toGrayscale(screenBuffer, imageWidth, imageHeight);
-    
+
     // Détecter contours rectangulaires (boutons = rectangles arrondis)
     const edges = this.detectEdges(grayscale, imageWidth, imageHeight, region);
     const rectangles = this.findRectangles(edges, region);
@@ -1180,7 +1203,7 @@ export class GGClubAdapter extends PlatformAdapter {
       if (rect.width > 60 && rect.width < 120 && rect.height > 30 && rect.height < 60) {
         const ocrResult = await this.performOCR(screenBuffer, rect);
         const buttonType = this.inferButtonTypeFromText(ocrResult.text);
-        
+
         if (buttonType) {
           buttons.push({
             type: buttonType,
@@ -1202,7 +1225,7 @@ export class GGClubAdapter extends PlatformAdapter {
     region: ScreenRegion
   ): Uint8Array {
     const edges = new Uint8Array(width * height);
-    
+
     // Sobel edge detection simplifié
     for (let y = region.y + 1; y < region.y + region.height - 1; y++) {
       for (let x = region.x + 1; x < region.x + region.width - 1; x++) {
@@ -1210,16 +1233,16 @@ export class GGClubAdapter extends PlatformAdapter {
           -grayscale[(y-1)*width + (x-1)] + grayscale[(y-1)*width + (x+1)] +
           -2*grayscale[y*width + (x-1)] + 2*grayscale[y*width + (x+1)] +
           -grayscale[(y+1)*width + (x-1)] + grayscale[(y+1)*width + (x+1)];
-        
+
         const gy =
           -grayscale[(y-1)*width + (x-1)] - 2*grayscale[(y-1)*width + x] - grayscale[(y-1)*width + (x+1)] +
           grayscale[(y+1)*width + (x-1)] + 2*grayscale[(y+1)*width + x] + grayscale[(y+1)*width + (x+1)];
-        
+
         const magnitude = Math.sqrt(gx*gx + gy*gy);
         edges[y*width + x] = magnitude > 128 ? 255 : 0;
       }
     }
-    
+
     return edges;
   }
 
@@ -1227,14 +1250,14 @@ export class GGClubAdapter extends PlatformAdapter {
     const rectangles: ScreenRegion[] = [];
     const minArea = 2000; // pixels²
     const maxArea = 10000; // pixels²
-    
+
     // Analyse par colonnes verticales (les boutons sont alignés horizontalement)
     const columnWidth = 100;
     const numColumns = Math.floor(searchRegion.width / columnWidth);
-    
+
     for (let col = 0; col < numColumns; col++) {
       const colX = searchRegion.x + col * columnWidth;
-      
+
       // Chercher des régions denses en edges dans cette colonne
       let edgeCount = 0;
       for (let y = searchRegion.y; y < searchRegion.y + searchRegion.height; y++) {
@@ -1245,11 +1268,11 @@ export class GGClubAdapter extends PlatformAdapter {
           }
         }
       }
-      
+
       // Si densité suffisante, considérer comme bouton potentiel
       const area = columnWidth * searchRegion.height;
       const density = edgeCount / area;
-      
+
       if (density > 0.15 && area >= minArea && area <= maxArea) {
         rectangles.push({
           x: colX,
@@ -1259,7 +1282,7 @@ export class GGClubAdapter extends PlatformAdapter {
         });
       }
     }
-    
+
     // Fallback: découpage basique si aucun rectangle détecté
     if (rectangles.length === 0) {
       for (let i = 0; i < 4; i++) {
@@ -1271,19 +1294,19 @@ export class GGClubAdapter extends PlatformAdapter {
         });
       }
     }
-    
+
     return rectangles;
   }
 
   private inferButtonTypeFromText(text: string): DetectedButton["type"] | null {
     const normalized = text.toLowerCase().trim();
-    
+
     if (normalized.includes("fold") || normalized.includes("passer")) return "fold";
     if (normalized.includes("call") || normalized.includes("suivre")) return "call";
     if (normalized.includes("check")) return "check";
     if (normalized.includes("raise") || normalized.includes("relance") || normalized.includes("bet")) return "raise";
     if (normalized.includes("all") && normalized.includes("in") || normalized.includes("tapis")) return "allin";
-    
+
     return null;
   }
 
@@ -1316,13 +1339,13 @@ export class GGClubAdapter extends PlatformAdapter {
             height: region.height,
           },
         });
-        
+
         const text = result.data.text.trim();
         const confidence = result.data.confidence / 100;
-        
+
         // Cache result
         this.ocrCache.set(screenBuffer, region, text, confidence);
-        
+
         return {
           text,
           confidence,
@@ -1350,7 +1373,7 @@ export class GGClubAdapter extends PlatformAdapter {
     if (Math.random() < 0.25) {
       const randomX = Math.random() * window.width;
       const randomY = Math.random() < 0.5 ? 50 + Math.random() * 50 : window.height - 100 + Math.random() * 50;
-      
+
       await this.performMouseMove(windowHandle, randomX, randomY);
       await this.addRandomDelay(150 + Math.random() * 300);
     }
@@ -1378,30 +1401,30 @@ export class GGClubAdapter extends PlatformAdapter {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
         const offsetX = window ? window.x : 0;
         const offsetY = window ? window.y : 0;
-        
+
         const currentPos = robot.getMousePos();
         const targetX = offsetX + x;
         const targetY = offsetY + y;
-        
+
         const steps = this.antiDetectionConfig.enableMouseJitter ? 
           Math.floor(Math.random() * 10) + 5 : 10;
-        
+
         for (let i = 1; i <= steps; i++) {
           const progress = i / steps;
           const eased = this.easeInOutQuad(progress);
-          
+
           const midX = currentPos.x + (targetX - currentPos.x) * eased;
           const midY = currentPos.y + (targetY - currentPos.y) * eased;
-          
+
           const jitter = this.antiDetectionConfig.enableMouseJitter ? 
             this.antiDetectionConfig.mouseJitterRange : 0;
           const jitterX = (Math.random() - 0.5) * jitter;
           const jitterY = (Math.random() - 0.5) * jitter;
-          
+
           robot.moveMouse(Math.round(midX + jitterX), Math.round(midY + jitterY));
           await this.addRandomDelay(10);
         }
-        
+
         robot.moveMouse(targetX, targetY);
       } catch (error) {
         console.error("Mouse move error:", error);
@@ -1410,7 +1433,7 @@ export class GGClubAdapter extends PlatformAdapter {
       await this.addRandomDelay(10);
     }
   }
-  
+
   private easeInOutQuad(t: number): number {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   }
@@ -1473,7 +1496,7 @@ export class GGClubAdapter extends PlatformAdapter {
       action: "call",
       amount: callButton.amount,
       windowHandle,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
   }
 
@@ -1496,7 +1519,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.emitPlatformEvent("game_state", {
       action: "check",
       windowHandle,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
   }
 
@@ -1524,7 +1547,7 @@ export class GGClubAdapter extends PlatformAdapter {
       action: "raise",
       amount,
       windowHandle,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
   }
 
@@ -1548,7 +1571,7 @@ export class GGClubAdapter extends PlatformAdapter {
       action: "bet",
       amount,
       windowHandle,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
   }
 
@@ -1567,7 +1590,7 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         robot.keyTap("a", "control");
         await this.addRandomDelay(30);
-        
+
         for (const char of amountStr) {
           if (this.antiDetectionConfig.enableTimingVariation) {
             const baseDelay = 50;
@@ -1576,7 +1599,7 @@ export class GGClubAdapter extends PlatformAdapter {
           } else {
             await this.addRandomDelay(50);
           }
-          
+
           if (char === '.') {
             robot.keyTap(".");
           } else {
@@ -1620,7 +1643,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.emitPlatformEvent("game_state", {
       action: "allin",
       windowHandle,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
   }
 
@@ -1635,12 +1658,12 @@ export class GGClubAdapter extends PlatformAdapter {
   async focusWindow(windowHandle: number): Promise<void> {
     this.antiDetectionMonitor.recordAction("window_focus");
     await this.addRandomDelay(100);
-    
+
     if (windowManager) {
       try {
         const windows = windowManager.windowManager.getWindows();
         const targetWindow = windows.find((w: any) => w.id === windowHandle);
-        
+
         if (targetWindow) {
           // Vérifier si fenêtre déjà active pour éviter focus inutile
           const activeWindow = windowManager.windowManager.getActiveWindow();
@@ -1652,28 +1675,28 @@ export class GGClubAdapter extends PlatformAdapter {
           // Multi-tentatives si focus échoue (fenêtres empilées)
           let attempts = 0;
           const maxAttempts = 3;
-          
+
           while (attempts < maxAttempts) {
             targetWindow.bringToTop();
             await this.addRandomDelay(200);
-            
+
             const nowActive = windowManager.windowManager.getActiveWindow();
             if (nowActive && nowActive.id === windowHandle) {
               console.log(`[GGClubAdapter] Window ${windowHandle} focused successfully`);
               return;
             }
-            
+
             attempts++;
             console.warn(`[GGClubAdapter] Focus attempt ${attempts}/${maxAttempts} failed, retrying...`);
-            
+
             // Essayer de cliquer au centre de la fenêtre comme fallback
             if (attempts === 2) {
               const bounds = targetWindow.getBounds();
               const absoluteCenterX = bounds.x + Math.floor(bounds.width / 2);
               const absoluteCenterY = bounds.y + Math.floor(bounds.height / 2);
-              
+
               console.warn(`[GGClubAdapter] Fallback click at screen coords (${absoluteCenterX}, ${absoluteCenterY})`);
-              
+
               if (robot) {
                 robot.moveMouse(absoluteCenterX, absoluteCenterY);
                 await this.addRandomDelay(100);
@@ -1682,7 +1705,7 @@ export class GGClubAdapter extends PlatformAdapter {
               }
             }
           }
-          
+
           console.error(`[GGClubAdapter] Failed to focus window ${windowHandle} after ${maxAttempts} attempts`);
         }
       } catch (error) {
@@ -1693,7 +1716,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
   async minimizeWindow(windowHandle: number): Promise<void> {
     await this.addRandomDelay(50);
-    
+
     if (windowManager) {
       try {
         const windows = windowManager.windowManager.getWindows();
@@ -1709,7 +1732,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
   async restoreWindow(windowHandle: number): Promise<void> {
     await this.addRandomDelay(50);
-    
+
     if (windowManager) {
       try {
         const windows = windowManager.windowManager.getWindows();
@@ -1842,7 +1865,7 @@ class AntiDetectionMonitor {
     ];
 
     const interaction = interactions[Math.floor(Math.random() * interactions.length)];
-    
+
     try {
       await this.executeRandomInteraction(interaction);
       this.lastRandomInteraction = now;
@@ -2139,9 +2162,9 @@ class AntiDetectionMonitor {
     if (!humanizer) return;
 
     const currentSettings = humanizer.getSettings();
-    
+
     const multiplier = 1 + (suspicionLevel - 0.6) * 2;
-    
+
     humanizer.updateSettings({
       minDelayMs: Math.round(currentSettings.minDelayMs * multiplier),
       maxDelayMs: Math.round(currentSettings.maxDelayMs * multiplier),
@@ -2187,7 +2210,7 @@ class AntiDetectionMonitor {
     // Détecter les séquences répétitives (fold-fold-fold ou call-call-call)
     let maxRepetition = 1;
     let currentRepetition = 1;
-    
+
     for (let i = 1; i < actionTypes.length; i++) {
       if (actionTypes[i] === actionTypes[i - 1]) {
         currentRepetition++;

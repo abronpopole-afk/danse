@@ -945,3 +945,16 @@ async function handleWebSocketMessage(ws: WebSocket, message: WebSocketMessage):
       ws.send(JSON.stringify({ type: "error", payload: { message: `Type de message inconnu: ${message.type}` } }));
   }
 }
+
+
+// OCR Error Correction Stats
+app.get("/api/ocr-correction/stats", (_req, res) => {
+  try {
+    const { ocrErrorCorrector } = require("./bot/ocr-error-correction");
+    const stats = ocrErrorCorrector.getStats();
+    res.json(stats);
+  } catch (error) {
+    console.error("Error getting OCR correction stats:", error);
+    res.status(500).json({ error: "Failed to get OCR correction stats" });
+  }
+});
