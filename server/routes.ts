@@ -60,18 +60,18 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
-  
+
   wss.on("connection", (ws) => {
     connectedClients.add(ws);
     console.log("Client WebSocket connecté");
-    
+
     ws.send(JSON.stringify({
       type: "connected",
       payload: { message: "Connexion établie au serveur GTO Bot" }
     }));
-    
+
     const tableManager = getTableManager();
     ws.send(JSON.stringify({
       type: "initial_state",
@@ -81,7 +81,7 @@ export async function registerRoutes(
         humanizerSettings: getHumanizer().getSettings(),
       }
     }));
-    
+
     ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString()) as WebSocketMessage;
@@ -91,137 +91,137 @@ export async function registerRoutes(
         ws.send(JSON.stringify({ type: "error", payload: { message: "Message invalide" } }));
       }
     });
-    
+
     ws.on("close", () => {
       connectedClients.delete(ws);
       console.log("Client WebSocket déconnecté");
     });
   });
-  
+
   const tableManager = getTableManager();
-  
+
   tableManager.on("tableEvent", (event: TableEvent) => {
     broadcastToClients({ type: "table_event", payload: event });
   });
-  
+
   tableManager.on("tableStateChange", (data: { tableId: string; state: TableState }) => {
     broadcastToClients({ type: "table_state_change", payload: data });
   });
-  
+
   tableManager.on("tableAdded", (data: any) => {
     broadcastToClients({ type: "table_added", payload: data });
   });
-  
+
   tableManager.on("tableRemoved", (data: any) => {
     broadcastToClients({ type: "table_removed", payload: data });
   });
-  
+
   app.post("/api/session/start", async (req, res) => {
     try {
       const existingSession = await storage.getActiveBotSession();
       if (existingSession) {
         return res.status(400).json({ error: "Une session est déjà active" });
       }
-      
+
       const session = await storage.createBotSession({
         status: "running",
         startedAt: new Date(),
       });
-      
+
       tableManager.setSessionId(session.id);
-      
+
       await storage.createBotStats({
         sessionId: session.id,
       });
-      
+
       await storage.createActionLog({
         sessionId: session.id,
         logType: "info",
         message: "Session démarrée",
       });
-      
+
       broadcastToClients({
         type: "session_started",
         payload: { sessionId: session.id }
       });
-      
+
       res.json({ success: true, session });
     } catch (error: any) {
       console.error("Erreur démarrage session:", error);
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/session/stop", async (req, res) => {
     try {
       const session = await storage.getActiveBotSession();
       if (!session) {
         return res.status(400).json({ error: "Aucune session active" });
       }
-      
+
       await tableManager.stopAll();
-      
+
       const stats = tableManager.getStats();
-      
+
       await storage.updateBotSession(session.id, {
         status: "stopped",
         stoppedAt: new Date(),
         totalProfit: stats.totalProfit,
         handsPlayed: stats.totalHandsPlayed,
       });
-      
+
       await storage.createActionLog({
         sessionId: session.id,
         logType: "info",
         message: "Session arrêtée",
         metadata: stats,
       });
-      
+
       broadcastToClients({
         type: "session_stopped",
         payload: { sessionId: session.id, stats }
       });
-      
+
       res.json({ success: true, stats });
     } catch (error: any) {
       console.error("Erreur arrêt session:", error);
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/session/current", async (req, res) => {
     try {
       const session = await storage.getActiveBotSession();
       const stats = tableManager.getStats();
       const tables = tableManager.getAllTableStates();
-      
+
       res.json({ session, stats, tables });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/tables", async (req, res) => {
     try {
       const { tableIdentifier, tableName, stakes } = req.body;
-      
+
       if (!tableIdentifier || !tableName || !stakes) {
         return res.status(400).json({ error: "Paramètres manquants" });
       }
-      
+
       const table = await tableManager.addTable({
         tableIdentifier,
         tableName,
         stakes,
       });
-      
+
       res.json({ success: true, table: table.getState() });
     } catch (error: any) {
       console.error("Erreur ajout table:", error);
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.delete("/api/tables/:tableId", async (req, res) => {
     try {
       const { tableId } = req.params;
@@ -232,7 +232,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/tables", async (req, res) => {
     try {
       const tables = tableManager.getAllTableStates();
@@ -241,7 +241,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/tables/:tableId/start", async (req, res) => {
     try {
       const { tableId } = req.params;
@@ -255,7 +255,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/tables/:tableId/pause", async (req, res) => {
     try {
       const { tableId } = req.params;
@@ -269,7 +269,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/tables/start-all", async (req, res) => {
     try {
       await tableManager.startAll();
@@ -278,7 +278,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/tables/stop-all", async (req, res) => {
     try {
       await tableManager.stopAll();
@@ -287,49 +287,49 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/humanizer", async (req, res) => {
     try {
       let config = await storage.getHumanizerConfig();
       if (!config) {
         config = await storage.createDefaultHumanizerConfig();
       }
-      
+
       const currentSettings = getHumanizer().getSettings();
-      
+
       res.json({ config, currentSettings });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.patch("/api/humanizer", async (req, res) => {
     try {
       const updates = req.body;
-      
+
       const config = await storage.updateHumanizerConfig(updates);
       updateHumanizerFromConfig(config);
-      
+
       broadcastToClients({
         type: "humanizer_updated",
         payload: { config, settings: getHumanizer().getSettings() }
       });
-      
+
       res.json({ success: true, config });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/gto-config", async (req, res) => {
     try {
       let config = await storage.getGtoConfig();
       if (!config) {
         config = await storage.createDefaultGtoConfig();
       }
-      
+
       const gtoAdapter = getGtoAdapter();
-      
+
       res.json({ 
         config,
         connected: gtoAdapter.isConnected(),
@@ -339,30 +339,30 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.patch("/api/gto-config", async (req, res) => {
     try {
       const updates = req.body;
-      
+
       const config = await storage.updateGtoConfig(updates);
-      
+
       await initializeGtoAdapter({
         apiEndpoint: config.apiEndpoint ?? undefined,
         apiKey: config.apiKey ?? undefined,
         useSimulation: config.fallbackToSimulation ?? true,
       });
-      
+
       broadcastToClients({
         type: "gto_config_updated",
         payload: { config }
       });
-      
+
       res.json({ success: true, config });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/platform-config", async (req, res) => {
     try {
       let config = await storage.getPlatformConfig();
@@ -371,23 +371,23 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.patch("/api/platform-config", async (req, res) => {
     try {
       const updates = req.body;
       const config = await storage.updatePlatformConfig(updates);
-      
+
       broadcastToClients({
         type: "platform_config_updated",
         payload: { config }
       });
-      
+
       res.json({ success: true, config });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/platform/supported", async (req, res) => {
     try {
       const platforms = getSupportedPlatforms();
@@ -396,12 +396,12 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/platform/status", async (req, res) => {
     try {
       const platformManager = getPlatformManager();
       const adapter = platformManager.getAdapter();
-      
+
       res.json({
         status: platformManager.getStatus(),
         suspicionLevel: platformManager.getSuspicionLevel(),
@@ -421,7 +421,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/platform/connect", async (req, res) => {
     try {
       const parseResult = platformConnectSchema.safeParse(req.body);
@@ -431,9 +431,9 @@ export async function registerRoutes(
           details: parseResult.error.errors 
         });
       }
-      
+
       const { platformName, username, password, autoReconnect, enableAutoAction } = parseResult.data;
-      
+
       const supportedPlatforms = getSupportedPlatforms();
       if (!supportedPlatforms.includes(platformName.toLowerCase())) {
         return res.status(400).json({ 
@@ -441,9 +441,9 @@ export async function registerRoutes(
           supportedPlatforms 
         });
       }
-      
+
       const platformManager = getPlatformManager();
-      
+
       const config: PlatformManagerConfig = {
         platformName,
         credentials: {
@@ -457,9 +457,9 @@ export async function registerRoutes(
         actionDelayMs: 100,
         enableAutoAction: enableAutoAction ?? true,
       };
-      
+
       const connected = await platformManager.initialize(config);
-      
+
       if (connected) {
         await storage.updatePlatformConfig({
           platformName,
@@ -468,13 +468,13 @@ export async function registerRoutes(
           connectionStatus: "connected",
           lastConnectionAt: new Date(),
         });
-        
+
         broadcastToClients({
           type: "platform_connected",
           payload: { platformName, status: platformManager.getStatus() }
         });
       }
-      
+
       res.json({ 
         success: connected, 
         status: platformManager.getStatus(),
@@ -485,74 +485,60 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/platform/disconnect", async (req, res) => {
     try {
       const platformManager = getPlatformManager();
       await platformManager.stop();
-      
+
       await storage.updatePlatformConfig({
         enabled: false,
         connectionStatus: "disconnected",
       });
-      
+
       broadcastToClients({
-
-
-  // Route pour stats du Task Scheduler
-  app.get("/api/platform/scheduler-stats", async (req, res) => {
-    try {
-      const platformManager = getPlatformManager();
-      const stats = platformManager.getSchedulerStats();
-      
-      res.json(stats);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
         type: "platform_disconnected",
         payload: { status: "disconnected" }
       });
-      
+
       res.json({ success: true, status: platformManager.getStatus() });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/platform/pause", async (req, res) => {
     try {
       const platformManager = getPlatformManager();
       await platformManager.pause();
-      
+
       broadcastToClients({
         type: "platform_paused",
         payload: { status: platformManager.getStatus() }
       });
-      
+
       res.json({ success: true, status: platformManager.getStatus() });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/platform/resume", async (req, res) => {
     try {
       const platformManager = getPlatformManager();
       await platformManager.resume();
-      
+
       broadcastToClients({
         type: "platform_resumed",
         payload: { status: platformManager.getStatus() }
       });
-      
+
       res.json({ success: true, status: platformManager.getStatus() });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/platform/action", async (req, res) => {
     try {
       const parseResult = platformActionSchema.safeParse(req.body);
@@ -562,18 +548,18 @@ export async function registerRoutes(
           details: parseResult.error.errors 
         });
       }
-      
+
       const { windowHandle, action, amount } = parseResult.data;
-      
+
       const platformManager = getPlatformManager();
-      
+
       if (platformManager.getStatus() !== "running") {
         return res.status(400).json({ 
           error: "Plateforme non connectée ou en pause",
           status: platformManager.getStatus()
         });
       }
-      
+
       const managedTable = platformManager.getTableByWindowHandle(windowHandle);
       if (!managedTable) {
         return res.status(404).json({ 
@@ -584,15 +570,15 @@ export async function registerRoutes(
           }))
         });
       }
-      
+
       await platformManager.manualAction(windowHandle, action, amount);
-      
+
       res.json({ success: true, message: "Action en file d'attente" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.patch("/api/platform/anti-detection", async (req, res) => {
     try {
       const parseResult = antiDetectionConfigSchema.safeParse(req.body);
@@ -602,23 +588,23 @@ export async function registerRoutes(
           details: parseResult.error.errors 
         });
       }
-      
+
       const updates = parseResult.data;
-      
+
       const platformManager = getPlatformManager();
       const adapter = platformManager.getAdapter();
-      
+
       if (!adapter) {
         return res.status(400).json({ error: "Aucun adaptateur de plateforme initialisé" });
       }
-      
+
       platformManager.updateAntiDetectionConfig(updates);
-      
+
       broadcastToClients({
         type: "anti_detection_updated",
         payload: { config: adapter.getAntiDetectionConfig() }
       });
-      
+
       res.json({ 
         success: true, 
         config: adapter.getAntiDetectionConfig()
@@ -627,45 +613,45 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   const platformManager = getPlatformManager();
-  
+
   platformManager.on("statusChange", (status) => {
     broadcastToClients({ type: "platform_status_change", payload: { status } });
   });
-  
+
   platformManager.on("tableAdded", (data) => {
     broadcastToClients({ type: "platform_table_added", payload: data });
   });
-  
+
   platformManager.on("tableRemoved", (data) => {
     broadcastToClients({ type: "platform_table_removed", payload: data });
   });
-  
+
   platformManager.on("actionQueued", (data) => {
     broadcastToClients({ type: "platform_action_queued", payload: data });
   });
-  
+
   platformManager.on("actionExecuted", (data) => {
     broadcastToClients({ type: "platform_action_executed", payload: data });
   });
-  
+
   platformManager.on("warning", (data) => {
     broadcastToClients({ type: "platform_warning", payload: data });
   });
-  
+
   platformManager.on("emergencyPause", (data) => {
     broadcastToClients({ type: "platform_emergency_pause", payload: data });
   });
-  
+
   platformManager.on("banned", (data) => {
     broadcastToClients({ type: "platform_banned", payload: data });
   });
-  
+
   platformManager.on("platformEvent", (event) => {
     broadcastToClients({ type: "platform_event", payload: event });
   });
-  
+
   app.get("/api/logs", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
@@ -675,17 +661,17 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/stats", async (req, res) => {
     try {
       const session = await storage.getActiveBotSession();
       const tableStats = tableManager.getStats();
-      
+
       let dbStats = null;
       if (session) {
         dbStats = await storage.getBotStats(session.id);
       }
-      
+
       res.json({
         session,
         tableStats,
@@ -697,7 +683,7 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.get("/api/hand-histories", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
@@ -707,11 +693,11 @@ export async function registerRoutes(
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   app.post("/api/simulate/hand", async (req, res) => {
     try {
       const { heroCards, communityCards, position, potSize, facingBet, numPlayers } = req.body;
-      
+
       const gtoAdapter = getGtoAdapter();
       const recommendation = await gtoAdapter.getRecommendation({
         heroCards: heroCards || ["Ah", "Ks"],
@@ -726,14 +712,14 @@ export async function registerRoutes(
         numPlayers: numPlayers || 6,
         isInPosition: true,
       });
-      
+
       const humanizer = getHumanizer();
       const humanizedAction = humanizer.humanizeAction(
         recommendation.bestAction,
         0.5,
         recommendation.confidence < 0.7
       );
-      
+
       res.json({
         recommendation,
         humanizedAction,
@@ -749,7 +735,7 @@ export async function registerRoutes(
     try {
       const { getPlayerProfile } = await import("./bot/player-profile");
       const profile = getPlayerProfile();
-      
+
       res.json({
         state: profile.getState(),
         config: profile.getConfig(),
@@ -766,9 +752,9 @@ export async function registerRoutes(
       const { personality } = req.body;
       const { getPlayerProfile } = await import("./bot/player-profile");
       const profile = getPlayerProfile();
-      
+
       profile.updatePersonality(personality);
-      
+
       res.json({
         state: profile.getState(),
         config: profile.getConfig(),
@@ -783,9 +769,9 @@ export async function registerRoutes(
     try {
       const { getPlayerProfile } = await import("./bot/player-profile");
       const profile = getPlayerProfile();
-      
+
       profile.reset();
-      
+
       res.json({
         state: profile.getState(),
         message: "Profile reset successfully",
@@ -796,17 +782,68 @@ export async function registerRoutes(
     }
   });
 
+  // Route pour stats du Task Scheduler
+  app.get("/api/scheduler/stats", async (req, res) => {
+    try {
+      const platformManager = getPlatformManager();
+      const stats = platformManager.getSchedulerStats();
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/state-confidence/:windowHandle", async (req, res) => {
+    try {
+      const { getStateConfidenceAnalyzer } = await import("./bot/state-confidence");
+      const analyzer = getStateConfidenceAnalyzer();
+      const windowHandle = parseInt(req.params.windowHandle);
+
+      const stats = analyzer.getStats(windowHandle);
+      const uncertainStates = analyzer.getUncertainStates(windowHandle);
+
+      res.json({
+        stats,
+        uncertainStates: uncertainStates.map(s => ({
+          timestamp: s.timestamp,
+          reason: s.reason,
+          retryCount: s.retryCount,
+          partialState: {
+            globalConfidence: s.partialState.globalConfidence,
+            heroCardsConfidence: s.partialState.heroCards?.confidence,
+            potSizeConfidence: s.partialState.potSize?.confidence,
+          },
+        })),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/state-confidence/config", async (req, res) => {
+    try {
+      const { getStateConfidenceAnalyzer } = await import("./bot/state-confidence");
+      const analyzer = getStateConfidenceAnalyzer();
+
+      analyzer.updateConfig(req.body);
+
+      res.json({ success: true, config: req.body });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }
 
 async function handleWebSocketMessage(ws: WebSocket, message: WebSocketMessage): Promise<void> {
   const tableManager = getTableManager();
-  
+
   switch (message.type) {
     case "ping":
       ws.send(JSON.stringify({ type: "pong", payload: { timestamp: Date.now() } }));
       break;
-      
+
     case "get_state":
       ws.send(JSON.stringify({
         type: "state",
@@ -817,13 +854,13 @@ async function handleWebSocketMessage(ws: WebSocket, message: WebSocketMessage):
         }
       }));
       break;
-      
+
     case "subscribe_table":
       break;
-      
+
     case "unsubscribe_table":
       break;
-      
+
     default:
       ws.send(JSON.stringify({ type: "error", payload: { message: `Type de message inconnu: ${message.type}` } }));
   }

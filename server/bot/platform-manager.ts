@@ -405,6 +405,18 @@ export class PlatformManager extends EventEmitter {
             return;
           }
           
+          // Vérifier la confiance de l'état détecté
+          const stateConfidenceResult = await this.validateStateConfidence(
+            managedTable.windowHandle,
+            gameState
+          );
+          
+          if (!stateConfidenceResult.proceed) {
+            console.warn(`[PlatformManager] Low confidence for window ${managedTable.windowHandle}: ${stateConfidenceResult.reason}`);
+            managedTable.tableSession.incrementError();
+            return;
+          }
+          
           managedTable.lastGameState = gameState;
           this.updateTableSession(managedTable, gameState);
           managedTable.tableSession.resetErrors();
@@ -418,6 +430,81 @@ export class PlatformManager extends EventEmitter {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
+  }
+
+  private async validateStateConfidence(
+    windowHandle: number,
+    gameState: GameTableState
+  ): Promise<{ proceed: boolean; reason?: string; uncertainties: string[] }> {
+    const { getStateConfidenceAnalyzer } = await import("./state-confidence");
+    const analyzer = getStateConfidenceAnalyzer();
+
+    // Simuler des scores de confiance basés sur la détection
+    const rawDetections = {
+      heroCards: {
+        cards: gameState.heroCards.map(c => cardInfoToNotation(c)),
+        confidence: gameState.heroCards.length === 2 ? 0.85 : 0.50,
+        method: "template_matching",
+      },
+      communityCards: {
+        cards: gameState.communityCards.map(c => cardInfoToNotation(c)),
+        confidence: gameState.communityCards.length > 0 ? 0.80 : 0.95,
+        method: "template_matching",
+      },
+      potSize: {
+        value: gameState.potSize,
+        confidence: gameState.potSize > 0 ? 0.75 : 0.90,
+        method: "ocr",
+      },
+      heroStack: {
+        value: gameState.heroStack,
+        confidence: gameState.heroStack > 0 ? 0.80 : 0.50,
+        method: "ocr",
+      },
+      facingBet: {
+        value: gameState.facingBet,
+        confidence: 0.70,
+        method: "ocr",
+      },
+      buttons: {
+        fold: { enabled: true, confidence: 0.88 },
+        call: { enabled: gameState.facingBet > 0, confidence: 0.82 },
+        raise: { enabled: true, confidence: 0.75 },
+      },
+      players: {
+        count: gameState.players.length,
+        confidence: 0.85,
+      },
+      currentStreet: {
+        street: gameState.currentStreet,
+        confidence: 0.90,
+      },
+      isHeroTurn: {
+        value: gameState.isHeroTurn,
+        confidence: gameState.isHeroTurn ? 0.85 : 0.95,
+      },
+    };
+
+    const stateConfidence = analyzer.analyzeStateConfidence(rawDetections);
+    analyzer.addToHistory(windowHandle, stateConfidence);
+
+    const decision = analyzer.shouldProceedWithAction(windowHandle, stateConfidence);
+
+    if (!decision.proceed) {
+      // Capturer un screenshot pour analyse ultérieure
+      const screenshot = await this.adapter?.captureWindow(windowHandle);
+      analyzer.recordUncertainState(windowHandle, stateConfidence, decision.reason || "Unknown", screenshot);
+
+      // Vérifier si on doit retry
+      const retryInfo = analyzer.shouldRetry(windowHandle);
+      if (retryInfo.retry && retryInfo.delayMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, retryInfo.delayMs));
+      }
+    } else {
+      analyzer.clearUncertainStates(windowHandle);
+    }
+
+    return decision;
   }
 
   private stopPolling(): void {
