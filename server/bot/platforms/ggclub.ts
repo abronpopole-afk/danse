@@ -22,6 +22,7 @@ import { AdvancedGtoAdapter, advancedGtoAdapter, PlayerProfiler } from "../gto-a
 import { diffDetector, DiffDetector } from "../diff-detector";
 import { ocrCache, OCRCache } from "../ocr-cache";
 import { ocrPool, OCRWorkerPool } from "../ocr-pool";
+import { getAutoCalibrationManager, AutoCalibrationManager } from "../auto-calibration";
 
 let Tesseract: any = null;
 let screenshotDesktop: any = null;
@@ -133,6 +134,7 @@ export class GGClubAdapter extends PlatformAdapter {
   private diffDetector: DiffDetector;
   private ocrCache: OCRCache;
   private criticalRegions: string[] = ['heroCardsRegion', 'actionButtonsRegion', 'potRegion'];
+  private autoCalibration: AutoCalibrationManager;
 
   constructor() {
     super("GGClub", {
@@ -154,6 +156,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.playerProfiler = new PlayerProfiler();
     this.diffDetector = diffDetector;
     this.ocrCache = ocrCache;
+    this.autoCalibration = getAutoCalibrationManager();
     this.initializeTesseract();
     ocrPool.initialize();
   }
@@ -473,6 +476,52 @@ export class GGClubAdapter extends PlatformAdapter {
     return buffer;
   }
 
+  private async performAutoRecalibration(windowHandle: number): Promise<void> {
+    try {
+      const screenBuffer = await this.captureScreen(windowHandle);
+      const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+      if (!window || !this.activeCalibration) return;
+
+      const result = await this.autoCalibration.performRecalibration(
+        windowHandle,
+        screenBuffer,
+        window.width,
+        window.height,
+        this.activeCalibration
+      );
+
+      if (result.success && result.adjustedRegions) {
+        // Mettre à jour les régions scaled pour cette fenêtre
+        this.scaledRegions.set(windowHandle, result.adjustedRegions);
+
+        // Mettre à jour le layout local
+        this.screenLayout = {
+          heroCardsRegion: result.adjustedRegions.heroCards,
+          communityCardsRegion: result.adjustedRegions.communityCards,
+          potRegion: result.adjustedRegions.pot,
+          actionButtonsRegion: result.adjustedRegions.actionButtons,
+          betSliderRegion: result.adjustedRegions.betSlider,
+          playerSeats: result.adjustedRegions.playerSeats,
+          dealerButtonRegion: result.adjustedRegions.dealerButton,
+          chatRegion: result.adjustedRegions.chat,
+          timerRegion: result.adjustedRegions.timer,
+        };
+
+        console.log(`[GGClubAdapter] Auto-recalibration applied for window ${windowHandle}: ${result.reason}`);
+        
+        this.emitPlatformEvent("calibration_adjusted", {
+          windowHandle,
+          drift: result.drift,
+          reason: result.reason,
+        });
+      } else {
+        console.log(`[GGClubAdapter] Auto-recalibration skipped for window ${windowHandle}: ${result.reason}`);
+      }
+    } catch (error) {
+      console.error(`[GGClubAdapter] Auto-recalibration error for window ${windowHandle}:`, error);
+    }
+  }
+
   private async performScreenCapture(windowHandle: number): Promise<Buffer> {
     await this.addRandomDelay(20);
     
@@ -498,6 +547,11 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
+    // Check if recalibration is needed
+    if (this.autoCalibration.shouldRecalibrate(windowHandle)) {
+      await this.performAutoRecalibration(windowHandle);
+    }
+
     const screenBuffer = await this.captureScreen(windowHandle);
     const window = this.activeWindows.get(`ggclub_${windowHandle}`);
     const imageWidth = window?.width || 880;
@@ -1289,6 +1343,9 @@ export class GGClubAdapter extends PlatformAdapter {
   async executeClick(windowHandle: number, x: number, y: number, timerPosition?: number): Promise<void> {
     const window = this.activeWindows.get(`ggclub_${windowHandle}`);
     if (!window) return;
+
+    // Increment action counter for auto-calibration
+    this.autoCalibration.incrementActionCount(windowHandle);
 
     if (Math.random() < 0.25) {
       const randomX = Math.random() * window.width;

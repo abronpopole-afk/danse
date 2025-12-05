@@ -782,14 +782,42 @@ export async function registerRoutes(
     }
   });
 
-  // Route pour stats du Task Scheduler
-  app.get("/api/scheduler/stats", async (req, res) => {
+  // Task Scheduler Stats
+  app.get("/api/scheduler/stats", async (_req, res) => {
     try {
-      const platformManager = getPlatformManager();
-      const stats = platformManager.getSchedulerStats();
+      const scheduler = getTaskScheduler();
+      const stats = {
+        system: scheduler.getSystemStats(),
+        tasks: scheduler.getAllTasks().map(t => ({
+          id: t.id,
+          name: t.name,
+          priority: t.priority,
+          enabled: t.enabled,
+          isRunning: t.isRunning,
+          runCount: t.runCount,
+          errorCount: t.errorCount,
+          avgExecutionTime: Math.round(t.avgExecutionTime),
+          maxExecutionTime: t.maxExecutionTime,
+          nextRunIn: Math.max(0, t.nextRunIn - Date.now()),
+        })),
+      };
       res.json(stats);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      console.error("Error fetching scheduler stats:", error);
+      res.status(500).json({ error: "Failed to fetch scheduler stats" });
+    }
+  });
+
+  // Auto-Calibration Stats
+  app.get("/api/calibration/auto-stats", async (_req, res) => {
+    try {
+      const { getAutoCalibrationManager } = await import("./bot/auto-calibration");
+      const autoCalibration = getAutoCalibrationManager();
+      const stats = autoCalibration.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching auto-calibration stats:", error);
+      res.status(500).json({ error: "Failed to fetch auto-calibration stats" });
     }
   });
 

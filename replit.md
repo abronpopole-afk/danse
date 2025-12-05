@@ -271,7 +271,43 @@ The application follows a **multi-layered bot architecture** with clear separati
 **Problem**: Visual detection produces false positives causing expensive errors
 **Solution**: Confidence-based decision gate with retry logic
 **Pros**: Eliminates 90%+ of detection errors, provides debugging data
-**Cons**: 500-1500ms additional latency on uncertain statesmotional states
+**Cons**: 500-1500ms additional latency on uncertain states
+
+### Auto-Calibration System Architecture
+
+**Strategy**: Passive recalibration to compensate for window movement and scaling changes
+
+1. **Anchor Points Detection**
+   - GG logo (top-left, orange)
+   - Settings button (top-right, gray)
+   - Table border (blue dark)
+   - Dealer button area (white)
+
+2. **Recalibration Triggers**
+   - Every 400 actions minimum
+   - 5 minutes minimum between recalibrations
+   - Prevents excessive CPU usage on multi-table sessions
+
+3. **Drift Calculation**
+   - Detect each anchor point in ±30px search area
+   - Calculate average offset (X, Y)
+   - Detect scaling changes (rare but possible)
+   - Minimum 2 anchors required for recalibration
+
+4. **Region Adjustment**
+   - Apply drift offset to all detection regions
+   - Hero cards, community cards, pot, buttons, etc.
+   - Preserves aspect ratio and proportions
+
+5. **Drift Threshold**
+   - Only applies correction if drift > 5 pixels
+   - Tracks drift history (last 10 recalibrations)
+   - Emits calibration events for monitoring
+
+**Problem**: Long sessions cause region drift from window movement/DPI changes
+**Solution**: Passive anchor-based recalibration every 400 actions
+**Pros**: Maintains accuracy on 12-24 tables over hours, zero manual intervention
+**Cons**: Requires 2+ visible anchor points, 100-200ms overhead per recalibrationmotional states
 
 ### Anti-Detection Architecture
 
