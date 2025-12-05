@@ -1007,13 +1007,27 @@ export class GGClubAdapter extends PlatformAdapter {
     };
   }
 
-  async executeClick(windowHandle: number, x: number, y: number): Promise<void> {
-    this.antiDetectionMonitor.recordAction("click");
+  async executeClick(windowHandle: number, x: number, y: number, timerPosition?: number): Promise<void> {
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+    if (!window) return;
+
+    if (Math.random() < 0.25) {
+      const randomX = Math.random() * window.width;
+      const randomY = Math.random() < 0.5 ? 50 + Math.random() * 50 : window.height - 100 + Math.random() * 50;
+      
+      await this.performMouseMove(windowHandle, randomX, randomY);
+      await this.addRandomDelay(150 + Math.random() * 300);
+    }
+
+    this.antiDetectionMonitor.recordAction("click", timerPosition, { x, y });
     this.trackAction();
 
     await this.addRandomDelay(50);
 
     const jitteredPos = this.getJitteredPosition(x, y);
+
+    const currentPos = robot ? robot.getMousePos() : { x: 0, y: 0 };
+    this.antiDetectionMonitor.recordMouseTrajectory(currentPos.x, currentPos.y, jitteredPos.x, jitteredPos.y);
 
     await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
     await this.addRandomDelay(30);
@@ -1347,6 +1361,11 @@ class AntiDetectionMonitor {
   private monitorInterval?: NodeJS.Timeout;
   private patterns: ActionPattern[] = [];
   private suspicionFactors: Map<string, number> = new Map();
+  private actionTimerPositions: number[] = [];
+  private mouseClickAreas: Array<{ x: number; y: number }> = [];
+  private mouseTrajectoryAngles: number[] = [];
+  private lastRandomInteraction: number = Date.now();
+  private randomInteractionInterval?: NodeJS.Timeout;
 
   constructor(adapter: GGClubAdapter) {
     this.adapter = adapter;
@@ -1357,6 +1376,10 @@ class AntiDetectionMonitor {
       this.analyzePatterns();
       this.decaySuspicion();
     }, 10000);
+
+    this.randomInteractionInterval = setInterval(() => {
+      this.triggerRandomHumanInteraction();
+    }, Math.random() * 480000 + 120000);
   }
 
   stop(): void {
@@ -1364,13 +1387,18 @@ class AntiDetectionMonitor {
       clearInterval(this.monitorInterval);
       this.monitorInterval = undefined;
     }
+    if (this.randomInteractionInterval) {
+      clearInterval(this.randomInteractionInterval);
+      this.randomInteractionInterval = undefined;
+    }
   }
 
-  recordAction(actionType: string): void {
+  recordAction(actionType: string, timerPosition?: number, clickPos?: { x: number; y: number }): void {
     const count = this.actionCounts.get(actionType) || 0;
     this.actionCounts.set(actionType, count + 1);
 
-    this.lastActionTimestamps.push(Date.now());
+    const now = Date.now();
+    this.lastActionTimestamps.push(now);
 
     if (this.lastActionTimestamps.length > 100) {
       this.lastActionTimestamps = this.lastActionTimestamps.slice(-100);
@@ -1378,16 +1406,170 @@ class AntiDetectionMonitor {
 
     this.patterns.push({
       type: actionType,
-      timestamp: Date.now(),
+      timestamp: now,
     });
 
     if (this.patterns.length > 500) {
       this.patterns = this.patterns.slice(-500);
     }
+
+    if (timerPosition !== undefined) {
+      this.actionTimerPositions.push(timerPosition);
+      if (this.actionTimerPositions.length > 50) {
+        this.actionTimerPositions = this.actionTimerPositions.slice(-50);
+      }
+    }
+
+    if (clickPos) {
+      this.mouseClickAreas.push(clickPos);
+      if (this.mouseClickAreas.length > 100) {
+        this.mouseClickAreas = this.mouseClickAreas.slice(-100);
+      }
+    }
+  }
+
+  recordMouseTrajectory(startX: number, startY: number, endX: number, endY: number): void {
+    const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+    this.mouseTrajectoryAngles.push(angle);
+    if (this.mouseTrajectoryAngles.length > 50) {
+      this.mouseTrajectoryAngles = this.mouseTrajectoryAngles.slice(-50);
+    }
   }
 
   recordScreenCapture(): void {
     this.screenCaptureCount++;
+  }
+
+  private async triggerRandomHumanInteraction(): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastRandomInteraction < 120000) return;
+
+    const interactions = [
+      'hover_stack',
+      'hover_pot',
+      'hover_cards',
+      'check_bankroll',
+      'random_click',
+      'hover_random_area',
+      'micro_movement',
+    ];
+
+    const interaction = interactions[Math.floor(Math.random() * interactions.length)];
+    
+    try {
+      await this.executeRandomInteraction(interaction);
+      this.lastRandomInteraction = now;
+      console.log(`[Anti-Detection] Random human interaction: ${interaction}`);
+    } catch (error) {
+      console.error('[Anti-Detection] Failed random interaction:', error);
+    }
+  }
+
+  private async executeRandomInteraction(type: string): Promise<void> {
+    const windowHandle = Array.from((this.adapter as any).activeWindows.keys())[0];
+    if (!windowHandle) return;
+
+    const window = (this.adapter as any).activeWindows.get(windowHandle);
+    if (!window) return;
+
+    const centerX = window.width / 2;
+    const centerY = window.height / 2;
+
+    switch (type) {
+      case 'hover_stack':
+        const stackX = centerX - 150 + Math.random() * 20;
+        const stackY = centerY + 180 + Math.random() * 20;
+        await this.performHover(parseInt(windowHandle.split('_')[1]), stackX, stackY);
+        break;
+
+      case 'hover_pot':
+        const potX = centerX + Math.random() * 40 - 20;
+        const potY = centerY - 100 + Math.random() * 20;
+        await this.performHover(parseInt(windowHandle.split('_')[1]), potX, potY);
+        break;
+
+      case 'hover_cards':
+        const cardX = centerX - 50 + Math.random() * 100;
+        const cardY = centerY + 150 + Math.random() * 30;
+        await this.performHover(parseInt(windowHandle.split('_')[1]), cardX, cardY);
+        break;
+
+      case 'check_bankroll':
+        const bankrollX = window.width - 100 + Math.random() * 20;
+        const bankrollY = 50 + Math.random() * 20;
+        await this.performHover(parseInt(windowHandle.split('_')[1]), bankrollX, bankrollY);
+        await this.sleep(500 + Math.random() * 1000);
+        break;
+
+      case 'random_click':
+        const randomX = Math.random() * window.width;
+        const randomY = Math.random() * window.height;
+        const isEmptyArea = randomY < 100 || randomY > window.height - 100;
+        if (isEmptyArea) {
+          await this.performHover(parseInt(windowHandle.split('_')[1]), randomX, randomY);
+        }
+        break;
+
+      case 'hover_random_area':
+        const cornerX = Math.random() > 0.5 ? window.width - 50 : 50;
+        const cornerY = Math.random() > 0.5 ? window.height - 50 : 50;
+        await this.performHover(parseInt(windowHandle.split('_')[1]), cornerX, cornerY);
+        await this.sleep(200 + Math.random() * 500);
+        break;
+
+      case 'micro_movement':
+        if (robot) {
+          const currentPos = robot.getMousePos();
+          const jitterX = (Math.random() - 0.5) * 10;
+          const jitterY = (Math.random() - 0.5) * 10;
+          robot.moveMouse(currentPos.x + jitterX, currentPos.y + jitterY);
+          await this.sleep(100);
+          robot.moveMouse(currentPos.x, currentPos.y);
+        }
+        break;
+    }
+  }
+
+  private async performHover(windowHandle: number, x: number, y: number): Promise<void> {
+    if (!robot) return;
+
+    try {
+      const window = (this.adapter as any).activeWindows.get(`ggclub_${windowHandle}`);
+      if (!window) return;
+
+      const screenX = window.x + x;
+      const screenY = window.y + y;
+
+      const currentPos = robot.getMousePos();
+      this.recordMouseTrajectory(currentPos.x, currentPos.y, screenX, screenY);
+
+      const steps = 8 + Math.floor(Math.random() * 8);
+      for (let i = 1; i <= steps; i++) {
+        const progress = i / steps;
+        const eased = this.easeInOutCubic(progress);
+
+        const midX = currentPos.x + (screenX - currentPos.x) * eased;
+        const midY = currentPos.y + (screenY - currentPos.y) * eased;
+
+        const jitterX = (Math.random() - 0.5) * 3;
+        const jitterY = (Math.random() - 0.5) * 3;
+
+        robot.moveMouse(Math.round(midX + jitterX), Math.round(midY + jitterY));
+        await this.sleep(8 + Math.random() * 12);
+      }
+
+      robot.moveMouse(screenX, screenY);
+    } catch (error) {
+      console.error('[Anti-Detection] Hover error:', error);
+    }
+  }
+
+  private easeInOutCubic(t: number): number {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private analyzePatterns(): void {
@@ -1397,6 +1579,74 @@ class AntiDetectionMonitor {
     this.checkBurstActivity();
     this.checkImpossibleTimings();
     this.checkActionSequencePatterns();
+    this.checkClockTimingPattern();
+    this.checkClickHeatmapConcentration();
+    this.checkMouseTrajectoryVariation();
+  }
+
+  private checkClockTimingPattern(): void {
+    if (this.actionTimerPositions.length < 10) return;
+
+    const positionCounts = new Map<number, number>();
+    for (const pos of this.actionTimerPositions) {
+      const bucket = Math.floor(pos / 5) * 5;
+      positionCounts.set(bucket, (positionCounts.get(bucket) || 0) + 1);
+    }
+
+    const maxConcentration = Math.max(...Array.from(positionCounts.values()));
+    const concentrationRatio = maxConcentration / this.actionTimerPositions.length;
+
+    if (concentrationRatio > 0.4) {
+      this.addSuspicion("clock_timing_pattern", 0.12);
+      console.warn(`[Anti-Detection] Clock timing pattern detected: ${(concentrationRatio * 100).toFixed(1)}% at same timer position`);
+    } else {
+      this.removeSuspicion("clock_timing_pattern", 0.03);
+    }
+  }
+
+  private checkClickHeatmapConcentration(): void {
+    if (this.mouseClickAreas.length < 20) return;
+
+    const gridSize = 20;
+    const heatmap = new Map<string, number>();
+
+    for (const pos of this.mouseClickAreas) {
+      const gridX = Math.floor(pos.x / gridSize);
+      const gridY = Math.floor(pos.y / gridSize);
+      const key = `${gridX},${gridY}`;
+      heatmap.set(key, (heatmap.get(key) || 0) + 1);
+    }
+
+    const maxHeat = Math.max(...Array.from(heatmap.values()));
+    const concentrationRatio = maxHeat / this.mouseClickAreas.length;
+
+    if (concentrationRatio > 0.3) {
+      this.addSuspicion("click_heatmap_concentration", 0.1);
+      console.warn(`[Anti-Detection] Click heatmap too concentrated: ${(concentrationRatio * 100).toFixed(1)}%`);
+    } else {
+      this.removeSuspicion("click_heatmap_concentration", 0.02);
+    }
+  }
+
+  private checkMouseTrajectoryVariation(): void {
+    if (this.mouseTrajectoryAngles.length < 15) return;
+
+    const normalizedAngles = this.mouseTrajectoryAngles.map(a => {
+      let normalized = a % 90;
+      if (normalized < 0) normalized += 90;
+      return normalized;
+    });
+
+    const mean = normalizedAngles.reduce((sum, a) => sum + a, 0) / normalizedAngles.length;
+    const variance = normalizedAngles.reduce((sum, a) => sum + Math.pow(a - mean, 2), 0) / normalizedAngles.length;
+    const stdDev = Math.sqrt(variance);
+
+    if (stdDev < 10) {
+      this.addSuspicion("mouse_trajectory_uniformity", 0.08);
+      console.warn(`[Anti-Detection] Mouse trajectories too uniform: σ=${stdDev.toFixed(1)}°`);
+    } else {
+      this.removeSuspicion("mouse_trajectory_uniformity", 0.02);
+    }
   }
 
   private checkTimingRegularity(): void {
@@ -1503,8 +1753,7 @@ class AntiDetectionMonitor {
 
     const currentSettings = humanizer.getSettings();
     
-    // Augmenter les délais et la variance proportionnellement à la suspicion
-    const multiplier = 1 + (suspicionLevel - 0.6) * 2; // 1.0x à 1.8x
+    const multiplier = 1 + (suspicionLevel - 0.6) * 2;
     
     humanizer.updateSettings({
       minDelayMs: Math.round(currentSettings.minDelayMs * multiplier),
@@ -1514,15 +1763,15 @@ class AntiDetectionMonitor {
       misclickProbability: suspicionLevel > 0.7 ? 0.001 : currentSettings.misclickProbability,
     });
 
-    // AJOUT : Randomiser les décisions GTO pour casser les patterns
     const gtoAdapter = (this.adapter as any).gtoAdapter;
     if (gtoAdapter && suspicionLevel > 0.6) {
-      // Injecter du "noise" dans les fréquences d'action
-      const noiseLevel = (suspicionLevel - 0.6) * 0.25; // 0 à 10% de bruit
+      const noiseLevel = (suspicionLevel - 0.6) * 0.25;
       console.warn(`[Anti-Detection] Injecting ${(noiseLevel * 100).toFixed(1)}% GTO noise`);
-      
-      // Le bruit sera appliqué lors du prochain getRecommendation()
       (gtoAdapter as any).injectedNoise = noiseLevel;
+    }
+
+    if (suspicionLevel > 0.7) {
+      this.triggerRandomHumanInteraction();
     }
 
     console.warn(`[Anti-Detection] Emergency randomization applied (${Math.round(suspicionLevel * 100)}%)`);
