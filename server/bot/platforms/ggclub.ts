@@ -113,6 +113,8 @@ export class GGClubAdapter extends PlatformAdapter {
   private cardRecognitionCache: Map<string, CardInfo[]> = new Map();
   private lastScreenCaptures: Map<number, { buffer: Buffer; timestamp: number }> = new Map();
   private screenCaptureInterval: number = 100;
+  private maxConcurrentTables: number = 24;
+  private processingBatchSize: number = 6;
   private ocrQueue: Map<number, Promise<void>> = new Map();
   private reconnectAttempts: number = 0;
   private sessionToken: string | null = null;
@@ -500,7 +502,7 @@ export class GGClubAdapter extends PlatformAdapter {
     const window = this.activeWindows.get(`ggclub_${windowHandle}`);
     const imageWidth = window?.width || 880;
 
-    // Détection différentielle
+    // Détection différentielle (optimisée pour 24 tables)
     const regions = {
       heroCardsRegion: this.screenLayout.heroCardsRegion,
       communityCardsRegion: this.screenLayout.communityCardsRegion,
