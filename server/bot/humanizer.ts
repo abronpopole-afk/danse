@@ -89,7 +89,21 @@ export class Humanizer {
   }
   
   calculateThinkingDelay(actionType: string, handStrength: number, isComplexDecision: boolean, street: string = "preflop", potSize: number = 0): number {
-    const { minDelayMs, maxDelayMs, thinkingTimeVariance, stealthModeEnabled, enableDynamicProfile } = this.settings;
+    let { minDelayMs, maxDelayMs, thinkingTimeVariance, stealthModeEnabled, enableDynamicProfile } = this.settings;
+    
+    // Vérifier le mode conservateur
+    try {
+      const { getSafeModeManager } = await import("./safe-mode");
+      const safeModeManager = getSafeModeManager();
+      const conservativeDelays = safeModeManager.getConservativeDelays();
+      
+      if (conservativeDelays) {
+        minDelayMs = conservativeDelays.minDelayMs;
+        maxDelayMs = conservativeDelays.maxDelayMs;
+      }
+    } catch (error) {
+      // Safe mode non disponible, utiliser les paramètres normaux
+    }
     
     // Récupérer les modifiers du profil dynamique
     let modifiers: ProfileModifiers = {

@@ -149,6 +149,25 @@ export class SimulatedGtoAdapter implements GtoAdapter {
     } catch (error) {
       // Utiliser les valeurs par défaut si le profil n'est pas disponible
     }
+
+    // Vérifier le mode conservateur
+    try {
+      const { getSafeModeManager } = await import("./safe-mode");
+      const safeModeManager = getSafeModeManager();
+      
+      if (safeModeManager.shouldFoldBorderlineHand(handStrength, context.facingBet, context.potSize)) {
+        return {
+          actions: [
+            { action: "FOLD", probability: 0.95, ev: 0 },
+            { action: "CALL", probability: 0.05, ev: -0.1 },
+          ],
+          bestAction: "FOLD",
+          confidence: 0.90,
+        };
+      }
+    } catch (error) {
+      // Safe mode non disponible, continuer normalement
+    }
     
     return this.generateRecommendation(context, handStrength, boardTexture, modifiers);
   }

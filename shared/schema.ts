@@ -190,3 +190,29 @@ export const playerDataSchema = z.object({
 });
 
 export type PlayerData = z.infer<typeof playerDataSchema>;
+
+export const safeModeConfigSchema = z.object({
+  mode: z.enum(["normal", "conservative", "freeze"]),
+  suspicionThreshold: z.object({
+    conservative: z.number().min(0).max(1),
+    freeze: z.number().min(0).max(1),
+  }),
+  conservativeSettings: z.object({
+    foldBorderlineHands: z.boolean(),
+    noRoboticRaises: z.boolean(),
+    minDelayMs: z.number().min(500),
+    maxDelayMs: z.number().min(1000),
+    maxActiveTables: z.number().min(1).max(24),
+  }),
+  freezeSettings: z.object({
+    disableAutoActions: z.boolean(),
+    continueReading: z.boolean(),
+    continueStats: z.boolean(),
+    alertUser: z.boolean(),
+  }),
+});
+
+export type SafeModeConfig = z.infer<typeof safeModeConfigSchema>;
+
+export const playerProfileStateSchema = insertPlayerProfileStateSchema.extend({
+});

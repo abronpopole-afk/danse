@@ -16,6 +16,7 @@ import { getHumanizer, HumanizedAction } from "./humanizer";
 import { getGtoAdapter, HandContext } from "./gto-engine";
 import { storage } from "../storage";
 import { getTaskScheduler } from "./task-scheduler";
+import { getSafeModeManager } from "./safe-mode";
 
 export interface PlatformManagerConfig {
   platformName: string;
@@ -217,6 +218,15 @@ export class PlatformManager extends EventEmitter {
   }): Promise<void> {
     if (!this.config?.enableAutoAction) return;
 
+    const safeModeManager = getSafeModeManager();
+    if (!safeModeManager.canAutoAct()) {
+      this.emit("actionBlocked", {
+        windowHandle: data.windowHandle,
+        reason: "Safe mode: Freeze - Manual intervention required",
+      });
+      return;
+    }
+
     const managedTable = this.managedTables.get(data.windowHandle);
     if (!managedTable || managedTable.isProcessingAction) return;
 
@@ -290,15 +300,42 @@ export class PlatformManager extends EventEmitter {
 
   private handleAntiDetectionAlert(data: any): void {
     const suspicionLevel = this.adapter?.getSuspicionLevel() || 0;
+    const safeModeManager = getSafeModeManager();
 
-    if (suspicionLevel > 0.8) {
+    const evaluation = safeModeManager.evaluateMode(suspicionLevel);
+
+    if (evaluation.changed) {
+      this.emit("safeModeChanged", {
+        mode: evaluation.mode,
+        reason: evaluation.reason,
+        actions: evaluation.actions,
+        suspicionLevel,
+      });
+
+      if (evaluation.mode === "freeze") {
+        this.emit("emergencyPause", {
+          reason: "Safe mode: Freeze activated",
+          suspicionLevel,
+          recommendation: "Manual intervention required",
+        });
+      } else if (evaluation.mode === "conservative") {
+        this.emit("warning", {
+          message: "Safe mode: Conservative activated",
+          suspicionLevel,
+          factors: data.factors,
+          actions: evaluation.actions,
+        });
+      }
+    }
+
+    if (suspicionLevel > 0.8 && evaluation.mode !== "freeze") {
       this.pause();
       this.emit("emergencyPause", { 
-        reason: "High suspicion level", 
+        reason: "Critical suspicion level", 
         suspicionLevel,
         recommendation: "Wait before resuming",
       });
-    } else if (suspicionLevel > 0.5) {
+    } else if (suspicionLevel > 0.5 && evaluation.mode === "normal") {
       this.emit("warning", {
         message: "Elevated suspicion level detected",
         suspicionLevel,
@@ -386,10 +423,18 @@ export class PlatformManager extends EventEmitter {
     const tables = Array.from(this.managedTables.values());
     const tableManager = getTableManager();
     
+    const safeModeManager = getSafeModeManager();
+    const tableLimit = safeModeManager.shouldReduceTables();
+    
     // Récupérer les tables prioritaires en premier
-    const prioritizedTables = tableManager.getPrioritizedTables()
+    let prioritizedTables = tableManager.getPrioritizedTables()
       .map(session => tables.find(t => t.tableSession.getId() === session.getId()))
       .filter(Boolean) as ManagedTable[];
+    
+    // Limiter le nombre de tables en mode conservateur
+    if (tableLimit.reduce) {
+      prioritizedTables = prioritizedTables.slice(0, tableLimit.maxTables);
+    }
     
     // Poll par batch de 6 tables max simultanément
     const batchSize = 6;

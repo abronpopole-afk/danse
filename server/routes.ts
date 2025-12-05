@@ -730,6 +730,58 @@ export async function registerRoutes(
     }
   });
 
+  // Safe Mode Routes
+  app.get("/api/safe-mode", async (req, res) => {
+    try {
+      const { getSafeModeManager } = await import("./bot/safe-mode");
+      const safeModeManager = getSafeModeManager();
+      
+      res.json({
+        currentMode: safeModeManager.getCurrentMode(),
+        config: safeModeManager.getConfig(),
+        description: safeModeManager.getModeDescription(),
+        history: safeModeManager.getHistory().slice(-10),
+      });
+    } catch (error) {
+      console.error("Error getting safe mode:", error);
+      res.status(500).json({ error: "Failed to get safe mode" });
+    }
+  });
+
+  app.post("/api/safe-mode/config", async (req, res) => {
+    try {
+      const { getSafeModeManager } = await import("./bot/safe-mode");
+      const safeModeManager = getSafeModeManager();
+      
+      safeModeManager.updateConfig(req.body);
+      
+      res.json({
+        success: true,
+        config: safeModeManager.getConfig(),
+      });
+    } catch (error) {
+      console.error("Error updating safe mode config:", error);
+      res.status(500).json({ error: "Failed to update safe mode config" });
+    }
+  });
+
+  app.post("/api/safe-mode/reset", async (req, res) => {
+    try {
+      const { getSafeModeManager } = await import("./bot/safe-mode");
+      const safeModeManager = getSafeModeManager();
+      
+      safeModeManager.reset();
+      
+      res.json({
+        success: true,
+        currentMode: safeModeManager.getCurrentMode(),
+      });
+    } catch (error) {
+      console.error("Error resetting safe mode:", error);
+      res.status(500).json({ error: "Failed to reset safe mode" });
+    }
+  });
+
   // Player Profile Routes
   app.get("/api/player-profile", async (req, res) => {
     try {

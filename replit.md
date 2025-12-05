@@ -309,6 +309,33 @@ The application follows a **multi-layered bot architecture** with clear separati
 **Pros**: Maintains accuracy on 12-24 tables over hours, zero manual intervention
 **Cons**: Requires 2+ visible anchor points, 100-200ms overhead per recalibrationmotional states
 
+### Safe Mode System
+
+**Purpose**: Protect account from ban by adapting behavior based on suspicion level
+
+**Modes**:
+
+1. **Normal Mode** (suspicion < 0.5)
+   - Full bot functionality
+   - Optimal play strategy
+   - All tables active (up to 24)
+
+2. **Conservative Mode** (suspicion 0.5 - 0.7)
+   - Fold all borderline hands (equity 40-55%)
+   - Increased delays (1000-2500ms)
+   - No robotic raises
+   - Reduced to 4 active tables
+   - **Goal**: Dramatically reduce suspicion through defensive play
+
+3. **Freeze Mode** (suspicion > 0.7)
+   - Auto-actions completely disabled
+   - Manual intervention required
+   - Game state reading continues
+   - Statistics tracking continues
+   - **Goal**: Prevent ban while allowing recovery time
+
+**Auto-switching**: SafeMode automatically transitions based on real-time suspicion level from anti-detection monitor.
+
 ### Anti-Detection Architecture
 
 **Strategy**: Multi-layered defense against bot detection
