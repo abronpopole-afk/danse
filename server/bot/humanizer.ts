@@ -88,7 +88,7 @@ export class Humanizer {
     return { ...this.settings };
   }
 
-  calculateThinkingDelay(actionType: string, handStrength: number, isComplexDecision: boolean, street: string = "preflop", potSize: number = 0): number {
+  async calculateThinkingDelay(actionType: string, handStrength: number, isComplexDecision: boolean, street: string = "preflop", potSize: number = 0): Promise<number> {
     let { minDelayMs, maxDelayMs, thinkingTimeVariance, stealthModeEnabled, enableDynamicProfile } = this.settings;
 
     // Auto-ajustements depuis anti-pattern detector
@@ -341,7 +341,7 @@ export class Humanizer {
    * @param street Street actuelle
    * @returns Sizing ajusté avec variance humaine
    */
-  getHumanizedSizing(baseSizing: number, potSize: number, street: string): number {
+  async getHumanizedSizing(baseSizing: number, potSize: number, street: string): Promise<number> {
     let modifiers: ProfileModifiers = {
       delayMultiplier: 1,
       varianceMultiplier: 1,
@@ -672,7 +672,7 @@ export class Humanizer {
     return [];
   }
 
-  humanizeAction(
+  async humanizeAction(
     action: string,
     handStrength: number,
     isComplexDecision: boolean,
@@ -680,8 +680,8 @@ export class Humanizer {
     currentMousePosition?: { x: number; y: number },
     street: string = "preflop",
     potSize: number = 0
-  ): HumanizedAction {
-    const thinkingDelay = this.calculateThinkingDelay(action, handStrength, isComplexDecision, street, potSize);
+  ): Promise<HumanizedAction> {
+    const thinkingDelay = await this.calculateThinkingDelay(action, handStrength, isComplexDecision, street, potSize);
     const thinkingPauses = this.generateThinkingPauses(thinkingDelay);
     const shouldMisclick = this.shouldTriggerMisclick();
 

@@ -203,6 +203,12 @@ export class AutoCalibrationManager {
     };
   }
 
+  private async captureScreen(windowHandle: number): Promise<{ buffer: Buffer; width: number; height: number } | null> {
+    // Cette méthode devrait être implémentée par le caller ou déléguée au platform adapter
+    // Pour l'instant, on retourne null pour éviter l'erreur
+    return null;
+  }
+
   async recalibrate(windowHandle: number): Promise<boolean> {
     console.log('[AutoCalibration] Starting multi-frame recalibration...');
 
