@@ -1,227 +1,264 @@
 
-# 🧠 Poker OCR Engine - Documentation Technique
+# 🧠 ML OCR - Moteur de Reconnaissance Optique pour Poker
 
-Système de reconnaissance optique de caractères (OCR) spécialisé pour le poker, basé sur des réseaux de neurones convolutifs (CNN) en pur JavaScript.
+## Vue d'ensemble
 
-## 📋 Architecture
+Le **Poker OCR Engine** est un système de reconnaissance optique de caractères (OCR) spécialisé pour les interfaces de poker. Il utilise des réseaux de neurones convolutifs (CNN) en pure JavaScript sans dépendances externes (TensorFlow/PyTorch).
 
-### Composants
+## Architecture
+
+### Composants Principaux
 
 1. **Neural Network** (`neural-network.ts`)
-   - Implémentation pure JavaScript (zéro dépendances externes)
-   - Couches supportées : Conv2D, MaxPooling, Dense
-   - Activations : ReLU, Softmax, Sigmoid
-   - Export/Import de poids (JSON)
+   - Implémentation pure JavaScript de CNN
+   - Couches : Convolution, MaxPooling, Dense, Softmax
+   - Activation : ReLU
+   - Pas de dépendances externes
 
 2. **Card Classifier** (`card-classifier-ml.ts`)
-   - Classificateur de rangs (2-A : 13 classes)
-   - Classificateur de couleurs (♠♥♦♣ : 4 classes)
-   - Classificateur de chiffres (0-9, symboles : 17 classes)
-   - Preprocessing automatique (resize 32x32, normalisation)
+   - Reconnaissance de rangs de cartes (2-A)
+   - Reconnaissance de couleurs (♠♥♦♣)
+   - Reconnaissance de chiffres (0-9, ., ,, K, M, B)
+   - Confiance minimale : 75%
 
-3. **Training Pipeline** (`training-pipeline.ts`)
-   - Augmentation de données (rotation, bruit, brightness)
-   - Mini-batch training
-   - Early stopping (patience: 5 epochs)
-   - Validation split (80/20)
+3. **Data Collector** (`data-collector.ts`)
+   - Collecte automatique d'exemples pendant le jeu
+   - Sauvegarde auto toutes les 50 exemples
+   - Génération de données synthétiques si besoin
+   - Format : PNG avec métadonnées JSON
 
-4. **Data Collector** (`data-collector.ts`)
-   - Collecte automatique pendant le jeu (confiance >95%)
-   - Maximum 500 samples par label
-   - Auto-vérification par confiance
-   - Export pour training
+4. **Training Pipeline** (`training-pipeline.ts`)
+   - Entraînement avec augmentation de données
+   - Rotation, flip, bruit, luminosité
+   - Sauvegarde des poids au format JSON
+   - Support batch training
 
 5. **Poker OCR Engine** (`poker-ocr-engine.ts`)
-   - Orchestration ML + Tesseract
-   - Fallback hiérarchisé
-   - Cache des résultats
-   - Collecte training data
+   - Orchestrateur principal
+   - ML primary + Tesseract fallback
+   - Cache OCR intégré
+   - Correction d'erreurs automatique
 
-## 🚀 Utilisation
+## Utilisation
 
-### Initialisation
+### Initialisation Automatique
+
+Le système s'initialise automatiquement au démarrage du serveur :
 
 ```typescript
-import { getPokerOCREngine } from './poker-ocr-engine';
-
-const engine = await getPokerOCREngine({
+// Dans GGClubAdapter
+const pokerOCREngine = await getPokerOCREngine({
   useMLPrimary: true,
   useTesseractFallback: true,
   confidenceThreshold: 0.75,
-  collectTrainingData: true
+  collectTrainingData: true,
 });
-
-await engine.initialize();
 ```
 
 ### Reconnaissance de Cartes
 
 ```typescript
-const result = await engine.recognizeCards(
-  imageBuffer,    // Buffer RGBA
-  width,          // Largeur image
-  height,         // Hauteur image
-  2               // Nombre de cartes
+const result = await pokerOCREngine.recognizeCards(
+  imageBuffer,
+  width,
+  height,
+  2 // Nombre de cartes
 );
 
 console.log(result.cards);
 // [
 //   { rank: 'A', suit: 's', combined: 'As', confidence: 0.92 },
-//   { rank: 'K', suit: 'h', combined: 'Kh', confidence: 0.89 }
+//   { rank: 'K', suit: 'h', combined: 'Kh', confidence: 0.88 }
 // ]
 ```
 
-### Reconnaissance de Valeurs
+### Reconnaissance de Valeurs (Pot/Stack/Bet)
 
 ```typescript
-const result = await engine.recognizeValue(
+const result = await pokerOCREngine.recognizeValue(
   imageBuffer,
   width,
   height,
-  'pot'  // Type: 'pot' | 'stack' | 'bet'
+  'pot' // ou 'stack', 'bet'
 );
 
-console.log(result.value);      // 1250.50
-console.log(result.rawText);    // "$1,250.50"
-console.log(result.confidence); // 0.87
+console.log(result.value); // 1250.50
+console.log(result.method); // 'ml' ou 'tesseract'
 ```
 
-## 🎓 Entraînement
+## Collecte de Données
 
-### Collecte de Données
+### Automatique
 
-Le système collecte automatiquement des exemples pendant le jeu :
+Le système collecte automatiquement des exemples quand :
+- Confiance ML > 95%
+- Pendant le jeu normal
+- Sauvegarde auto toutes les 50 exemples
 
-```typescript
-// Automatique si collectTrainingData: true
-// Sauvegarde dans server/bot/ml-ocr/training-data/
-```
-
-### Lancer l'Entraînement
+### Manuelle
 
 ```bash
-# Via script npm
+# Lancer le data collector
+npm run collect:cards
+
+# Générer des données synthétiques
+npm run generate:synthetic
+```
+
+## Entraînement
+
+### Entraîner le Modèle
+
+```bash
+# Entraîner avec les données collectées
 npm run train:ml-ocr
 
-# Ou manuellement
-node -e "import('./training-pipeline.js').then(m => m.runTraining())"
+# Les poids sont sauvegardés dans server/bot/ml-ocr/weights/
+# - rank-weights.json
+# - suit-weights.json
+# - digit-weights.json
 ```
 
 ### Pipeline d'Entraînement
 
-```typescript
-import { TrainingPipeline } from './training-pipeline';
+Le pipeline inclut :
+- Chargement des données depuis `training-data/`
+- Augmentation de données (rotation, flip, bruit)
+- Entraînement par epochs (100 par défaut)
+- Validation croisée
+- Sauvegarde des meilleurs poids
 
-const pipeline = new TrainingPipeline({
-  learningRate: 0.001,
-  batchSize: 32,
-  epochs: 50,
-  validationSplit: 0.2,
-  augmentation: true,
-  earlyStopPatience: 5
-});
+## Performance
 
-await pipeline.initialize();
+### Latence
 
-// Entraîner les 3 classifieurs
-await pipeline.trainRankClassifier('./weights');
-await pipeline.trainSuitClassifier('./weights');
-await pipeline.trainDigitClassifier('./weights');
+- **ML OCR** : 50-100ms par carte
+- **Tesseract fallback** : 200-400ms
+- **Cache hit** : <5ms
+
+### Précision
+
+- **Rangs de cartes** : >95%
+- **Couleurs** : >92%
+- **Chiffres/montants** : >90%
+
+### Statistiques
+
+```bash
+# Obtenir les stats ML OCR
+curl http://localhost:5000/api/ml-ocr/stats
+
+# Résultat
+{
+  "mlCalls": 1234,
+  "tesseractCalls": 56,
+  "cacheHits": 789,
+  "avgMlLatency": 85,
+  "avgTesseractLatency": 320
+}
 ```
 
-## 📊 Performance
+## Fallback Hiérarchique
 
-### Benchmarks
+Le système utilise une approche multi-niveaux :
 
-- **Reconnaissance carte** : 50-100ms (ML), 200-400ms (Tesseract)
-- **Précision** : ~95% (ML après training), ~85% (Tesseract)
-- **Taille modèle** : ~500KB poids JSON
+1. **ML OCR** (priorité 1)
+   - Rapide (50-100ms)
+   - Confiance > 75%
+   - Pure JavaScript
 
-### Optimisations
+2. **Tesseract OCR** (fallback)
+   - Si ML confiance < 75%
+   - Plus lent (200-400ms)
+   - Plus robuste sur texte
 
-1. **Lazy initialization** : Modèles chargés uniquement si utilisés
-2. **Graceful degradation** : Fonctionne sans ML (Tesseract seul)
-3. **Cache résultats** : Évite re-calculs identiques
-4. **Multi-frame validation** : Consensus sur 2-3 frames
+3. **Template Matching** (dernier recours)
+   - Si OCR échoue
+   - Basé sur patterns visuels
+   - Moins précis mais rapide
 
-## 🔧 Configuration
+## Configuration
 
-### Seuils de Confiance
+### Options OCR Engine
+
+```typescript
+interface OCRConfig {
+  useMLPrimary: boolean;              // Utiliser ML en priorité
+  useTesseractFallback: boolean;      // Fallback Tesseract
+  confidenceThreshold: number;        // Seuil minimum (0.75)
+  collectTrainingData: boolean;       // Collecter exemples
+  maxRetries: number;                 // Tentatives max
+}
+```
+
+### Ajuster le Seuil de Confiance
 
 ```typescript
 // Dans poker-ocr-engine.ts
-confidenceThreshold: 0.75  // Minimum pour accepter résultat ML
-```
-
-### Augmentation de Données
-
-```typescript
-// Dans training-pipeline.ts
-const augConfig = {
-  rotation: 5,           // ±5° rotation
-  scale: [0.9, 1.1],     // 90-110% scale
-  noise: 0.05,           // 5% noise
-  brightness: [0.8, 1.2],
-  contrast: [0.9, 1.1]
+const config = {
+  confidenceThreshold: 0.80, // Augmenter pour plus de précision
 };
 ```
 
-## 🐛 Debugging
+## Dépannage
 
-### Logs
+### ML OCR ne s'initialise pas
 
-```typescript
-// Activer logs détaillés
-console.log(engine.getStats());
-// {
-//   mlCalls: 1234,
-//   tesseractCalls: 56,
-//   cacheHits: 890,
-//   avgMlLatency: 85,
-//   avgTesseractLatency: 320
-// }
+**Cause** : Poids manquants ou corrompus
+
+**Solution** :
+```bash
+# Vérifier les poids
+ls server/bot/ml-ocr/weights/
+
+# Re-entraîner si nécessaire
+npm run train:ml-ocr
 ```
 
-### Erreurs Communes
+### Faible précision
 
-1. **"ML OCR not available"** : Modules optionnels non installés (normal)
-2. **Low confidence** : Besoin de plus de training data
-3. **Slow detection** : Vérifier que cache fonctionne
+**Solutions** :
+1. Collecter plus de données (500+ exemples par classe)
+2. Augmenter les epochs d'entraînement
+3. Ajuster l'augmentation de données
+4. Vérifier la qualité des images d'entraînement
 
-## 📁 Structure Fichiers
+### Latence élevée
 
-```
-ml-ocr/
-├── neural-network.ts       # CNN implementation
-├── card-classifier-ml.ts   # Card/digit classifiers
-├── training-pipeline.ts    # Training logic
-├── data-collector.ts       # Sample collection
-├── poker-ocr-engine.ts     # Main orchestrator
-├── index.ts                # Exports
-├── weights/                # Trained models
-│   ├── rank-weights.json
-│   ├── suit-weights.json
-│   └── digit-weights.json
-└── training-data/          # Collected samples
-    ├── samples.json
-    └── images/
-```
+**Causes** :
+- Trop de fallback Tesseract
+- Cache OCR désactivé
+- Images non préprocessées
 
-## 🔐 Sécurité
+**Solutions** :
+1. Améliorer la confiance ML (plus de données)
+2. Activer le cache OCR
+3. Préprocesser les images (contrast, grayscale)
 
-- **Pas de dépendances externes** : Code 100% contrôlé
-- **Pas de réseau** : Tout local
-- **Données anonymes** : Pas d'info identifiable dans training data
+## Améliorations Futures
 
-## 🚧 Limitations
-
-1. **Taille modèle fixe** : Input 32x32 pixels
-2. **Pas de GPU** : CPU uniquement (acceptable pour poker)
-3. **Training offline** : Pas d'apprentissage en ligne
-
-## 📈 Améliorations Futures
-
-- [ ] Compression de poids (quantization)
-- [ ] WASM acceleration
+- [ ] Support ONNX pour modèles externes
+- [ ] Quantization des poids (réduction taille)
+- [ ] Multi-GPU training
 - [ ] Transfer learning depuis modèles pré-entraînés
-- [ ] Online learning (incrémental)
+- [ ] Support temps réel (WebGL acceleration)
+
+## Contribuer
+
+Pour améliorer le ML OCR :
+
+1. Collectez des exemples variés (différentes rooms, thèmes)
+2. Annotez manuellement si précision <90%
+3. Entraînez avec plus d'epochs
+4. Partagez vos poids si meilleure précision
+
+## Ressources
+
+- Neural Network : Architecture CNN classique
+- Data Augmentation : Rotation, flip, noise, brightness
+- Training : Gradient descent avec momentum
+- Validation : Cross-validation 80/20
+
+---
+
+**Built with** : Pure JavaScript, pas de TensorFlow/PyTorch requis 🚀

@@ -362,9 +362,11 @@ Pour éviter la détection :
 ### 3. Différencier les Horaires
 
 Ne pas jouer tous les comptes simultanément 24/7 :
-- **Compte 1** : 9h-12h, 14h-18h
-- **Compte 2** : 12h-15h, 20h-23h
-- **Compte 3** : 14h-17h, 18h-21h
+- **Compte 1** : 9h-12h, 14h-18h (profil matinal)
+- **Compte 2** : 12h-15h, 20h-23h (profil après-midi/soir)
+- **Compte 3** : 14h-17h, 18h-21h (profil mixte)
+
+**Rythme circadien** : Chaque compte a son propre cycle de fatigue basé sur ses horaires habituels
 
 ### 4. Surveiller le Scheduler
 
@@ -432,6 +434,23 @@ UPDATE player_profile_state
 SET account_id = 'compte2'
 WHERE id = 2;
 ```
+
+### Problème : Patterns suspects détectés sur un compte
+
+**Diagnostic** :
+```bash
+# Vérifier self-detection pour compte1
+curl http://localhost:5000/api/self-detection/patterns?accountId=compte1
+
+# Voir les métriques
+curl http://localhost:5000/api/self-detection/metrics?accountId=compte1
+```
+
+**Solution** :
+- Si timings trop réguliers : Augmenter `thinkingTimeVariance` à 0.4+
+- Si sizing trop cohérent : Activer `sizingVariance` et approximations
+- Si GTO trop précis : Augmenter erreurs intentionnelles à 3-5%
+- Si clustering temporel : Activer profil dynamique avec fatigue/tilt
 
 ### Problème : Task Scheduler en erreur
 

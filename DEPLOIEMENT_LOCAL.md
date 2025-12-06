@@ -760,7 +760,7 @@ GTO_CACHE_TTL_MINUTES=60
 
 **Note** : Le cache fonctionne automatiquement. Il améliore significativement les performances en évitant des appels API répétés pour des situations similaires.
 
-## 🛡️ Étape 12 : Anti-Detection Globale Améliorée
+## 🛡️ Étape 12 : Anti-Détection Globale Améliorée
 
 ### 12.1 Erreurs Humaines Simulées
 
@@ -768,18 +768,24 @@ Le système simule maintenant des **erreurs intentionnelles** pour paraître hum
 
 **Types d'erreurs** :
 - **Misclick rare** : 0.1-0.5% des actions
-- **Fold de mains fortes** : 0.5% en position marginale
+- **Fold de mains fortes** : 0.5% en position marginale (AA/KK)
 - **Sizing imparfait** : ±5-15% variation volontaire
 - **Over-bet/Under-bet** : Occasionnellement non-optimal
+- **Erreurs cognitives** : Mauvaises lectures du pot (0.8%)
+- **Approximations stratégiques** : Ranges imprécis
+- **Clics hésitants** : Mouvements interrompus puis repris (1.2%)
+- **Actions incorrectes** : Check au lieu de bet (rare)
 
-**Configuration** :
+**Configuration automatique** :
 ```typescript
-// Dans Player Profile
+// Dans Player Profile (automatique selon tilt/fatigue)
 {
-  mistakeRate: 0.003,        // 0.3% erreurs
+  mistakeRate: 0.003,        // 0.3% erreurs de base
   foldStrongHandRate: 0.005, // 0.5% fold AA/KK
   sizingVariation: 0.1,      // ±10% variation
-  tiltInducedErrors: true    // Plus d'erreurs si tilt >60%
+  tiltInducedErrors: true,   // Plus d'erreurs si tilt >60%
+  fatigueErrors: true,       // Plus d'erreurs si fatigue >70%
+  cognitiveMisreads: 0.008   // 0.8% mauvaises lectures pot
 }
 ```
 
@@ -823,6 +829,52 @@ Réponse :
 ```
 
 **Si suspicion >70%** → Safe Mode activé automatiquement
+
+### 12.4 Auto-Détection Inversée (Self-Detection)
+
+Le système analyse son propre comportement pour détecter des patterns suspects :
+
+**Métriques surveillées** :
+- **Timings réguliers** : Coefficient de variation <15% = suspect
+- **Sizing cohérent** : Écart-type <0.08 = suspect
+- **Précision GTO** : >92% = surhumain
+- **Taux d'erreur** : <0.5% = trop parfait
+- **Clustering temporel** : Actions trop régulièrement espacées
+
+**API de surveillance** :
+```bash
+# Obtenir les patterns suspects
+curl http://localhost:5000/api/self-detection/patterns
+
+# Métriques comportementales
+curl http://localhost:5000/api/self-detection/metrics
+```
+
+**Réponse exemple** :
+```json
+{
+  "suspiciousPatterns": [
+    {
+      "type": "timing",
+      "severity": "high",
+      "description": "Timings peu variés (CV=22%)",
+      "recommendation": "Activer micro-pauses et hésitations"
+    }
+  ],
+  "metrics": {
+    "avgActionTime": 2450,
+    "stdDevActionTime": 540,
+    "gtoAccuracy": 0.87,
+    "errorRate": 0.008
+  }
+}
+```
+
+**Actions automatiques si alertes critiques** :
+- Augmentation automatique de `thinkingTimeVariance`
+- Injection de bruit GTO (déviation intentionnelle)
+- Déclenchement d'interactions humaines aléatoires
+- Augmentation des erreurs intentionnelles
 
 ## 🧠 Étape 13 : Comprendre le Player Profile
 
@@ -890,21 +942,29 @@ Chaque personnalité affecte le jeu différemment :
 - Amplitude de base : 0.3 pixels
 - Amplitude avec fatigue : 0.3 + (fatigue × 1.2) pixels
 - Simule les tremblements naturels de la main humaine
+- Fréquence variable (80-120 Hz) pour réalisme
 
 **Trajectoires biaisées** :
 - Biais personnel constant (simule un humain spécifique)
 - Influence maximale au début/fin du mouvement
 - Trajectoire non parfaite même sans fatigue
+- Jitter de base : 2-5 pixels selon fatigue
 
 **Loi de Fitts** :
 - Temps de mouvement = 50ms + 150ms × log₂(distance/20 + 1)
 - Vitesse non constante : accélération début, décélération fin
 - Ajusté par multiplicateur de fatigue (mouvements plus lents)
+- Bell curve : lent début/fin, rapide au milieu
 
 **Erreurs de précision** :
 - Activées seulement si fatigue > 50%
 - Amplitude proportionnelle à la fatigue
-- Simule une main tremblante en fin de sessionigue pendant peak hours (14h-22h)
+- Simule une main tremblante en fin de session
+
+**Hésitations** :
+- 1.2% de chance de mouvement interrompu
+- Pause 150-600ms avec micro-mouvements
+- Plus fréquent si fatigué ou après loss
 
 ---
 

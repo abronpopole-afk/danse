@@ -164,12 +164,16 @@ curl http://localhost:5000/api/ranges/status
 
 Le système simule un comportement humain complet :
 - ✅ Timing non-robotique (Gaussian + variance)
-- ✅ Mouse movements Bézier avec micro-tremblements
+- ✅ Mouvements de souris Bézier avec micro-tremblements (80-120 Hz)
 - ✅ Erreurs intentionnelles (0.1-1%)
-- ✅ Sizing imparfait volontaire
-- ✅ Chat/notes simulation
-- ✅ Tilt/fatigue/circadien
+- ✅ Sizing imparfait volontaire (±5-15%)
+- ✅ Simulation chat/notes (1-2% des mains)
+- ✅ Tilt/fatigue/rythme circadien
 - ✅ Pattern breaking constant
+- ✅ Erreurs cognitives (mauvaises lectures pot, approximations ranges)
+- ✅ Clics hésitants (move → stop → restart)
+- ✅ Dégradation décisions selon état émotionnel
+- ✅ Auto-détection inversée (analyse patterns suspects)
 
 **Safe Mode** : Pause automatique si suspicion >70%
 
