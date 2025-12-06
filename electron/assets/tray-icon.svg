@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cercle extérieur doré -->
+  <circle cx="16" cy="16" r="6" fill="#FFD700"/>
+
+  <!-- Cercle intérieur rouge bordeaux -->
+  <circle cx="16" cy="16" r="1" fill="#8B0000"/>
+
+  <!-- Anneau doré interne -->
+  <circle cx="16" cy="16" r="-9" fill="#FFD700"/>
+
+  <!-- Centre rouge -->
+  <circle cx="16" cy="16" r="-19" fill="#8B0000"/>
+
+  <!-- Accents dorés sur les bords (effet jeton) -->
+  <circle cx="15" cy="16" r="8" fill="#FFD700"/>
+  <circle cx="15.13397459621556" cy="15.5" r="8" fill="#FFD700"/>
+  <circle cx="15.5" cy="15.13397459621556" r="8" fill="#FFD700"/>
+  <circle cx="16" cy="15" r="8" fill="#FFD700"/>
+  <circle cx="16.5" cy="15.13397459621556" r="8" fill="#FFD700"/>
+  <circle cx="16.866025403784437" cy="15.5" r="8" fill="#FFD700"/>
+  <circle cx="17" cy="16" r="8" fill="#FFD700"/>
+  <circle cx="16.866025403784437" cy="16.5" r="8" fill="#FFD700"/>
+  <circle cx="16.5" cy="16.866025403784437" r="8" fill="#FFD700"/>
+  <circle cx="16" cy="17" r="8" fill="#FFD700"/>
+  <circle cx="15.5" cy="16.866025403784437" r="8" fill="#FFD700"/>
+  <circle cx="15.133974596215563" cy="16.5" r="8" fill="#FFD700"/>
+
+  <!-- Texte "GTO" -->
+  <text x="16" y="16" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">G</text>
+</svg>
