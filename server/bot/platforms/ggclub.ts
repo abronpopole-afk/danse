@@ -1660,7 +1660,33 @@ export class GGClubAdapter extends PlatformAdapter {
     const currentPos = robot ? robot.getMousePos() : { x: 0, y: 0 };
     this.antiDetectionMonitor.recordMouseTrajectory(currentPos.x, currentPos.y, jitteredPos.x, jitteredPos.y);
 
-    await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
+    // Check for hesitation (move → stop → restart)
+    const humanizer = getHumanizer();
+    const hesitation = humanizer.shouldHesitateClick();
+
+    if (hesitation.hesitate && hesitation.movements) {
+      // Move towards target then stop
+      const partialX = currentPos.x + (jitteredPos.x - currentPos.x) * 0.6;
+      const partialY = currentPos.y + (jitteredPos.y - currentPos.y) * 0.6;
+      await this.performMouseMove(windowHandle, partialX, partialY);
+      
+      // Pause (hesitation)
+      await this.addRandomDelay(hesitation.pauseDuration || 300);
+      
+      // Micro-movements during hesitation
+      for (let i = 0; i < hesitation.movements; i++) {
+        const microJitterX = partialX + (Math.random() - 0.5) * 8;
+        const microJitterY = partialY + (Math.random() - 0.5) * 8;
+        await this.performMouseMove(windowHandle, microJitterX, microJitterY);
+        await this.addRandomDelay(80 + Math.random() * 120);
+      }
+      
+      // Resume movement to target
+      await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
+    } else {
+      await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
+    }
+
     await this.addRandomDelay(30);
     await this.performMouseClick(windowHandle, jitteredPos.x, jitteredPos.y);
 

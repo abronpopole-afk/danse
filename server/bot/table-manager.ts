@@ -267,6 +267,9 @@ export class TableSession extends EventEmitter {
     let selectedAction = this.selectAction(recommendation);
 
     const humanizer = getHumanizer();
+    
+    // Dégrader la décision selon l'état émotionnel (tilt/fatigue)
+    selectedAction = humanizer.getDegradedDecision(selectedAction, handStrength);
     const handStrength = this.estimateHandStrength();
     const isStrongSpot = recommendation.confidence > 0.8 && context.facingBet < context.potSize * 0.5;
 

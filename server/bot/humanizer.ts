@@ -447,6 +447,50 @@ export class Humanizer {
   }
 
   /**
+   * Dégrade les décisions selon l'état émotionnel (tilt/fatigue)
+   * Simule des erreurs stratégiques corrélées à l'humeur
+   */
+  getDegradedDecision(optimalAction: string, handStrength: number): string {
+    if (!this.settings.enableDynamicProfile) return optimalAction;
+
+    const profile = getPlayerProfile();
+    const state = profile.getState();
+    
+    // Pas de dégradation si en forme
+    if (state.tiltLevel < 0.3 && state.fatigueLevel < 0.4) return optimalAction;
+
+    const degradationProb = (state.tiltLevel * 0.15 + state.fatigueLevel * 0.10); // Max 25%
+
+    if (Math.random() < degradationProb) {
+      // Tilt élevé → over-aggressive
+      if (state.tiltLevel > 0.6) {
+        if (optimalAction === "FOLD" && handStrength > 0.2) return "CALL";
+        if (optimalAction === "CALL" && handStrength > 0.4) return "RAISE 66%";
+        if (optimalAction.includes("RAISE") && Math.random() < 0.3) return "ALLIN";
+      }
+      
+      // Fatigue élevée → passive/erreurs
+      if (state.fatigueLevel > 0.7) {
+        if (optimalAction.includes("RAISE") && Math.random() < 0.4) return "CALL";
+        if (optimalAction === "CALL" && handStrength < 0.5 && Math.random() < 0.3) return "FOLD";
+      }
+
+      // Losing streak → trop tight ou trop loose
+      if (state.consecutiveLosses > 4) {
+        if (Math.random() < 0.5) {
+          // Trop tight
+          if (handStrength < 0.7) return "FOLD";
+        } else {
+          // Trop loose (revenge)
+          if (optimalAction === "FOLD" && handStrength > 0.15) return "CALL";
+        }
+      }
+    }
+
+    return optimalAction;
+  }
+
+  /**
    * Simule une mauvaise lecture du pot (erreur cognitive humaine)
    * Retourne le pot perçu au lieu du pot réel
    */
@@ -698,3 +742,5 @@ export function updateHumanizerFromConfig(config: Partial<HumanizerConfig>): voi
 export function resetHumanizer(settings?: Partial<HumanizerSettings>): void {
   globalHumanizer = new Humanizer(settings);
 }
+
+export type { HumanizerSettings, HumanizedAction, BezierPoint };
