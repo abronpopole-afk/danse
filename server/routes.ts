@@ -1183,19 +1183,65 @@ export async function registerRoutes(
       const { windowHandle, iterations } = req.body;
       const test = new GGClubCaptureTest();
       await test.initialize();
+      
+      console.log(`[API] Starting capture benchmark: ${iterations || 50} iterations`);
       await test.runBenchmark(windowHandle || 1001, iterations || 50);
-      res.json({ success: true, message: "Benchmark complete" });
+      
+      res.json({ 
+        success: true, 
+        message: "Benchmark complete",
+        resultsPath: "./test-results/captures/",
+      });
     } catch (error) {
+      console.error("[API] Capture benchmark error:", error);
       res.status(500).json({ error: String(error) });
     }
   });
 
-  app.post("/api/tests/multi-table", async (_req, res) => {
+  app.post("/api/tests/multi-table", async (req, res) => {
+    try {
+      const { tableCount } = req.body;
+      const test = new MultiTablePerformanceTest();
+      
+      console.log(`[API] Starting multi-table test: ${tableCount || 6} tables`);
+      
+      if (tableCount === 12) {
+        await test.testTwelveTables();
+      } else if (tableCount === 24) {
+        await test.testTwentyFourTables();
+      } else {
+        await test.testSixTables();
+      }
+      
+      const report = test.getReport();
+      
+      res.json({ 
+        success: true, 
+        message: "Multi-table test complete",
+        report,
+      });
+    } catch (error) {
+      console.error("[API] Multi-table test error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/tests/stress", async (_req, res) => {
     try {
       const test = new MultiTablePerformanceTest();
-      await test.testSixTables();
-      res.json({ success: true, message: "Multi-table test complete" });
+      
+      console.log("[API] Starting stress test (6, 12, 24 tables)");
+      await test.stressTest();
+      
+      const report = test.getReport();
+      
+      res.json({ 
+        success: true, 
+        message: "Stress test complete",
+        report,
+      });
     } catch (error) {
+      console.error("[API] Stress test error:", error);
       res.status(500).json({ error: String(error) });
     }
   });
@@ -1203,9 +1249,17 @@ export async function registerRoutes(
   app.post("/api/tests/e2e", async (_req, res) => {
     try {
       const test = new E2ETest();
+      
+      console.log("[API] Starting E2E test");
       await test.runFullCycle();
-      res.json({ success: true, message: "E2E test complete" });
+      
+      res.json({ 
+        success: true, 
+        message: "E2E test complete",
+        replayPath: "./replays/",
+      });
     } catch (error) {
+      console.error("[API] E2E test error:", error);
       res.status(500).json({ error: String(error) });
     }
   });
