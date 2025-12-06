@@ -188,18 +188,47 @@ export class Humanizer {
       ];
     }
     
-    const points: BezierPoint[] = [];
-    const numPoints = Math.max(10, Math.floor(duration / 16));
+    // Récupérer les modifiers de fatigue/tilt
+    let modifiers: ProfileModifiers = {
+      delayMultiplier: 1,
+      varianceMultiplier: 1,
+      errorProbability: 0,
+      aggressionShift: 0,
+      rangeWidening: 1,
+      sizingVariance: 1,
+    };
+
+    let fatigueLevel = 0;
+    if (this.settings.enableDynamicProfile) {
+      const profile = getPlayerProfile();
+      modifiers = profile.getModifiers();
+      fatigueLevel = profile.getState().fatigueLevel;
+    }
     
-    const cp1x = startX + (endX - startX) * randomInRange(0.2, 0.4) + randomInRange(-50, 50);
-    const cp1y = startY + (endY - startY) * randomInRange(0.2, 0.4) + randomInRange(-50, 50);
-    const cp2x = startX + (endX - startX) * randomInRange(0.6, 0.8) + randomInRange(-30, 30);
-    const cp2y = startY + (endY - startY) * randomInRange(0.6, 0.8) + randomInRange(-30, 30);
+    const points: BezierPoint[] = [];
+    const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+    
+    // Loi de Fitts: temps = a + b * log2(distance/width + 1)
+    // Plus la distance est grande, plus le mouvement prend du temps
+    const fittsIndex = Math.log2(distance / 20 + 1);
+    const adjustedDuration = Math.max(duration, duration * (0.8 + fittsIndex * 0.3));
+    const numPoints = Math.max(10, Math.floor(adjustedDuration / 16));
+    
+    // Biais de trajectoire personnel (constant pour simuler un humain spécifique)
+    const personalBiasX = Math.sin(123.456) * 15; // Biais horizontal constant
+    const personalBiasY = Math.cos(789.012) * 12; // Biais vertical constant
+    
+    // Points de contrôle Bézier avec biais
+    const cp1x = startX + (endX - startX) * randomInRange(0.2, 0.4) + randomInRange(-50, 50) + personalBiasX * 0.3;
+    const cp1y = startY + (endY - startY) * randomInRange(0.2, 0.4) + randomInRange(-50, 50) + personalBiasY * 0.3;
+    const cp2x = startX + (endX - startX) * randomInRange(0.6, 0.8) + randomInRange(-30, 30) + personalBiasX * 0.5;
+    const cp2y = startY + (endY - startY) * randomInRange(0.6, 0.8) + randomInRange(-30, 30) + personalBiasY * 0.5;
     
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;
       const mt = 1 - t;
       
+      // Courbe de Bézier cubique
       const x = mt * mt * mt * startX +
                 3 * mt * mt * t * cp1x +
                 3 * mt * t * t * cp2x +
@@ -210,14 +239,33 @@ export class Humanizer {
                 3 * mt * t * t * cp2y +
                 t * t * t * endY;
       
-      const jitterX = randomInRange(-2, 2);
-      const jitterY = randomInRange(-2, 2);
+      // Loi de Fitts: vitesse non constante (accélération au début, décélération à la fin)
+      const fittsVelocityFactor = Math.sin(t * Math.PI); // Bell curve: lent au début/fin, rapide au milieu
       
-      const timestamp = Math.round(t * duration);
+      // Tremblements micro-moteurs (80-120 Hz) dépendants de la fatigue
+      const microTremorFrequency = 80 + Math.random() * 40; // 80-120 Hz
+      const microTremorAmplitude = (0.3 + fatigueLevel * 1.2) * modifiers.varianceMultiplier;
+      const microTremorX = Math.sin(t * numPoints * microTremorFrequency * 0.1) * microTremorAmplitude;
+      const microTremorY = Math.cos(t * numPoints * microTremorFrequency * 0.1) * microTremorAmplitude;
+      
+      // Jitter de base augmenté par la fatigue
+      const baseJitter = 2 + fatigueLevel * 3; // 2-5 pixels selon fatigue
+      const jitterX = randomInRange(-baseJitter, baseJitter) * (1 - fittsVelocityFactor * 0.3);
+      const jitterY = randomInRange(-baseJitter, baseJitter) * (1 - fittsVelocityFactor * 0.3);
+      
+      // Biais directionnel personnel (trajectoire non parfaite)
+      const biasInfluence = 1 - fittsVelocityFactor; // Plus fort au début/fin
+      const trajectoryBiasX = personalBiasX * biasInfluence * 0.2;
+      const trajectoryBiasY = personalBiasY * biasInfluence * 0.2;
+      
+      // Erreurs de précision augmentées par fatigue (main tremblante)
+      const precisionError = fatigueLevel > 0.5 ? randomInRange(-2, 2) * fatigueLevel : 0;
+      
+      const timestamp = Math.round(t * adjustedDuration);
       
       points.push({
-        x: Math.round(x + jitterX),
-        y: Math.round(y + jitterY),
+        x: Math.round(x + jitterX + microTremorX + trajectoryBiasX + precisionError),
+        y: Math.round(y + jitterY + microTremorY + trajectoryBiasY + precisionError),
         timestamp,
       });
     }
@@ -329,6 +377,44 @@ export class Humanizer {
   
   async waitForHumanDelay(delay: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  /**
+   * Simule un mouvement de souris réaliste avec vitesse variable selon la loi de Fitts
+   * @param startX Position X de départ
+   * @param startY Position Y de départ
+   * @param endX Position X de destination
+   * @param endY Position Y de destination
+   * @returns Durée totale du mouvement en ms
+   */
+  async simulateMouseMovement(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number
+  ): Promise<number> {
+    const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+    
+    // Loi de Fitts: MT = a + b * log2(D/W + 1)
+    // a = 50ms (temps incompressible), b = 150ms (coefficient), W = 20px (largeur cible)
+    const baseDuration = 50 + 150 * Math.log2(distance / 20 + 1);
+    
+    // Variation selon fatigue
+    let durationMultiplier = 1;
+    if (this.settings.enableDynamicProfile) {
+      const modifiers = getPlayerProfile().getModifiers();
+      durationMultiplier = modifiers.delayMultiplier;
+    }
+    
+    const totalDuration = Math.round(baseDuration * durationMultiplier * randomInRange(0.9, 1.1));
+    
+    // Générer la trajectoire
+    const path = this.generateBezierMousePath(startX, startY, endX, endY, totalDuration);
+    
+    // Note: L'exécution réelle du mouvement se ferait via robotjs dans platform-manager
+    // Ici on retourne juste la durée pour la synchronisation
+    
+    return totalDuration;
   }
 }
 

@@ -554,7 +554,29 @@ Chaque personnalité affecte le jeu différemment :
 **Fatigue augmente** :
 - Linéaire : 0-2h
 - Exponentielle : après 2h
-- Rythme circadien : moins de fatigue pendant peak hours (14h-22h)
+- Rythme circadien : moins de fatigue pendant les heures de pic
+
+### 10.4 Impact de la fatigue sur les mouvements de souris
+
+**Tremblements micro-moteurs (80-120 Hz)** :
+- Amplitude de base : 0.3 pixels
+- Amplitude avec fatigue : 0.3 + (fatigue × 1.2) pixels
+- Simule les tremblements naturels de la main humaine
+
+**Trajectoires biaisées** :
+- Biais personnel constant (simule un humain spécifique)
+- Influence maximale au début/fin du mouvement
+- Trajectoire non parfaite même sans fatigue
+
+**Loi de Fitts** :
+- Temps de mouvement = 50ms + 150ms × log₂(distance/20 + 1)
+- Vitesse non constante : accélération début, décélération fin
+- Ajusté par multiplicateur de fatigue (mouvements plus lents)
+
+**Erreurs de précision** :
+- Activées seulement si fatigue > 50%
+- Amplitude proportionnelle à la fatigue
+- Simule une main tremblante en fin de sessionigue pendant peak hours (14h-22h)
 
 ---
 

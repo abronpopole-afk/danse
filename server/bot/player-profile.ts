@@ -266,18 +266,19 @@ export class PlayerProfile extends EventEmitter {
 
     return {
       // Tilt = actions plus rapides, moins de réflexion
+      // Fatigue = actions plus lentes (coordination réduite)
       delayMultiplier: Math.max(
         0.5,
-        1 - tiltFactor * 0.5 - fatigueFactor * 0.2
+        1 - tiltFactor * 0.5 + fatigueFactor * 0.3
       ),
 
-      // Fatigue = plus de variance
-      varianceMultiplier: 1 + fatigueFactor * 0.8 + tiltFactor * 0.5,
+      // Fatigue = plus de variance dans les mouvements et décisions
+      varianceMultiplier: 1 + fatigueFactor * 1.2 + tiltFactor * 0.5,
 
-      // Tilt + Fatigue = plus d'erreurs
+      // Tilt + Fatigue = plus d'erreurs (tremblements, misclicks)
       errorProbability: Math.min(
         0.1,
-        (tiltFactor * 0.05 + fatigueFactor * 0.03) * (1 - focusFactor)
+        (tiltFactor * 0.05 + fatigueFactor * 0.04) * (1 - focusFactor)
       ),
 
       // Tilt = plus agressif
@@ -286,8 +287,8 @@ export class PlayerProfile extends EventEmitter {
       // Tilt = range plus large (joue plus de mains)
       rangeWidening: 1 + tiltFactor * 0.3,
 
-      // Tilt = sizing erratique
-      sizingVariance: 1 + tiltFactor * 0.4 + fatigueFactor * 0.2,
+      // Tilt + Fatigue = sizing erratique
+      sizingVariance: 1 + tiltFactor * 0.4 + fatigueFactor * 0.3,
     };
   }
 
