@@ -76,7 +76,87 @@ sudo -u postgres psql -c "CREATE USER poker_bot WITH PASSWORD 'votre_mot_de_pass
 sudo -u postgres psql -c "CREATE DATABASE poker_bot OWNER poker_bot;"
 ```
 
-### 1.3 Installation des Build Tools pour Modules Natifs
+### 1.3 Installation de Redis (Recommandé pour l'Event Bus)
+
+Redis est utilisé pour le système d'événements distribués, permettant de gérer efficacement plusieurs tables et comptes simultanément.
+
+#### Windows
+
+Redis n'a pas de version officielle Windows native, mais plusieurs options existent :
+
+**Option 1 : WSL2 (Recommandé pour Windows 10/11)**
+```bash
+# Activer WSL2 (si pas déjà fait)
+wsl --install
+
+# Dans WSL2, installer Redis
+sudo apt-get update
+sudo apt-get install -y redis-server
+
+# Configurer Redis pour écouter sur toutes les interfaces
+sudo sed -i 's/bind 127.0.0.1 ::1/bind 0.0.0.0/g' /etc/redis/redis.conf
+
+# Démarrer Redis
+sudo service redis-server start
+
+# Vérifier que Redis fonctionne
+redis-cli ping  # Doit retourner "PONG"
+```
+
+**Option 2 : Memurai (Alternative native Windows)**
+```bash
+# Télécharger depuis https://www.memurai.com/
+# Installer l'exécutable
+# Redis sera disponible sur localhost:6379
+```
+
+**Option 3 : Redis depuis archive (Portable)**
+```bash
+# Télécharger redis-windows depuis GitHub
+# https://github.com/tporadowski/redis/releases
+
+# Extraire dans C:\Redis
+# Lancer redis-server.exe
+cd C:\Redis
+.\redis-server.exe
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Installation de Redis
+sudo apt-get update
+sudo apt-get install -y redis-server
+
+# Configurer Redis pour démarrer automatiquement
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+
+# Configurer pour écouter sur 0.0.0.0 (si nécessaire pour multi-machines)
+sudo sed -i 's/bind 127.0.0.1 ::1/bind 0.0.0.0/g' /etc/redis/redis.conf
+
+# Optionnel : Définir un mot de passe Redis
+sudo sed -i 's/# requirepass foobared/requirepass votre_mot_de_passe_redis/g' /etc/redis/redis.conf
+
+# Redémarrer Redis
+sudo systemctl restart redis-server
+
+# Vérifier que Redis fonctionne
+redis-cli ping  # Doit retourner "PONG"
+```
+
+#### macOS
+```bash
+# Installation avec Homebrew
+brew install redis
+
+# Démarrer Redis
+brew services start redis
+
+# Vérifier
+redis-cli ping  # Doit retourner "PONG"
+```
+
+### 1.4 Installation des Build Tools pour Modules Natifs
 
 #### Windows
 ```bash
@@ -133,6 +213,11 @@ touch .env
 ```env
 # Base de données PostgreSQL
 DATABASE_URL=postgresql://poker_bot:votre_mot_de_passe@localhost:5432/poker_bot
+
+# Redis (Event Bus)
+REDIS_URL=redis://localhost:6379
+# Si vous avez défini un mot de passe Redis :
+# REDIS_URL=redis://:votre_mot_de_passe_redis@localhost:6379
 
 # Port de l'application
 PORT=5000
@@ -253,7 +338,13 @@ Vérifier dans la console :
 ✓ node-window-manager loaded
 ✓ Database connected
 ✓ Player profile initialized from database
+✓ EventBus initialized (Redis connected)
 ✓ serving on port 5000
+```
+
+**Note** : Si Redis n'est pas disponible, le bot fonctionnera en mode local dégradé avec un message :
+```
+[EventBus] Mode dégradé activé (sans Redis)
 ```
 
 Si des modules ne chargent pas :
@@ -507,6 +598,34 @@ sudo systemctl status postgresql  # Linux
 psql -U poker_bot -d poker_bot -h localhost
 ```
 
+#### Redis ne se connecte pas
+```bash
+# Vérifier que Redis est démarré
+sudo systemctl status redis-server  # Linux
+redis-cli ping                       # Doit retourner "PONG"
+
+# Sur Windows avec WSL2
+wsl sudo service redis-server status
+
+# Vérifier la connexion depuis Node.js
+node -e "import('ioredis').then(m => { const r = new m.default('redis://localhost:6379'); r.ping().then(console.log).finally(() => r.quit()); })"
+
+# Si erreur ECONNREFUSED, vérifier que Redis écoute bien
+sudo netstat -tlnp | grep redis
+```
+
+#### Le bot fonctionne mais Redis n'est pas utilisé
+```bash
+# Vérifier que REDIS_URL est défini dans .env
+grep REDIS_URL .env
+
+# Si absent, ajouter :
+echo "REDIS_URL=redis://localhost:6379" >> .env
+
+# Redémarrer le bot
+npm run dev
+```
+
 #### Le Task Scheduler ralentit
 ```bash
 # Consulter les stats via l'API
@@ -647,6 +766,7 @@ Avant de lancer le bot, vérifier :
 
 - [ ] Node.js 20.x installé
 - [ ] PostgreSQL installé et démarré
+- [ ] Redis installé et démarré (recommandé)
 - [ ] Build tools installés
 - [ ] Dépendances `npm install` terminées
 - [ ] Fichier `.env` configuré
@@ -678,6 +798,9 @@ npm run dev
 # Vérifier la base de données
 npm run db:push
 
+# Vérifier Redis
+redis-cli ping
+
 # Nettoyer et réinstaller
 rm -rf node_modules && npm install
 
@@ -689,6 +812,9 @@ curl http://localhost:5000/api/platform/scheduler-stats
 
 # État du profil
 curl http://localhost:5000/api/player-profile
+
+# Infos Event Bus
+curl http://localhost:5000/api/platform/event-bus-info
 ```
 
 ---
