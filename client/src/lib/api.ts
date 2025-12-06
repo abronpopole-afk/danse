@@ -135,6 +135,10 @@ export const api = {
         body: JSON.stringify(updates),
       });
     },
+
+    async test(): Promise<{ success: boolean; error?: string }> {
+      return fetchJson(`${API_BASE}/gto-config/test`, { method: "POST" });
+    },
   },
 
   platform: {
@@ -146,6 +150,39 @@ export const api = {
       return fetchJson(`${API_BASE}/platform-config`, {
         method: "PATCH",
         body: JSON.stringify(updates),
+      });
+    },
+
+    async getStats(): Promise<{ accounts: any[] }> {
+      return fetchJson(`${API_BASE}/platform-config/stats`);
+    },
+
+    async getActive(): Promise<{ configs: any[] }> {
+      return fetchJson(`${API_BASE}/platform-config/active`);
+    },
+
+    async connect(config: any): Promise<{ success: boolean; accountId?: string }> {
+      return fetchJson(`${API_BASE}/platform-config/connect`, {
+        method: "POST",
+        body: JSON.stringify(config),
+      });
+    },
+
+    async disconnect(accountId: string): Promise<{ success: boolean }> {
+      return fetchJson(`${API_BASE}/platform-config/disconnect/${accountId}`, {
+        method: "POST",
+      });
+    },
+
+    async pause(accountId: string): Promise<{ success: boolean }> {
+      return fetchJson(`${API_BASE}/platform-config/pause/${accountId}`, {
+        method: "POST",
+      });
+    },
+
+    async delete(accountId: string): Promise<{ success: boolean }> {
+      return fetchJson(`${API_BASE}/platform-config/${accountId}`, {
+        method: "DELETE",
       });
     },
   },

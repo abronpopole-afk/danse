@@ -239,6 +239,25 @@ export default function SettingsPage() {
                     {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                     Sauvegarder
                   </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      try {
+                        const response = await api.gtoConfig.test();
+                        if (response.success) {
+                          toast.success("Connexion GTO réussie !");
+                        } else {
+                          toast.error("Échec de connexion: " + response.error);
+                        }
+                      } catch (error: any) {
+                        toast.error("Erreur: " + error.message);
+                      }
+                    }}
+                    disabled={!gtoForm.apiKey}
+                  >
+                    <Wifi className="w-4 h-4 mr-2" />
+                    Tester connexion
+                  </Button>
                   <Button variant="outline" onClick={loadConfigs} disabled={isLoading}>
                     <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                     Recharger

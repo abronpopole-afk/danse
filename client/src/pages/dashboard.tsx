@@ -4,6 +4,8 @@ import { TableVisualizer } from "@/components/poker/table-visualizer";
 import { ActionLog } from "@/components/poker/action-log";
 import { HumanizerPanel } from "@/components/settings/humanizer-panel";
 import { ProfilePanel } from "@/components/settings/profile-panel";
+import { StackVisualizer } from "@/components/poker/stack-visualizer";
+import { TiltMonitor } from "@/components/poker/tilt-monitor";
 import { useBotState } from "@/hooks/use-bot-state";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -298,6 +300,13 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="lg:col-span-1 flex flex-col gap-6">
+            <TiltMonitor profile={playerProfile} />
+            {selectedTable?.players && (
+              <StackVisualizer 
+                players={selectedTable.players} 
+                heroPosition={selectedTable.heroPosition}
+              />
+            )}
             <HumanizerPanel 
               settings={humanizerSettings}
               onUpdate={handleUpdateHumanizer}
