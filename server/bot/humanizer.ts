@@ -133,6 +133,13 @@ export class Humanizer {
       if (conservativeDelays) {
         minDelayMs = conservativeDelays.minDelayMs;
         maxDelayMs = conservativeDelays.maxDelayMs;
+        console.log(`[Humanizer] Safe Mode delays applied: ${minDelayMs}-${maxDelayMs}ms`);
+      }
+      
+      // Appliquer errorProbability depuis Safe Mode
+      const safeModeErrorProb = safeModeManager.getErrorProbability();
+      if (safeModeErrorProb > 0.02) {
+        modifiers.errorProbability = Math.max(modifiers.errorProbability, safeModeErrorProb);
       }
     } catch (error) {
     }

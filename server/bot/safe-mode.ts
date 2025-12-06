@@ -1,45 +1,71 @@
 
-export type SafeMode = "normal" | "conservative" | "freeze";
+export type SafeMode = "normal" | "cautious" | "conservative" | "freeze";
 
 export interface SafeModeConfig {
   mode: SafeMode;
   suspicionThreshold: {
-    conservative: number; // 0.5 = déclenche mode conservateur
-    freeze: number; // 0.7 = déclenche mode freeze
+    cautious: number; // 0.35 = légère alerte
+    conservative: number; // 0.55 = mode conservateur
+    freeze: number; // 0.75 = mode freeze
+  };
+  cautiousSettings: {
+    increaseDelayVariance: boolean;
+    enableMoreErrors: boolean;
+    addRandomPauses: boolean;
+    minDelayMs: number;
+    maxDelayMs: number;
+    errorProbability: number;
   };
   conservativeSettings: {
     foldBorderlineHands: boolean;
     noRoboticRaises: boolean;
+    enableTimeouts: boolean;
+    enableDonkBets: boolean;
     minDelayMs: number;
     maxDelayMs: number;
     maxActiveTables: number;
+    gtoAccuracyLimit: number; // Limiter GTO à 80%
   };
   freezeSettings: {
     disableAutoActions: boolean;
     continueReading: boolean;
     continueStats: boolean;
     alertUser: boolean;
+    cooldownMinutes: number; // Temps avant reprise auto
   };
 }
 
 const DEFAULT_SAFE_MODE_CONFIG: SafeModeConfig = {
   mode: "normal",
   suspicionThreshold: {
-    conservative: 0.5,
-    freeze: 0.7,
+    cautious: 0.35,
+    conservative: 0.55,
+    freeze: 0.75,
+  },
+  cautiousSettings: {
+    increaseDelayVariance: true,
+    enableMoreErrors: true,
+    addRandomPauses: true,
+    minDelayMs: 1800,
+    maxDelayMs: 5000,
+    errorProbability: 0.08, // 8% erreurs
   },
   conservativeSettings: {
     foldBorderlineHands: true,
     noRoboticRaises: true,
-    minDelayMs: 1000,
-    maxDelayMs: 2500,
+    enableTimeouts: true,
+    enableDonkBets: true,
+    minDelayMs: 2500,
+    maxDelayMs: 7000,
     maxActiveTables: 4,
+    gtoAccuracyLimit: 0.80, // Max 80% GTO
   },
   freezeSettings: {
     disableAutoActions: true,
     continueReading: true,
     continueStats: true,
     alertUser: true,
+    cooldownMinutes: 15, // 15min cooldown
   },
 };
 
@@ -81,23 +107,34 @@ export class SafeModeManager {
     if (suspicionLevel >= this.config.suspicionThreshold.freeze) {
       newMode = "freeze";
       reason = `Suspicion critique (${(suspicionLevel * 100).toFixed(1)}%)`;
-      actions.push("Actions automatiques désactivées");
-      actions.push("Intervention manuelle requise");
-      actions.push("Lecture et statistiques maintenues");
+      actions.push("🚨 Actions automatiques désactivées");
+      actions.push("⏸️ Intervention manuelle requise");
+      actions.push("📊 Lecture et statistiques maintenues");
+      actions.push(`⏱️ Cooldown: ${this.config.freezeSettings.cooldownMinutes}min`);
     } else if (suspicionLevel >= this.config.suspicionThreshold.conservative) {
       newMode = "conservative";
       reason = `Suspicion élevée (${(suspicionLevel * 100).toFixed(1)}%)`;
-      actions.push("Fold sur mains borderline");
-      actions.push("Délais augmentés (1-2.5s)");
-      actions.push("Pas de raises robotisés");
+      actions.push("🛡️ Mode ultra-défensif activé");
+      actions.push("📉 Fold sur mains borderline");
+      actions.push("⏱️ Délais augmentés (2.5-7s)");
+      actions.push("🎲 GTO limité à 80% max");
+      actions.push("🎭 Timeouts + donk-bets activés");
       if (this.config.conservativeSettings.maxActiveTables < 24) {
-        actions.push(`Max ${this.config.conservativeSettings.maxActiveTables} tables actives`);
+        actions.push(`🎰 Max ${this.config.conservativeSettings.maxActiveTables} tables actives`);
       }
+    } else if (suspicionLevel >= this.config.suspicionThreshold.cautious) {
+      newMode = "cautious";
+      reason = `Suspicion modérée (${(suspicionLevel * 100).toFixed(1)}%)`;
+      actions.push("⚠️ Mode prudent activé");
+      actions.push("📈 Variance augmentée (timing + sizing)");
+      actions.push("🎲 Erreurs intentionnelles (8%)");
+      actions.push("⏸️ Pauses aléatoires ajoutées");
+      actions.push("⏱️ Délais augmentés (1.8-5s)");
     } else {
       newMode = "normal";
       if (previousMode !== "normal") {
         reason = `Suspicion normale (${(suspicionLevel * 100).toFixed(1)}%)`;
-        actions.push("Retour au mode normal");
+        actions.push("✅ Retour au mode normal");
       }
     }
 
@@ -144,11 +181,48 @@ export class SafeModeManager {
   }
 
   getConservativeDelays(): { minDelayMs: number; maxDelayMs: number } | null {
-    if (this.currentMode !== "conservative") return null;
-    return {
-      minDelayMs: this.config.conservativeSettings.minDelayMs,
-      maxDelayMs: this.config.conservativeSettings.maxDelayMs,
-    };
+    if (this.currentMode === "conservative") {
+      return {
+        minDelayMs: this.config.conservativeSettings.minDelayMs,
+        maxDelayMs: this.config.conservativeSettings.maxDelayMs,
+      };
+    }
+    
+    if (this.currentMode === "cautious") {
+      return {
+        minDelayMs: this.config.cautiousSettings.minDelayMs,
+        maxDelayMs: this.config.cautiousSettings.maxDelayMs,
+      };
+    }
+    
+    return null;
+  }
+
+  getErrorProbability(): number {
+    if (this.currentMode === "cautious") {
+      return this.config.cautiousSettings.errorProbability;
+    }
+    
+    if (this.currentMode === "conservative") {
+      return 0.12; // 12% erreurs en mode conservateur
+    }
+    
+    return 0.02; // 2% erreurs en mode normal
+  }
+
+  shouldEnableTimeouts(): boolean {
+    return this.currentMode === "conservative" && this.config.conservativeSettings.enableTimeouts;
+  }
+
+  shouldEnableDonkBets(): boolean {
+    return this.currentMode === "conservative" && this.config.conservativeSettings.enableDonkBets;
+  }
+
+  getGtoAccuracyLimit(): number | null {
+    if (this.currentMode === "conservative") {
+      return this.config.conservativeSettings.gtoAccuracyLimit;
+    }
+    return null;
   }
 
   shouldReduceTables(): { reduce: boolean; maxTables: number } {
@@ -202,20 +276,40 @@ export class SafeModeManager {
           benefits: ["Performance maximale", "Toutes les fonctionnalités actives"],
         };
 
+      case "cautious":
+        return {
+          mode: "cautious",
+          description: "Mode prudent - Suspicion modérée détectée",
+          restrictions: [
+            "Variance augmentée (timing + sizing)",
+            "Délais augmentés (1800-5000ms)",
+            "Erreurs intentionnelles (8%)",
+            "Pauses aléatoires ajoutées",
+          ],
+          benefits: [
+            "Réduit la suspicion légère",
+            "Pattern plus naturel",
+            "Prévention précoce",
+            "Performance quasi-normale",
+          ],
+        };
+
       case "conservative":
         return {
           mode: "conservative",
-          description: "Mode conservateur - Jeu défensif",
+          description: "Mode conservateur - Jeu ultra-défensif",
           restrictions: [
             "Fold automatique sur mains borderline (equity 40-55%)",
-            "Délais augmentés (1000-2500ms)",
-            "Pas de raises rapides",
+            "Délais augmentés (2500-7000ms)",
+            "GTO limité à 80% max",
+            "Timeouts + donk-bets activés",
             `Maximum ${this.config.conservativeSettings.maxActiveTables} tables`,
           ],
           benefits: [
             "Réduit drastiquement la suspicion",
-            "Pattern plus humain",
+            "Pattern très humain",
             "Protège le compte",
+            "Jeu crédible",
           ],
         };
 
@@ -227,6 +321,7 @@ export class SafeModeManager {
             "Actions automatiques désactivées",
             "Aucune décision prise par le bot",
             "Attente intervention manuelle",
+            `Cooldown: ${this.config.freezeSettings.cooldownMinutes}min`,
           ],
           benefits: [
             "Lecture des états maintenue",
