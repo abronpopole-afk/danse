@@ -40,42 +40,47 @@ export class WorkerPool {
   }
 
   private async createWorker(): Promise<void> {
-    const worker = new Worker(this.workerPath);
-    
-    worker.on('message', (result: WorkerResult) => {
-      const pending = this.taskMap.get(result.id);
-      if (pending) {
-        if (result.error) {
-          pending.reject(new Error(result.error));
-        } else {
-          pending.resolve(result);
-        }
-        this.taskMap.delete(result.id);
-      }
+    try {
+      const worker = new Worker(this.workerPath);
       
-      // Worker is now available
-      this.availableWorkers.push(worker);
-      this.processNextTask();
-    });
-    
-    worker.on('error', (error) => {
-      console.error('[WorkerPool] Worker error:', error);
-      // Remove from available workers
-      this.availableWorkers = this.availableWorkers.filter(w => w !== worker);
-      // Recreate worker
-      this.createWorker();
-    });
-    
-    worker.on('exit', (code) => {
-      if (code !== 0) {
-        console.error(`[WorkerPool] Worker exited with code ${code}`);
-        this.workers = this.workers.filter(w => w !== worker);
+      worker.on('message', (result: WorkerResult) => {
+        const pending = this.taskMap.get(result.id);
+        if (pending) {
+          if (result.error) {
+            pending.reject(new Error(result.error));
+          } else {
+            pending.resolve(result);
+          }
+          this.taskMap.delete(result.id);
+        }
+        
+        // Worker is now available
+        this.availableWorkers.push(worker);
+        this.processNextTask();
+      });
+      
+      worker.on('error', (error) => {
+        console.error(`[WorkerPool] Worker error for ${path.basename(this.workerPath)}:`, error);
+        // Remove from available workers
         this.availableWorkers = this.availableWorkers.filter(w => w !== worker);
-      }
-    });
-    
-    this.workers.push(worker);
-    this.availableWorkers.push(worker);
+        // Recreate worker
+        this.createWorker();
+      });
+      
+      worker.on('exit', (code) => {
+        if (code !== 0) {
+          console.error(`[WorkerPool] Worker exited with code ${code} for ${path.basename(this.workerPath)}`);
+          this.workers = this.workers.filter(w => w !== worker);
+          this.availableWorkers = this.availableWorkers.filter(w => w !== worker);
+        }
+      });
+      
+      this.workers.push(worker);
+      this.availableWorkers.push(worker);
+    } catch (error) {
+      console.error(`[WorkerPool] Failed to create worker for ${this.workerPath}:`, error);
+      throw error;
+    }
   }
 
   async executeTask(task: WorkerTask): Promise<WorkerResult> {

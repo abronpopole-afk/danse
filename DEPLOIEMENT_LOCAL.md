@@ -237,7 +237,24 @@ git clone https://replit.com/@VotreUsername/VotreRepl.git .
 # OU télécharger le ZIP depuis Replit et l'extraire
 ```
 
-### 2.2 Configuration de la base de données
+### 2.2 Compiler les Workers
+
+Avant de démarrer l'application, compiler les workers TypeScript en JavaScript :
+
+```bash
+# Compiler les workers
+npm run build:workers
+
+# OU sur Windows
+script\build-workers.bat
+```
+
+Cela créera les fichiers dans `dist/workers/` :
+- `vision-worker-thread.js`
+- `gto-worker-thread.js`
+- `humanizer-worker-thread.js`
+
+### 2.3 Configuration de la base de données
 
 1. Créer un fichier `.env` à la racine du projet :
 ```bash

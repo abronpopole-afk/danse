@@ -11,23 +11,28 @@ export class WorkerManager {
     if (this.initialized) return;
 
     try {
+      // Utiliser les workers compilés dans dist/workers
+      const workerDir = process.env.NODE_ENV === 'production' 
+        ? 'dist/workers' 
+        : 'dist/workers';
+
       // Initialize Vision Worker Pool
       this.visionPool = new WorkerPool(
-        new URL('./vision-worker-thread.js', import.meta.url).pathname,
+        `${workerDir}/vision-worker-thread.js`,
         3 // 3 workers pour vision (CPU intensive)
       );
       await this.visionPool.initialize();
 
       // Initialize GTO Worker Pool
       this.gtoPool = new WorkerPool(
-        new URL('./gto-worker-thread.js', import.meta.url).pathname,
+        `${workerDir}/gto-worker-thread.js`,
         2 // 2 workers pour GTO
       );
       await this.gtoPool.initialize();
 
       // Initialize Humanizer Worker Pool
       this.humanizerPool = new WorkerPool(
-        new URL('./humanizer-worker-thread.js', import.meta.url).pathname,
+        `${workerDir}/humanizer-worker-thread.js`,
         2 // 2 workers pour humanizer
       );
       await this.humanizerPool.initialize();
