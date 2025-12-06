@@ -19,13 +19,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          
+      - name: Fix package versions
+        run: |
+          (Get-Content package.json) -replace '"@auth/express": "\^0.10.4"', '"@auth/express": "^0.12.1"' | Set-Content package.json
+          (Get-Content package.json) -replace '"@auth/core": "\^0.37.4"', '"@auth/core": "^0.40.0"' | Set-Content package.json
+        shell: pwsh
           
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm install --ignore-scripts --legacy-peer-deps
         
       - name: Install Electron and build tools
-        run: npm install --save-dev electron electron-builder
+        run: npm install --save-dev electron electron-builder --legacy-peer-deps
           
       - name: Build TypeScript workers
         run: npm run build:workers
