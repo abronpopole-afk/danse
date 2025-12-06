@@ -67,6 +67,25 @@ npx node-gyp rebuild
 
 ## Dépannage
 
+### Erreur "spawn node ENOENT"
+
+Cette erreur signifie que Node.js n'est pas trouvé. Solution :
+
+1. **Vérifiez l'installation Node.js** :
+```powershell
+node --version
+```
+
+2. **Si la commande échoue**, Node.js n'est pas installé :
+   - Téléchargez depuis [nodejs.org](https://nodejs.org/)
+   - Installez la version LTS (20.x)
+   - **Important**: Cochez "Add to PATH" lors de l'installation
+   - Redémarrez Windows après installation
+
+3. **Testez le diagnostic** :
+   - Naviguez vers le dossier d'installation
+   - Exécutez: `node electron/check-node.cjs`
+
 ### L'application ne démarre pas
 
 1. Vérifiez que Node.js est installé : `node --version`

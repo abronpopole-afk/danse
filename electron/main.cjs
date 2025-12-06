@@ -108,10 +108,35 @@ function startServer() {
     PORT: PORT.toString()
   };
 
-  serverProcess = spawn('node', [serverPath], {
+  // Détecter le chemin Node.js sur Windows
+  let nodePath = 'node';
+  if (process.platform === 'win32') {
+    // Vérifier si Node.js est dans le PATH
+    const possiblePaths = [
+      path.join(process.env.ProgramFiles || 'C:\\Program Files', 'nodejs', 'node.exe'),
+      path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'nodejs', 'node.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'nodejs', 'node.exe'),
+      path.join(process.env.APPDATA || '', 'npm', 'node.exe'),
+    ];
+
+    for (const possiblePath of possiblePaths) {
+      try {
+        const fs = require('fs');
+        if (fs.existsSync(possiblePath)) {
+          nodePath = possiblePath;
+          break;
+        }
+      } catch (e) {
+        // Continue à chercher
+      }
+    }
+  }
+
+  serverProcess = spawn(nodePath, [serverPath], {
     cwd: path.join(__dirname, '..'),
     env,
-    stdio: ['pipe', 'pipe', 'pipe']
+    stdio: ['pipe', 'pipe', 'pipe'],
+    shell: process.platform === 'win32' // Utiliser le shell sur Windows
   });
 
   serverProcess.stdout.on('data', (data) => {
