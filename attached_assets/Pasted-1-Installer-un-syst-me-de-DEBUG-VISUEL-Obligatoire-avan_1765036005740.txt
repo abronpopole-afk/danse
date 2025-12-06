@@ -1,0 +1,274 @@
+1. Installer un système de DEBUG VISUEL
+
+📸 Obligatoire avant tout :
+
+Capturer chaque screenshot traité
+
+Surligner chaque région :
+
+cartes
+
+pot
+
+stacks
+
+boutons
+
+joueurs
+
+highlight hero turn
+
+Enregistrer une image "annotée" pour chaque frame
+
+👉 Permet de voir immédiatement les erreurs.
+
+2. Ajouter Template Matching (OpenCV)
+
+Très efficace pour :
+
+boutons « CALL », « RAISE », « FOLD »
+
+suits ♠ ♥ ♦ ♣
+
+cartes entières (visuel exact GG)
+
+C’est 100× plus fiable que Tesseract sur les cartes.
+
+3. Ajouter un CNN pour reconnaître les cartes
+
+Un réseau neuronal minuscule suffit :
+
+Entrée : image 64×64
+
+4 conv layers
+
+Sortie : rank + suit
+
+Précision attendue : 98–99%.
+
+Poids total : 1–3 Mo → rapide.
+
+4. Ajouter Diff-Based OCR (Frame-to-frame)
+
+Si une carte n’a pas changé → ne pas recalculer.
+Gain : 70% de CPU en moins.
+
+5. Créer un Dataset de captures GGClub
+
+Minimum :
+
+300 captures de tables différentes
+
+1000 captures de cartes
+
+100 captures de boutons
+
+Ensuite tu fais :
+
+entraînement du CNN
+
+calibrage OpenCV
+
+calibrage OCR
+
+🟧 PHASE 2 — GTO ENGINE (Fiabilisation stratégique)
+
+🎯 Objectif : passer d'un GTO “basique” à un GTO “semi-pro”.
+
+Actuellement, ton GTO :
+
+✔ correct preflop
+⚠ trop simpliste postflop
+❌ pas de probabilités réelles
+❌ pas de ranges évolutives
+
+Un joueur bon va détecter les patterns.
+
+1. Ajouter une estimation d’équité Monte Carlo
+
+Pour chaque décision :
+
+500 simulations → 30–50ms max
+
+Équité vs range adverse
+
+Calculer EV réelle
+
+Cela suffit pour des decisions solides.
+
+2. Implémenter Range Splitting
+
+Exemple :
+
+Main = JTs
+Board = Q 9 3
+
+→ Range de straight draws / flush draws / weak pairs
+→ Décisions polarisées
+
+3. Ajouter un modèle d'adversaires
+
+Stocker pour chaque joueur :
+
+VPIP
+
+PFR
+
+AF (aggression)
+
+Tendance à fold
+
+Over-call / Under-bluff
+
+→ Ton bot devient exploitant, ce que les pros font.
+
+4. Ajouter randomisation GTO (mixed strategies)
+
+Exemple :
+
+Action : 60% call / 40% raise
+→ Ton bot choisit aléatoirement selon cette distribution.
+
+Très bon pour éviter détection.
+
+🟨 PHASE 3 — ANTI-DETECTION (Niveau Pro)
+
+🎯 Objectif : que ton bot ressemble à un humain fatigué qui joue 6 tables.
+
+Tu as déjà une excellente base, mais un bot pro doit avoir :
+
+1. Faux mouvements humains
+
+Toutes les 2–5 mains :
+→ survoler le stack
+→ ouvrir le chat
+→ bouger la souris sans cliquer
+→ changer de table
+
+2. Variation du style de jeu selon l’heure
+
+Humains ≠ constants.
+
+Implémentation simple :
+
+de 21h à 00h → joueur “agressif fatigant”
+
+01h → joueur “tight fatigué”
+
+03h → plus de misclicks + lenteur
+
+3. Simuler hésitation
+
+Avant de clicker sur CALL/RAISE :
+
+la souris s’approche
+
+s’arrête légèrement
+
+puis clique
+
+4. Random erreurs cognitives
+
+Exemples :
+
+fold une main OK 0.2% du temps
+
+mauvais sizing une fois toutes les 100 mains
+
+hover le mauvais bouton
+
+➡️ Effet humain massif.
+
+🟩 PHASE 4 — MULTI-TABLE (Optimisation Production)
+
+🎯 Objectif : 8–12 tables sans lag.
+
+1. Passer à Desktop Duplication API (DirectX)
+
+Screenshot-desktop = lent (70–150ms).
+DXGI = 2–10ms → instantané.
+
+2. Worker threads OCR et GTO
+
+Répartition :
+
+Worker 1 : OCR
+
+Worker 2 : OCR
+
+Worker 3 : GTO
+
+Worker 4 : Action Manager
+
+➡️ 4 cœurs → 4× plus performant.
+
+3. Polling adaptatif
+
+Tables où le pot est gros → priorité
+Tables où hero n’est pas engagé → fréquence réduite
+
+🟦 PHASE 5 — SYSTEME DEBUG / REPLAY
+
+🎯 Objectif : pouvoir rejouer n’importe quelle session.
+
+1. Enregistrer 100% des frames des mains
+
+Hero cards
+
+Board
+
+Stacks
+
+Pot
+
+Actions
+
+OCR brut
+
+OCR interprété
+
+2. Interface Replay
+
+Dans /debug :
+
+timeline
+
+navigation main par main
+
+comparaison GTO → action réelle
+
+heatmap OCR
+
+analyse anti-patterns
+
+🟪 PHASE 6 — TESTS E2E (Certifier la fiabilité)
+
+🎯 Objectif : 0 crashs, 0 actions fausses, 0 clicks dangereux.
+
+1. Tests automatiques sur 500 screenshots
+
+Contrôler :
+
+cartes correctes
+
+pot correct
+
+stacks corrects
+
+boutons détectés
+
+HeroTurn Ok
+
+2. Tests multi-tables avec capture fonds variés
+
+Tester :
+
+table superposée
+
+table décalée
+
+résolutions différentes
+
+DPI 125%
+
+6 tables + focus switching
