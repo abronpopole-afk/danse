@@ -99,7 +99,8 @@ export class PokerOCREngine {
           console.log('[PokerOCREngine] Tesseract fallback initialized');
         }
       } catch (e) {
-        console.warn('[PokerOCREngine] Tesseract not available:', e);
+        console.warn('[PokerOCREngine] Tesseract not available (OK, ML primary active):', (e as Error).message);
+        this.config.useTesseractFallback = false;
       }
     }
 
@@ -119,16 +120,16 @@ export class PokerOCREngine {
     const validator = getMultiFrameValidator();
 
     const cardWidth = Math.floor(width / cardCount);
-    
+
     for (let i = 0; i < cardCount; i++) {
       const cardStart = i * cardWidth;
       const cardBuffer = this.extractRegion(
-        imageBuffer, 
-        width, 
-        height, 
-        cardStart, 
-        0, 
-        cardWidth, 
+        imageBuffer,
+        width,
+        height,
+        cardStart,
+        0,
+        cardWidth,
         height
       );
 
@@ -204,7 +205,7 @@ export class PokerOCREngine {
       if (this.config.useTesseractFallback && this.tesseractWorker) {
         const tesseractResult = await this.recognizeWithTesseract(cardBuffer);
         const parsed = this.parseCardFromText(tesseractResult.text);
-        
+
         if (parsed) {
           cards.push({
             rank: parsed.rank,
@@ -213,7 +214,7 @@ export class PokerOCREngine {
             confidence: tesseractResult.confidence * 0.8
           });
         }
-        
+
         this.stats.tesseractCalls++;
       }
     }
@@ -234,10 +235,10 @@ export class PokerOCREngine {
   ): Promise<ValueOCRResult> {
     const startTime = Date.now();
     const validator = getMultiFrameValidator();
-    
+
     const cacheKey = this.generateCacheKey(imageBuffer, width, height);
     const cached = ocrCache.get(imageBuffer, { x: 0, y: 0, width, height });
-    
+
     if (cached) {
       this.stats.cacheHits++;
       return {
@@ -261,7 +262,7 @@ export class PokerOCREngine {
 
       if (confidence < this.config.confidenceThreshold && this.tesseractWorker) {
         const tesseractResult = await this.recognizeWithTesseract(imageBuffer);
-        
+
         if (tesseractResult.confidence > confidence) {
           text = tesseractResult.text;
           confidence = tesseractResult.confidence;
@@ -326,7 +327,7 @@ export class PokerOCREngine {
   ): { text: string; confidence: number } {
     const charWidth = Math.min(32, Math.floor(width / 4));
     const numChars = Math.floor(width / charWidth);
-    
+
     let text = '';
     let totalConfidence = 0;
     let validChars = 0;
@@ -343,7 +344,7 @@ export class PokerOCREngine {
       );
 
       const result = this.cardClassifier.classifyDigit(charBuffer, charWidth, height);
-      
+
       if (result.confidence > 0.5) {
         text += result.class;
         totalConfidence += result.confidence;
@@ -387,20 +388,20 @@ export class PokerOCREngine {
     channels: number = 4
   ): Buffer {
     const output = Buffer.alloc(width * height * channels);
-    
+
     for (let dy = 0; dy < height; dy++) {
       for (let dx = 0; dx < width; dx++) {
         const srcX = Math.min(x + dx, srcWidth - 1);
         const srcY = Math.min(y + dy, srcHeight - 1);
         const srcIdx = (srcY * srcWidth + srcX) * channels;
         const dstIdx = (dy * width + dx) * channels;
-        
+
         for (let c = 0; c < channels; c++) {
           output[dstIdx + c] = buffer[srcIdx + c] || 0;
         }
       }
     }
-    
+
     return output;
   }
 
@@ -409,7 +410,7 @@ export class PokerOCREngine {
       'A': 'A', 'K': 'K', 'Q': 'Q', 'J': 'J', 'T': 'T', '10': 'T',
       '9': '9', '8': '8', '7': '7', '6': '6', '5': '5', '4': '4', '3': '3', '2': '2'
     };
-    
+
     const suitMap: Record<string, string> = {
       's': 's', 'spade': 's', 'spades': 's', '♠': 's',
       'h': 'h', 'heart': 'h', 'hearts': 'h', '♥': 'h',
@@ -418,7 +419,7 @@ export class PokerOCREngine {
     };
 
     const cleaned = text.toLowerCase().trim();
-    
+
     for (const [key, rank] of Object.entries(rankMap)) {
       if (cleaned.includes(key.toLowerCase())) {
         for (const [suitKey, suit] of Object.entries(suitMap)) {
@@ -428,7 +429,7 @@ export class PokerOCREngine {
         }
       }
     }
-    
+
     return null;
   }
 
@@ -436,13 +437,13 @@ export class PokerOCREngine {
     const cleaned = text
       .replace(/[^0-9.,KMBkmb]/g, '')
       .replace(',', '.');
-    
+
     let value = parseFloat(cleaned) || 0;
-    
+
     if (text.toLowerCase().includes('k')) value *= 1000;
     if (text.toLowerCase().includes('m')) value *= 1000000;
     if (text.toLowerCase().includes('b')) value *= 1000000000;
-    
+
     return value;
   }
 
@@ -476,7 +477,7 @@ export async function getPokerOCREngine(config?: Partial<OCRConfig>): Promise<Po
   if (initializationFailed) {
     return null;
   }
-  
+
   if (!engineInstance) {
     try {
       engineInstance = new PokerOCREngine(config);

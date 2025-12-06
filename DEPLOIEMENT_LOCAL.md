@@ -1,3 +1,39 @@
+
+# ⚠️ IMPORTANT : Windows vs Linux/Replit
+
+## Modules Natifs Windows UNIQUEMENT
+
+Les modules suivants **ne fonctionnent que sur Windows** :
+- `screenshot-desktop` : Capture d'écran
+- `robotjs` : Contrôle souris/clavier  
+- `node-window-manager` : Gestion fenêtres
+- **DXGI Desktop Duplication** : Capture ultra-rapide DirectX
+
+### Sur Replit (Linux)
+✅ **Fonctionnel** :
+- Serveur web + API
+- GTO Engine (calculs)
+- ML OCR (reconnaissance)
+- Dashboard frontend
+- Base de données PostgreSQL
+- Event Bus Redis
+
+❌ **Non fonctionnel** :
+- Capture d'écran automatique
+- Contrôle de la souris/clavier
+- Détection fenêtres GGClub
+
+### Déploiement Recommandé
+
+**Architecture Hybride** :
+1. **Sur Replit** : Backend API + Dashboard (accessible depuis partout)
+2. **Sur Windows Local** : Agent de capture + contrôle (connecté à l'API Replit)
+
+**Alternative** : Tout en local Windows (voir guide ci-dessous)
+
+---
+
+
 # 🚀 Guide de Déploiement Local - GTO Poker Bot
 
 Ce guide vous permettra d'installer et de faire fonctionner le bot de poker sur votre machine locale Windows/Linux avec interface graphique.

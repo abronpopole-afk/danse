@@ -31,29 +31,43 @@ let screenshotDesktop: any = null;
 let robot: any = null;
 let windowManager: any = null;
 
+const IS_WINDOWS = process.platform === 'win32';
+const IS_REPLIT = process.env.REPL_ID !== undefined;
+
 async function loadNativeModules(): Promise<void> {
+  // Tesseract.js - compatible tous OS
   try {
     Tesseract = await import("tesseract.js");
+    console.log("✓ tesseract.js loaded");
   } catch (e) {
-    console.warn("tesseract.js not available:", e);
+    console.warn("⚠ tesseract.js not available (OK sur Replit):", (e as Error).message);
   }
 
-  try {
-    screenshotDesktop = (await import("screenshot-desktop")).default;
-  } catch (e) {
-    console.warn("screenshot-desktop not available:", e);
-  }
+  // Modules natifs Windows uniquement
+  if (IS_WINDOWS && !IS_REPLIT) {
+    try {
+      screenshotDesktop = (await import("screenshot-desktop")).default;
+      console.log("✓ screenshot-desktop loaded (Windows)");
+    } catch (e) {
+      console.warn("⚠ screenshot-desktop not available:", (e as Error).message);
+    }
 
-  try {
-    robot = (await import("robotjs")).default;
-  } catch (e) {
-    console.warn("robotjs not available:", e);
-  }
+    try {
+      robot = (await import("robotjs")).default;
+      console.log("✓ robotjs loaded (Windows)");
+    } catch (e) {
+      console.warn("⚠ robotjs not available:", (e as Error).message);
+    }
 
-  try {
-    windowManager = await import("node-window-manager");
-  } catch (e) {
-    console.warn("node-window-manager not available:", e);
+    try {
+      windowManager = await import("node-window-manager");
+      console.log("✓ node-window-manager loaded (Windows)");
+    } catch (e) {
+      console.warn("⚠ node-window-manager not available:", (e as Error).message);
+    }
+  } else {
+    console.log("ℹ Mode serveur Linux/Replit - modules natifs Windows désactivés");
+    console.log("  → Pour capture d'écran, déployez en local Windows (voir DEPLOIEMENT_LOCAL.md)");
   }
 }
 

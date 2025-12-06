@@ -43,20 +43,24 @@ export class RangeUpdater {
   private async loadLastUpdate(): Promise<void> {
     try {
       // Check database for last update
-      const logs = await storage.getActionLogs({
-        logType: "info",
-        limit: 1,
-      });
-      
-      const updateLog = logs.find(log => 
-        log.message.includes("Range update completed")
-      );
-      
-      if (updateLog && updateLog.timestamp) {
-        this.lastUpdate = new Date(updateLog.timestamp);
+      if (typeof storage.getActionLogs === 'function') {
+        const logs = await storage.getActionLogs({
+          logType: "info",
+          limit: 1,
+        });
+        
+        const updateLog = logs.find(log => 
+          log.message.includes("Range update completed")
+        );
+        
+        if (updateLog && updateLog.timestamp) {
+          this.lastUpdate = new Date(updateLog.timestamp);
+        }
+      } else {
+        console.warn("[RangeUpdater] storage.getActionLogs not available, using default");
       }
     } catch (error) {
-      console.error("[RangeUpdater] Failed to load last update:", error);
+      console.warn("[RangeUpdater] Failed to load last update:", error);
     }
   }
 

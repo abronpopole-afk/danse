@@ -156,21 +156,51 @@ Le bot utilise une architecture modulaire avec séparation des responsabilités 
 
 ## 📋 Prérequis
 
+### ⚠️ Compatibilité Plateforme
+
+**Windows 10/11** (Recommandé pour capture d'écran) :
+- Tous les modules natifs fonctionnels
+- DXGI Desktop Duplication (6× plus rapide)
+- Contrôle souris/clavier automatique
+
+**Linux/Replit** (Backend API uniquement) :
+- ✅ Serveur web + Dashboard
+- ✅ GTO Engine + ML OCR
+- ❌ Pas de capture d'écran automatique
+- ❌ Pas de contrôle souris/clavier
+
+### Configuration Minimale
 - **Node.js** 20.x+
 - **PostgreSQL** 14+
-- **Redis** 6+ (requis pour Event Bus)
-- **Windows 10/11** ou Linux avec interface graphique
+- **Redis** 6+ (optionnel, requis pour multi-tables avancé)
 - **RAM** : 8GB min (16GB recommandé)
 - **CPU** : 4 cores min
 
 ## 🚀 Installation Rapide
 
+### Sur Replit (Backend API)
+```bash
+# Les dépendances sont installées automatiquement
+# Configurer les variables d'environnement dans Secrets :
+# - DATABASE_URL
+# - REDIS_URL (optionnel)
+# - ENCRYPTION_KEY
+# - DB_ENCRYPTION_KEY
+
+# Vérifier compatibilité
+npm run check:platform
+
+# Démarrer
+npm run dev
+```
+
+### Sur Windows Local (Capture + Contrôle)
 ```bash
 # Cloner le projet
 git clone <repo-url>
 cd poker-bot
 
-# Installer dépendances
+# Installer dépendances (inclut modules natifs)
 npm install
 
 # Configurer .env
@@ -180,6 +210,12 @@ cp .env.example .env
 # Initialiser DB
 npm run db:push
 psql -U poker_bot -d poker_bot -f script/migrate-player-profile.sql
+
+# Compiler DXGI (optionnel, Windows uniquement)
+cd native
+node-gyp configure
+node-gyp build
+cd ..
 
 # Démarrer
 npm run dev

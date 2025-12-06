@@ -73,7 +73,7 @@ export class GtoCache {
     
     // Déchiffrer la recommandation si elle est chiffrée
     try {
-      const { decryptData, isEncrypted } = require("./db-encryption");
+      const { decryptData, isEncrypted } = await import("./db-encryption");
       if (typeof entry.recommendation === "string" && isEncrypted(entry.recommendation)) {
         return decryptData<GtoRecommendation>(entry.recommendation);
       }
@@ -94,7 +94,7 @@ export class GtoCache {
 
     // Chiffrer la recommandation avant mise en cache
     try {
-      const { encryptData } = require("./db-encryption");
+      const { encryptData } = await import("./db-encryption");
       const encryptedRec = encryptData(recommendation);
       
       this.cache.set(key, {
