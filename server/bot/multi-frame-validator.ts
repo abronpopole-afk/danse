@@ -16,10 +16,16 @@ export interface ValidationResult<T> {
   validated: boolean;
 }
 
+interface TimestampedValue<T> {
+  value: T;
+  timestamp: number;
+}
+
 export class MultiFrameValidator {
   private frameHistory: Map<string, FrameCapture[]> = new Map();
+  private valueHistory: Map<string, TimestampedValue<any>[]> = new Map();
   private maxFrames = 3;
-  private minConsistency = 0.66; // 2/3 frames must agree
+  private minConsistency = 1.0; // All 3 frames must agree (100% consistency)
   private frameTimeout = 500; // ms
 
   /**
@@ -31,31 +37,32 @@ export class MultiFrameValidator {
     confidence: number,
     compareFunc: (a: T, b: T) => boolean
   ): ValidationResult<T> {
-    const history = this.frameHistory.get(key) || [];
     const now = Date.now();
 
-    // Clean old frames
-    const validHistory = history.filter(f => now - f.timestamp < this.frameTimeout);
+    const existingHistory = this.valueHistory.get(key) || [];
+    const validHistory = existingHistory.filter(
+      (item) => now - item.timestamp < this.frameTimeout
+    );
 
-    // Count consistent detections
-    let consistentCount = 1; // Current frame
-    const recentValues: T[] = [currentValue];
+    validHistory.push({ value: currentValue, timestamp: now });
 
-    // Extract values from history (need to store them separately)
-    const valueHistory = (this as any)[`${key}_values`] || [];
-    for (const value of valueHistory) {
-      if (compareFunc(currentValue, value)) {
-        consistentCount++;
-      }
-      recentValues.push(value);
+    if (validHistory.length > this.maxFrames) {
+      validHistory.shift();
     }
 
-    // Update history
-    (this as any)[`${key}_values`] = recentValues.slice(-this.maxFrames);
+    this.valueHistory.set(key, validHistory);
 
-    const totalFrames = Math.min(recentValues.length, this.maxFrames);
-    const consistency = consistentCount / totalFrames;
-    const validated = consistency >= this.minConsistency && totalFrames >= 2;
+    const totalFrames = validHistory.length;
+
+    let consistentCount = 0;
+    for (const item of validHistory) {
+      if (compareFunc(currentValue, item.value)) {
+        consistentCount++;
+      }
+    }
+
+    const consistency = totalFrames > 0 ? consistentCount / totalFrames : 0;
+    const validated = consistency >= this.minConsistency && totalFrames >= 3;
 
     return {
       value: currentValue,
@@ -116,14 +123,10 @@ export class MultiFrameValidator {
   clear(key?: string): void {
     if (key) {
       this.frameHistory.delete(key);
-      delete (this as any)[`${key}_values`];
+      this.valueHistory.delete(key);
     } else {
       this.frameHistory.clear();
-      Object.keys(this).forEach(k => {
-        if (k.endsWith('_values')) {
-          delete (this as any)[k];
-        }
-      });
+      this.valueHistory.clear();
     }
   }
 
@@ -131,7 +134,7 @@ export class MultiFrameValidator {
    * Get validation statistics
    */
   getStats(key: string): { frameCount: number; oldestFrame: number } | null {
-    const history = this.frameHistory.get(key);
+    const history = this.valueHistory.get(key);
     if (!history || history.length === 0) return null;
 
     return {

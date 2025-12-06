@@ -1,13 +1,15 @@
 /**
  * Poker OCR Engine
  * High-performance OCR specifically optimized for poker UI elements
- * Uses custom ML models with Tesseract.js fallback
+ * Uses multi-layer approach: HSV → ML → Tesseract → Template Matching
+ * Enhanced with multi-frame validation for stability
  */
 
 import { CardClassifier, getCardClassifier, CardClassificationResult } from './card-classifier-ml';
 import { DataCollector, getDataCollector } from './data-collector';
 import { ocrCache } from '../ocr-cache';
 import { ocrErrorCorrector } from '../ocr-error-correction';
+import { getMultiFrameValidator } from '../multi-frame-validator';
 
 export interface OCRConfig {
   useMLPrimary: boolean;
@@ -109,10 +111,12 @@ export class PokerOCREngine {
     imageBuffer: Buffer,
     width: number,
     height: number,
-    cardCount: number = 2
+    cardCount: number = 2,
+    validationKey: string = 'cards'
   ): Promise<CardOCRResult> {
     const startTime = Date.now();
     const cards: CardOCRResult['cards'] = [];
+    const validator = getMultiFrameValidator();
 
     const cardWidth = Math.floor(width / cardCount);
     
@@ -153,15 +157,22 @@ export class PokerOCREngine {
           rankRegion,
           suitRegion,
           Math.floor(cardWidth * 0.4),
-          Math.floor(height * 0.3)
+          Math.floor(height * 0.3),
+          true
         );
 
-        if (result.overallConfidence >= this.config.confidenceThreshold) {
+        const validationResult = validator.validateCard(
+          `${validationKey}_card_${i}`,
+          result.combined,
+          result.overallConfidence
+        );
+
+        if (validationResult.validated && validationResult.confidence >= this.config.confidenceThreshold) {
           cards.push({
             rank: result.rank.class,
             suit: result.suit.class,
-            combined: result.combined,
-            confidence: result.overallConfidence
+            combined: validationResult.value,
+            confidence: validationResult.confidence
           });
 
           if (this.config.collectTrainingData && this.dataCollector) {
@@ -176,6 +187,15 @@ export class PokerOCREngine {
             );
           }
 
+          this.stats.mlCalls++;
+          continue;
+        } else if (result.overallConfidence >= this.config.confidenceThreshold) {
+          cards.push({
+            rank: result.rank.class,
+            suit: result.suit.class,
+            combined: result.combined,
+            confidence: result.overallConfidence
+          });
           this.stats.mlCalls++;
           continue;
         }
@@ -209,9 +229,11 @@ export class PokerOCREngine {
     imageBuffer: Buffer,
     width: number,
     height: number,
-    type: 'pot' | 'stack' | 'bet' = 'pot'
+    type: 'pot' | 'stack' | 'bet' = 'pot',
+    validationKey?: string
   ): Promise<ValueOCRResult> {
     const startTime = Date.now();
+    const validator = getMultiFrameValidator();
     
     const cacheKey = this.generateCacheKey(imageBuffer, width, height);
     const cached = ocrCache.get(imageBuffer, { x: 0, y: 0, width, height });
@@ -259,6 +281,20 @@ export class PokerOCREngine {
 
     const correctionResult = ocrErrorCorrector.correctPotValue(text);
     const finalText = correctionResult.corrected;
+    let finalValue = this.parseNumericValue(finalText);
+
+    if (validationKey) {
+      const validationResult = validator.validateNumber(
+        validationKey,
+        finalValue,
+        confidence,
+        0.05
+      );
+      if (validationResult.validated) {
+        finalValue = validationResult.value;
+        confidence = validationResult.confidence;
+      }
+    }
 
     ocrCache.set(imageBuffer, { x: 0, y: 0, width, height }, finalText, confidence);
 
@@ -275,7 +311,7 @@ export class PokerOCREngine {
     }
 
     return {
-      value: this.parseNumericValue(finalText),
+      value: finalValue,
       rawText: finalText,
       confidence,
       method,

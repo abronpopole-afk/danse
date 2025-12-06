@@ -1,9 +1,11 @@
 /**
  * ML-based Card Classifier
  * Uses custom neural network for fast, accurate poker card recognition
+ * Enhanced with HSV color detection for reliable suit recognition
  */
 
 import { NeuralNetwork, createTensor, Tensor } from './neural-network';
+import { detectSuitByHSV } from '../image-processing';
 
 export interface ClassificationResult {
   class: string;
@@ -211,6 +213,60 @@ export class CardClassifier {
     };
   }
 
+  classifySuitWithHSV(imageData: Buffer | Uint8Array, width: number, height: number, channels: number = 4): ClassificationResult {
+    const imageBuffer = Buffer.isBuffer(imageData) ? imageData : Buffer.from(imageData);
+    const region = { x: 0, y: 0, width, height };
+    const hsvResult = detectSuitByHSV(imageBuffer, width, height, region, channels, true);
+    
+    const suitMap: Record<string, string> = {
+      'hearts': 'h',
+      'diamonds': 'd',
+      'clubs': 'c',
+      'spades': 's'
+    };
+
+    if (hsvResult.suit && hsvResult.confidence >= 0.7) {
+      const suitChar = suitMap[hsvResult.suit] || '?';
+      const allProbs = new Map<string, number>();
+      for (const s of SUITS) {
+        allProbs.set(s, s === suitChar ? hsvResult.confidence : (1 - hsvResult.confidence) / 3);
+      }
+      return {
+        class: suitChar,
+        confidence: hsvResult.confidence,
+        allProbabilities: allProbs
+      };
+    }
+
+    const mlResult = this.classifySuit(imageData, width, height);
+
+    if (hsvResult.suit && hsvResult.confidence >= 0.5) {
+      const hsvSuitChar = suitMap[hsvResult.suit] || '?';
+      if (mlResult.class === hsvSuitChar) {
+        const boostedConfidence = Math.min(0.99, (mlResult.confidence + hsvResult.confidence) / 2 * 1.2);
+        return {
+          class: mlResult.class,
+          confidence: boostedConfidence,
+          allProbabilities: mlResult.allProbabilities
+        };
+      }
+      
+      if (hsvResult.confidence > mlResult.confidence) {
+        const allProbs = new Map<string, number>();
+        for (const s of SUITS) {
+          allProbs.set(s, s === hsvSuitChar ? hsvResult.confidence : (1 - hsvResult.confidence) / 3);
+        }
+        return {
+          class: hsvSuitChar,
+          confidence: hsvResult.confidence,
+          allProbabilities: allProbs
+        };
+      }
+    }
+
+    return mlResult;
+  }
+
   classifyDigit(imageData: Buffer | Uint8Array, width: number, height: number): ClassificationResult {
     if (!this.digitNetwork) {
       return { class: '?', confidence: 0, allProbabilities: new Map() };
@@ -242,10 +298,13 @@ export class CardClassifier {
     rankImageData: Buffer | Uint8Array,
     suitImageData: Buffer | Uint8Array,
     width: number,
-    height: number
+    height: number,
+    useHSV: boolean = true
   ): CardClassificationResult {
     const rank = this.classifyRank(rankImageData, width, height);
-    const suit = this.classifySuit(suitImageData, width, height);
+    const suit = useHSV 
+      ? this.classifySuitWithHSV(suitImageData, width, height)
+      : this.classifySuit(suitImageData, width, height);
     
     return {
       rank,
