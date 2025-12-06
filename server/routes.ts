@@ -1298,6 +1298,69 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/tests/comprehensive", async (_req, res) => {
+    try {
+      const { runComprehensiveTests } = await import("./bot/tests/comprehensive-test-suite");
+
+      console.log("[API] Starting comprehensive test suite");
+      const report = await runComprehensiveTests();
+
+      res.json({ 
+        success: true, 
+        message: "Comprehensive tests complete",
+        report,
+        resultsPath: "./test-results/comprehensive/",
+      });
+    } catch (error) {
+      console.error("[API] Comprehensive test error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/dataset/collect", async (req, res) => {
+    try {
+      const { DatasetCollector } = await import("../script/collect-dataset");
+      const { targetCount = 300 } = req.body;
+
+      console.log(`[API] Starting dataset collection (${targetCount} screenshots)`);
+      
+      const collector = new DatasetCollector({
+        targetScreenshots: targetCount,
+        minConfidence: 0.7,
+        delayBetweenCaptures: 2000,
+      });
+
+      await collector.initialize();
+      
+      // Run in background
+      collector.collectFromActiveTables().catch(console.error);
+
+      res.json({ 
+        success: true, 
+        message: "Dataset collection started",
+        targetCount,
+        outputDir: "./dataset/ggclub-captures",
+      });
+    } catch (error) {
+      console.error("[API] Dataset collection error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/dataset/stats", async (_req, res) => {
+    try {
+      const { getDataCollector } = await import("./bot/ml-ocr/data-collector");
+      const collector = await getDataCollector();
+      const stats = collector.getStats();
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error("[API] Dataset stats error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+    }
+  });
+
 
   return httpServer;
 }
