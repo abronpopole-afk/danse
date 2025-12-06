@@ -125,28 +125,31 @@ app.use((req, res, next) => {
 
   const PORT = parseInt(process.env.PORT || "5000", 10);
   const host = process.env.HOST || "0.0.0.0";
-  httpServer.listen(PORT, host, () => {
+  httpServer.listen(PORT, host, async () => {
     console.log(`✓ Server running on http://${host}:${PORT}`);
 
-  // Initialize range updater
-  const { getRangeUpdater } = await import("./bot/range-updater");
-  const rangeUpdater = getRangeUpdater();
+    // Initialize range updater
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const rangeUpdater = getRangeUpdater();
 
-  // Add default GTO Wizard source
-  rangeUpdater.addSource({
-    name: "GTO Wizard",
-    updateFrequency: "weekly",
-    enabled: false, // User must enable and configure
-  });
+    // Add default GTO Wizard source
+    rangeUpdater.addSource({
+      name: "GTO Wizard",
+      updateFrequency: "weekly",
+      enabled: false, // User must enable and configure
+    });
 
-  // Add solver-based source (always available)
-  rangeUpdater.addSource({
-    name: "Solver Simulation",
-    updateFrequency: "weekly",
-    enabled: true,
-  });
+    // Add solver-based source (always available)
+    rangeUpdater.addSource({
+      name: "Solver Simulation",
+      updateFrequency: "weekly",
+      enabled: true,
+    });
 
-  await rangeUpdater.startAutoUpdate();
-  console.log("✓ Range auto-updater started");
+    await rangeUpdater.startAutoUpdate();
+    console.log("✓ Range auto-updater started");
   });
-})();
+})().catch(error => {
+  console.error("Fatal error during server startup:", error);
+  process.exit(1);
+});
