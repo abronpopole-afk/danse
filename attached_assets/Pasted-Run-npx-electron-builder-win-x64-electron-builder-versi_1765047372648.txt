@@ -1,0 +1,18 @@
+Run npx electron-builder --win --x64
+  
+  • electron-builder  version=26.0.12 os=10.0.26100
+  • artifacts will be published if draft release exists  reason=CI detected
+  • loaded configuration  file=D:\a\gto-poker-bot\gto-poker-bot\electron-builder.yml
+  • description is missed in the package.json  appPackageFile=D:\a\gto-poker-bot\gto-poker-bot\package.json
+  • author is missed in the package.json  appPackageFile=D:\a\gto-poker-bot\gto-poker-bot\package.json
+  ⨯ Unable to `require`  moduleName=D:\a\gto-poker-bot\gto-poker-bot\electron\scripts\after-pack.js message=require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'D:\a\gto-poker-bot\gto-poker-bot\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+  ⨯ require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'D:\a\gto-poker-bot\gto-poker-bot\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.  failedTask=build stackTrace=Error: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'D:\a\gto-poker-bot\gto-poker-bot\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at resolveModule (D:\a\gto-poker-bot\gto-poker-bot\node_modules\app-builder-lib\src\util\resolve.ts:21:11)
+    at resolveFunction (D:\a\gto-poker-bot\gto-poker-bot\node_modules\app-builder-lib\src\util\resolve.ts:43:18)
+    at Packager.addPackagerEventHandlers (D:\a\gto-poker-bot\gto-poker-bot\node_modules\app-builder-lib\src\packager.ts:273:39)
+    at Packager.build (D:\a\gto-poker-bot\gto-poker-bot\node_modules\app-builder-lib\src\packager.ts:399:5)
+    at executeFinally (D:\a\gto-poker-bot\gto-poker-bot\node_modules\builder-util\src\promise.ts:12:14)
+Error: Process completed with exit code 1.

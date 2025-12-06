@@ -65,4 +65,4 @@ npmRebuild: false
 electronDownload:
   cache: .cache/electron
 
-afterPack: ./electron/scripts/after-pack.js
+afterPack: ./electron/scripts/after-pack.cjs
