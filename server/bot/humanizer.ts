@@ -288,7 +288,96 @@ export class Humanizer {
 
   shouldTriggerRandomFold(): boolean {
     if (!this.settings.enableRandomFolds) return false;
-    return Math.random() < this.settings.randomFoldProbability;
+    
+    let probability = this.settings.randomFoldProbability;
+    
+    // Augmenter la probabilité si fatigué
+    if (this.settings.enableDynamicProfile) {
+      const modifiers = getPlayerProfile().getModifiers();
+      probability += modifiers.errorProbability * 0.5; // Max 5% de folds aléatoires
+    }
+    
+    return Math.random() < probability;
+  }
+
+  /**
+   * Calcule un sizing de bet/raise humanisé avec variance intentionnelle
+   * @param baseSizing Le sizing GTO optimal (ex: 0.66 pour 66% pot)
+   * @param potSize Taille du pot actuel
+   * @param street Street actuelle
+   * @returns Sizing ajusté avec variance humaine
+   */
+  getHumanizedSizing(baseSizing: number, potSize: number, street: string): number {
+    let modifiers: ProfileModifiers = {
+      delayMultiplier: 1,
+      varianceMultiplier: 1,
+      errorProbability: 0,
+      aggressionShift: 0,
+      rangeWidening: 1,
+      sizingVariance: 1,
+    };
+
+    if (this.settings.enableDynamicProfile) {
+      const profile = getPlayerProfile();
+      modifiers = profile.getModifiers();
+    }
+
+    // Variance de base: ±5% à ±15% selon street
+    const baseVariance = street === "preflop" ? 0.05 : 0.10;
+    
+    // Appliquer le multiplicateur de variance (tilt/fatigue augmente)
+    const variance = baseVariance * modifiers.sizingVariance;
+    
+    // Ajouter du bruit gaussien
+    const noise = gaussianRandom(0, variance);
+    let adjustedSizing = baseSizing + noise;
+    
+    // Arrondir à des valeurs "humaines" (multiples de 0.05)
+    adjustedSizing = Math.round(adjustedSizing * 20) / 20;
+    
+    // Parfois utiliser des sizings "ronds" comme un humain
+    if (Math.random() < 0.15) {
+      const roundSizings = [0.33, 0.5, 0.66, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0];
+      const nearest = roundSizings.reduce((prev, curr) => 
+        Math.abs(curr - adjustedSizing) < Math.abs(prev - adjustedSizing) ? curr : prev
+      );
+      adjustedSizing = nearest;
+    }
+    
+    // Clamp entre 0.25 et 5.0 (min bet et over-bet max)
+    return clamp(adjustedSizing, 0.25, 5.0);
+  }
+
+  /**
+   * Détermine si une action erronée intentionnelle doit être déclenchée
+   * Simule des "brain farts" humains très rares
+   */
+  shouldTriggerIntentionalError(handStrength: number): { 
+    shouldError: boolean; 
+    errorType?: 'wrong_action' | 'wrong_sizing' | 'premature_fold';
+  } {
+    if (!this.settings.stealthModeEnabled) return { shouldError: false };
+    
+    let errorProb = 0.002; // 0.2% de base
+    
+    // Augmenter avec fatigue/tilt
+    if (this.settings.enableDynamicProfile) {
+      const modifiers = getPlayerProfile().getModifiers();
+      errorProb += modifiers.errorProbability * 0.3;
+    }
+    
+    if (Math.random() < errorProb) {
+      // Type d'erreur selon force de main
+      if (handStrength > 0.8 && Math.random() < 0.3) {
+        return { shouldError: true, errorType: 'premature_fold' }; // Fold AA par erreur
+      } else if (Math.random() < 0.5) {
+        return { shouldError: true, errorType: 'wrong_sizing' }; // Sizing bizarre
+      } else {
+        return { shouldError: true, errorType: 'wrong_action' }; // Check au lieu de bet
+      }
+    }
+    
+    return { shouldError: false };
   }
 
   generateThinkingPauses(totalThinkingTime: number): number[] {

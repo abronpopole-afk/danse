@@ -299,7 +299,7 @@ export class SimulatedGtoAdapter implements GtoAdapter {
     boardTexture: ReturnType<typeof evaluateBoardTexture>,
     modifiers: { aggressionShift: number; rangeWidening: number; sizingVariance: number } = { aggressionShift: 0, rangeWidening: 1, sizingVariance: 1 }
   ): GtoRecommendation {
-    const { facingBet, potSize, isInPosition } = context;
+    const { facingBet, potSize, isInPosition, street } = context;
     const positionBonus = isInPosition ? 0.1 : 0;
     const adjustedStrength = handStrength + positionBonus;
     
@@ -309,8 +309,23 @@ export class SimulatedGtoAdapter implements GtoAdapter {
     if (facingBet === 0) {
       if (adjustedStrength >= 0.75) {
         const baseBetSize = dangerousBoard ? 0.75 : 0.33;
-        // Appliquer sizingVariance (tilt = sizing plus erratique)
-        const betSize = baseBetSize * modifiers.sizingVariance;
+        
+        // Appliquer variance naturelle au sizing (non-robotique)
+        const variance = 0.08 * modifiers.sizingVariance;
+        const noise = (Math.random() - 0.5) * variance * 2;
+        let betSize = baseBetSize + noise;
+        
+        // Arrondir à des valeurs "humaines"
+        betSize = Math.round(betSize * 20) / 20;
+        
+        // Parfois utiliser des sizings "psychologiques"
+        if (Math.random() < 0.12) {
+          const psychSizings = [0.33, 0.5, 0.66, 0.75, 1.0];
+          betSize = psychSizings[Math.floor(Math.random() * psychSizings.length)];
+        }
+        
+        betSize = Math.max(0.25, Math.min(3.0, betSize));
+        
         return {
           actions: [
             { action: `BET ${Math.round(betSize * 100)}%`, probability: Math.min(0.90, 0.65 + aggBonus * 0.5), ev: 0.35 },

@@ -264,13 +264,45 @@ export class TableSession extends EventEmitter {
       metadata: { recommendation },
     });
 
-    const selectedAction = this.selectAction(recommendation);
+    let selectedAction = this.selectAction(recommendation);
 
     const humanizer = getHumanizer();
+    const handStrength = this.estimateHandStrength();
+    
+    // Vérifier erreur intentionnelle (très rare)
+    const errorCheck = humanizer.shouldTriggerIntentionalError(handStrength);
+    if (errorCheck.shouldError) {
+      if (errorCheck.errorType === 'premature_fold' && handStrength > 0.8) {
+        selectedAction = "FOLD";
+        await storage.createActionLog({
+          tableId: this.tableState.id,
+          logType: "warning",
+          message: `[Humanization] Erreur intentionnelle: fold premium hand (0.2% chance)`,
+        });
+      } else if (errorCheck.errorType === 'wrong_sizing') {
+        // Modifier le sizing si c'est un BET/RAISE
+        if (selectedAction.includes("BET") || selectedAction.includes("RAISE")) {
+          const weirdSizing = [0.15, 0.22, 0.88, 1.33, 2.75][Math.floor(Math.random() * 5)];
+          selectedAction = selectedAction.includes("BET") 
+            ? `BET ${Math.round(weirdSizing * 100)}%`
+            : `RAISE ${Math.round(weirdSizing * 100)}%`;
+        }
+      }
+    }
+    
+    // Vérifier fold aléatoire rare
+    if (humanizer.shouldTriggerRandomFold() && handStrength < 0.6 && handStrength > 0.3) {
+      selectedAction = "FOLD";
+      await storage.createActionLog({
+        tableId: this.tableState.id,
+        logType: "warning",
+        message: `[Humanization] Fold aléatoire déclenché (simulation erreur humaine)`,
+      });
+    }
+
     const isComplexDecision = recommendation.confidence < 0.7 || 
       recommendation.actions.filter(a => a.probability > 0.2).length > 2;
 
-    const handStrength = this.estimateHandStrength();
     const humanizedAction = humanizer.humanizeAction(
       selectedAction, 
       handStrength, 
@@ -347,6 +379,29 @@ export class TableSession extends EventEmitter {
       result,
       this.tableState.currentPot
     );
+
+    // Simuler chat/notes (humanisation supplémentaire)
+    const { getChatSimulator } = await import("./chat-simulator");
+    const chatSim = getChatSimulator();
+    
+    let eventType: "hand_won" | "hand_lost" | "bad_beat" | undefined;
+    if (result > 0) eventType = "hand_won";
+    else if (result < -20) eventType = "bad_beat"; // Grosse perte
+    else if (result < 0) eventType = "hand_lost";
+    
+    const chatMessage = chatSim.shouldSendChat({
+      eventType,
+      sessionDuration: (Date.now() - Date.now()) / 60000, // TODO: track réel
+    });
+    
+    if (chatMessage) {
+      await storage.createActionLog({
+        tableId: this.tableState.id,
+        logType: "info",
+        message: `[Chat Simulator] Message envoyé: "${chatMessage.content}"`,
+        metadata: { chatMessage },
+      });
+    }
 
     // Mettre à jour table dynamics
     const { getOpponentProfiler } = await import("./opponent-profiler");
