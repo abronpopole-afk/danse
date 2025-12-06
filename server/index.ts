@@ -124,7 +124,29 @@ app.use((req, res, next) => {
   }
 
   const PORT = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(PORT, "0.0.0.0", () => {
-    log(`Server running on port ${PORT}`);
+  const host = process.env.HOST || "0.0.0.0";
+  httpServer.listen(PORT, host, () => {
+    console.log(`✓ Server running on http://${host}:${PORT}`);
+
+  // Initialize range updater
+  const { getRangeUpdater } = await import("./bot/range-updater");
+  const rangeUpdater = getRangeUpdater();
+
+  // Add default GTO Wizard source
+  rangeUpdater.addSource({
+    name: "GTO Wizard",
+    updateFrequency: "weekly",
+    enabled: false, // User must enable and configure
+  });
+
+  // Add solver-based source (always available)
+  rangeUpdater.addSource({
+    name: "Solver Simulation",
+    updateFrequency: "weekly",
+    enabled: true,
+  });
+
+  await rangeUpdater.startAutoUpdate();
+  console.log("✓ Range auto-updater started");
   });
 })();

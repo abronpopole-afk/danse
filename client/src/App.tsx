@@ -7,6 +7,8 @@ import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
 import RemotePage from "@/pages/remote";
 import DebugPage from "@/pages/debug";
+import RangesPage from "@/pages/ranges"; // Assuming RangesPage is located at "@/pages/ranges"
+import { TooltipProvider } from "@radix-ui/react-tooltip"; // Assuming TooltipProvider is needed for Toaster
 
 function Router() {
   return (
@@ -17,6 +19,7 @@ function Router() {
       <Route path="/settings" component={SettingsPage} />
       <Route path="/remote" component={RemotePage} />
       <Route path="/debug" component={DebugPage} />
+      <Route path="/ranges" component={RangesPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -26,7 +29,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster 
+        <Toaster
           theme="dark"
           position="top-right"
           toastOptions={{

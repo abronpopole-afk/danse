@@ -1340,6 +1340,63 @@ function registerVisionRoutes(app: Express): void {
 }
 
 // Replay Viewer routes
+// Range Updater Routes
+app.get("/api/ranges/status", async (_req, res) => {
+  try {
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const updater = getRangeUpdater();
+    const status = updater.getStatus();
+    res.json(status);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/ranges/update", async (_req, res) => {
+  try {
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const updater = getRangeUpdater();
+    await updater.forceUpdate();
+    res.json({ success: true, message: "Range update completed" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/ranges/sources", async (req, res) => {
+  try {
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const updater = getRangeUpdater();
+    const source = req.body;
+    updater.addSource(source);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete("/api/ranges/sources/:name", async (req, res) => {
+  try {
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const updater = getRangeUpdater();
+    updater.removeSource(req.params.name);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/ranges/sources", async (_req, res) => {
+  try {
+    const { getRangeUpdater } = await import("./bot/range-updater");
+    const updater = getRangeUpdater();
+    const sources = updater.getSources();
+    res.json({ sources });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/replay/sessions", async (_req, res) => {
   try {
     const sessions = await storage.getAllBotSessions();
