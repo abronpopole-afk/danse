@@ -226,7 +226,7 @@ export class CardRankClassifier {
   }
 
   async predictRank(imageBuffer: Buffer, width: number, height: number): Promise<CardRankPrediction> {
-    const { sharp } = await loadMLDependencies();
+    const { tf, sharp } = await loadMLDependencies();
     
     if (!sharp) {
       console.log("[CardRankClassifier] Sharp not available, using heuristic classification");
@@ -241,6 +241,33 @@ export class CardRankClassifier {
         .raw()
         .toBuffer();
 
+      // TensorFlow.js prediction if available
+      if (tf && this.model) {
+        const tensor = tf.tensor3d(Array.from(processed), [28, 28, 1]).expandDims(0);
+        const prediction = this.model.predict(tensor) as any;
+        const probabilities = await prediction.data();
+        
+        let maxProb = 0;
+        let maxIndex = 0;
+        for (let i = 0; i < probabilities.length; i++) {
+          if (probabilities[i] > maxProb) {
+            maxProb = probabilities[i];
+            maxIndex = i;
+          }
+        }
+        
+        tensor.dispose();
+        prediction.dispose();
+        
+        if (maxProb > 0.7) {
+          return {
+            rank: this.RANKS[maxIndex],
+            confidence: maxProb,
+          };
+        }
+      }
+
+      // Fallback to heuristic if ML confidence is low
       return {
         rank: 'A',
         confidence: 0.5,
@@ -253,6 +280,43 @@ export class CardRankClassifier {
 
   async trainFromDataset(datasetPath: string): Promise<void> {
     console.log(`[CardRankClassifier] Training from ${datasetPath}`);
+    const { tf } = await loadMLDependencies();
+    
+    if (!tf) {
+      console.log("[CardRankClassifier] TensorFlow.js not available, skipping training");
+      return;
+    }
+    
+    // Build lightweight CNN model
+    this.model = tf.sequential({
+      layers: [
+        tf.layers.conv2d({
+          inputShape: [28, 28, 1],
+          kernelSize: 3,
+          filters: 16,
+          activation: 'relu'
+        }),
+        tf.layers.maxPooling2d({ poolSize: 2 }),
+        tf.layers.conv2d({
+          kernelSize: 3,
+          filters: 32,
+          activation: 'relu'
+        }),
+        tf.layers.maxPooling2d({ poolSize: 2 }),
+        tf.layers.flatten(),
+        tf.layers.dense({ units: 64, activation: 'relu' }),
+        tf.layers.dropout({ rate: 0.3 }),
+        tf.layers.dense({ units: 13, activation: 'softmax' })
+      ]
+    });
+    
+    this.model.compile({
+      optimizer: 'adam',
+      loss: 'categoricalCrossentropy',
+      metrics: ['accuracy']
+    });
+    
+    console.log("[CardRankClassifier] Model compiled successfully");
   }
   
   isMLAvailable(): boolean {

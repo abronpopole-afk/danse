@@ -1183,10 +1183,10 @@ export async function registerRoutes(
       const { windowHandle, iterations } = req.body;
       const test = new GGClubCaptureTest();
       await test.initialize();
-      
+
       console.log(`[API] Starting capture benchmark: ${iterations || 50} iterations`);
       await test.runBenchmark(windowHandle || 1001, iterations || 50);
-      
+
       res.json({ 
         success: true, 
         message: "Benchmark complete",
@@ -1202,9 +1202,9 @@ export async function registerRoutes(
     try {
       const { tableCount } = req.body;
       const test = new MultiTablePerformanceTest();
-      
+
       console.log(`[API] Starting multi-table test: ${tableCount || 6} tables`);
-      
+
       if (tableCount === 12) {
         await test.testTwelveTables();
       } else if (tableCount === 24) {
@@ -1212,9 +1212,9 @@ export async function registerRoutes(
       } else {
         await test.testSixTables();
       }
-      
+
       const report = test.getReport();
-      
+
       res.json({ 
         success: true, 
         message: "Multi-table test complete",
@@ -1229,12 +1229,12 @@ export async function registerRoutes(
   app.post("/api/tests/stress", async (_req, res) => {
     try {
       const test = new MultiTablePerformanceTest();
-      
+
       console.log("[API] Starting stress test (6, 12, 24 tables)");
       await test.stressTest();
-      
+
       const report = test.getReport();
-      
+
       res.json({ 
         success: true, 
         message: "Stress test complete",
@@ -1249,10 +1249,10 @@ export async function registerRoutes(
   app.post("/api/tests/e2e", async (_req, res) => {
     try {
       const test = new E2ETest();
-      
+
       console.log("[API] Starting E2E test");
       await test.runFullCycle();
-      
+
       res.json({ 
         success: true, 
         message: "E2E test complete",
@@ -1267,6 +1267,114 @@ export async function registerRoutes(
 
   return httpServer;
 }
+
+function registerVisionRoutes(app: Express): void {
+  app.get("/api/vision/errors", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      const count = parseInt(_req.query.count as string) || 50;
+      const errors = visionErrorLogger.getRecentErrors(count);
+      res.json(errors);
+    } catch (error) {
+      console.error("[Vision Errors API] Error:", error);
+      res.status(500).json({ error: "Failed to fetch vision errors" });
+    }
+  });
+
+  app.get("/api/vision/errors/critical", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      const errors = visionErrorLogger.getCriticalErrors();
+      res.json(errors);
+    } catch (error) {
+      console.error("[Vision Errors API] Error:", error);
+      res.status(500).json({ error: "Failed to fetch vision errors" });
+    }
+  });
+
+  app.get("/api/vision/metrics", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      const windowMs = parseInt(_req.query.window as string) || 3600000;
+      const metrics = visionErrorLogger.getMetrics(windowMs);
+      res.json(metrics);
+    } catch (error) {
+      console.error("[Vision Errors API] Error:", error);
+      res.status(500).json({ error: "Failed to fetch vision metrics" });
+    }
+  });
+
+  app.get("/api/vision/report", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      const report = visionErrorLogger.generateReport();
+      res.type("text/plain").send(report);
+    } catch (error) {
+      console.error("[Vision Report API] Error:", error);
+      res.status(500).json({ error: "Failed to generate vision report" });
+    }
+  });
+
+  app.post("/api/vision/export", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      const includeScreenshots = _req.body.includeScreenshots === true;
+      const log = visionErrorLogger.exportErrorLog(includeScreenshots);
+      res.type("application/json").send(log);
+    } catch (error) {
+      console.error("[Vision Export API] Error:", error);
+      res.status(500).json({ error: "Failed to export vision error log" });
+    }
+  });
+
+  app.post("/api/vision/clear", async (_req, res) => {
+    try {
+      const { visionErrorLogger } = await import("./bot/vision-error-logger");
+      visionErrorLogger.clearErrors();
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Vision Clear API] Error:", error);
+      res.status(500).json({ error: "Failed to clear vision errors" });
+    }
+  });
+}
+
+// Replay Viewer routes
+app.get("/api/replay/sessions", async (_req, res) => {
+  try {
+    const sessions = await storage.getAllBotSessions();
+    res.json({ sessions });
+  } catch (error) {
+    console.error("Error fetching replay sessions:", error);
+    res.status(500).json({ error: "Failed to fetch sessions" });
+  }
+});
+
+app.get("/api/replay/session/:sessionId", async (req, res) => {
+  try {
+    const { getDebugReplaySystem } = await import("./bot/debug-replay");
+    const replaySystem = getDebugReplaySystem();
+    const frames = await replaySystem.loadSession(req.params.sessionId);
+    res.json({ frames });
+  } catch (error) {
+    console.error("Error loading replay session:", error);
+    res.status(500).json({ error: "Failed to load session" });
+  }
+});
+
+app.get("/api/replay/analytics/:sessionId", async (req, res) => {
+  try {
+    const { getReplayViewer } = await import("./bot/replay-viewer");
+    const viewer = getReplayViewer();
+    await viewer.loadSession(req.params.sessionId);
+    const analytics = await viewer.analyzeSession();
+    res.json(analytics);
+  } catch (error) {
+    console.error("Error analyzing replay:", error);
+    res.status(500).json({ error: "Failed to analyze session" });
+  }
+});
+
 
 async function handleWebSocketMessage(
   ws: WebSocket, 
@@ -1436,78 +1544,3 @@ async function handleWebSocketMessage(
       ws.send(JSON.stringify({ type: "error", payload: { message: `Type de message inconnu: ${message.type}` } }));
   }
 }
-// Vision error logging routes
-app.get("/api/vision/errors", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  const count = parseInt(_req.query.count as string) || 50;
-  const errors = visionErrorLogger.getRecentErrors(count);
-  res.json(errors);
-});
-
-app.get("/api/vision/errors/critical", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  const errors = visionErrorLogger.getCriticalErrors();
-  res.json(errors);
-});
-
-app.get("/api/vision/metrics", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  const windowMs = parseInt(_req.query.window as string) || 3600000;
-  const metrics = visionErrorLogger.getMetrics(windowMs);
-  res.json(metrics);
-});
-
-app.get("/api/vision/report", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  const report = visionErrorLogger.generateReport();
-  res.type("text/plain").send(report);
-});
-
-app.post("/api/vision/export", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  const includeScreenshots = _req.body.includeScreenshots === true;
-  const log = visionErrorLogger.exportErrorLog(includeScreenshots);
-  res.type("application/json").send(log);
-});
-
-// Replay Viewer routes
-app.get("/api/replay/sessions", async (_req, res) => {
-  try {
-    const sessions = await storage.getAllBotSessions();
-    res.json({ sessions });
-  } catch (error) {
-    console.error("Error fetching replay sessions:", error);
-    res.status(500).json({ error: "Failed to fetch sessions" });
-  }
-});
-
-app.get("/api/replay/session/:sessionId", async (req, res) => {
-  try {
-    const { getDebugReplaySystem } = await import("./bot/debug-replay");
-    const replaySystem = getDebugReplaySystem();
-    const frames = await replaySystem.loadSession(req.params.sessionId);
-    res.json({ frames });
-  } catch (error) {
-    console.error("Error loading replay session:", error);
-    res.status(500).json({ error: "Failed to load session" });
-  }
-});
-
-app.get("/api/replay/analytics/:sessionId", async (req, res) => {
-  try {
-    const { getReplayViewer } = await import("./bot/replay-viewer");
-    const viewer = getReplayViewer();
-    await viewer.loadSession(req.params.sessionId);
-    const analytics = await viewer.analyzeSession();
-    res.json(analytics);
-  } catch (error) {
-    console.error("Error analyzing replay:", error);
-    res.status(500).json({ error: "Failed to analyze session" });
-  }
-});
-
-app.post("/api/vision/clear", async (_req, res) => {
-  const { visionErrorLogger } = await import("./bot/vision-error-logger");
-  visionErrorLogger.clearErrors();
-  res.json({ success: true });
-});

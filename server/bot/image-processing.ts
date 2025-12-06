@@ -724,9 +724,11 @@ export function detectSuitByHSV(
   width: number,
   height: number,
   region: ScreenRegion,
-  channels: number = 4
-): { suit: string | null; confidence: number } {
-  const results: Array<{ suit: string; score: number }> = [];
+  channels: number = 4,
+  useMultiMethod: boolean = true
+): { suit: string | null; confidence: number; methods: string[] } {
+  const results: Array<{ suit: string; score: number; method: string }> = [];
+  const methodsUsed: string[] = [];
 
   const processedImageBuffer = preprocessForOCR(imageBuffer, width, height, {
     blurRadius: 1,
@@ -790,9 +792,32 @@ export function detectSuitByHSV(
     }
   }
 
+  methodsUsed.push('hsv_primary');
+  
+  // Fallback: Raw color matching (no preprocessing)
+  if (useMultiMethod && (results.length === 0 || results[0].score < 15)) {
+    methodsUsed.push('raw_color_fallback');
+    
+    const rawRed = detectColorHSV(imageBuffer, width, height, region, POKER_SUIT_HSV_RANGES.hearts, channels);
+    const rawRedAlt = detectColorHSV(imageBuffer, width, height, region, POKER_SUIT_HSV_RANGES.hearts_alt, channels);
+    const totalRed = rawRed.percentage + rawRedAlt.percentage;
+    
+    if (totalRed > 8) {
+      results.push({ suit: "hearts", score: totalRed, method: "raw_color" });
+    }
+  }
+  
+  if (results.length === 0) {
+    return { suit: null, confidence: 0, methods: methodsUsed };
+  }
+  
+  // Sort by score
+  results.sort((a, b) => b.score - a.score);
+  
   return { 
     suit: results[0].suit, 
-    confidence: Math.min(results[0].score / 20, 1.0) 
+    confidence: Math.min(results[0].score / 20, 1.0),
+    methods: methodsUsed
   };
 }
 

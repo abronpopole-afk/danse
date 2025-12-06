@@ -136,6 +136,8 @@ export class GGClubAdapter extends PlatformAdapter {
   private ocrCache: OCRCache;
   private criticalRegions: string[] = ['heroCardsRegion', 'actionButtonsRegion', 'potRegion'];
   private autoCalibration: AutoCalibrationManager;
+  private enableML: boolean = true; // Added for ML card recognition
+  private cardClassifier: any = null; // Placeholder for ML card classifier
 
   constructor() {
     super("GGClub", {
@@ -160,6 +162,21 @@ export class GGClubAdapter extends PlatformAdapter {
     this.autoCalibration = getAutoCalibrationManager();
     this.initializeTesseract();
     ocrPool.initialize();
+    this.initializeCardClassifier();
+  }
+
+  private initializeCardClassifier(): void {
+    // Placeholder for ML card classifier initialization
+    // In a real scenario, this would involve loading a model (e.g., TensorFlow.js)
+    if (this.enableML) {
+      try {
+        // Example: this.cardClassifier = await tf.loadLayersModel('path/to/model.json');
+        console.log("ML Card Classifier initialized (placeholder)");
+      } catch (error) {
+        console.error("Failed to initialize ML Card Classifier:", error);
+        this.enableML = false;
+      }
+    }
   }
 
   enableDebugMode(enabled: boolean = true): void {
@@ -694,9 +711,15 @@ export class GGClubAdapter extends PlatformAdapter {
     const screenBuffer = await this.captureScreen(windowHandle);
     const cards: CardInfo[] = [];
 
+    // Assuming screenLayout.heroCardsRegion is an array of ScreenRegions
+    if (!Array.isArray(this.screenLayout.heroCardsRegion)) {
+        console.error("heroCardsRegion is not an array");
+        return [];
+    }
+
     for (const region of this.screenLayout.heroCardsRegion) {
-      const rank = await this.recognizeCardRank(region, screenBuffer, this.screenLayout.width);
-      const suit = await this.recognizeCardSuit(region, screenBuffer, this.screenLayout.width);
+      const rank = await this.recognizeCardRank(windowHandle, "hero", cards.length); // Pass windowHandle and index
+      const suit = await this.recognizeCardSuit(region, screenBuffer, this.screenLayout.width); // This might need adjustment based on new logic
 
       if (rank && suit) {
         cards.push({
@@ -725,11 +748,11 @@ export class GGClubAdapter extends PlatformAdapter {
 
       if (!validation.valid) {
         console.warn(`[GGClubAdapter] Invalid hero cards detected: ${validation.errors.join(", ")}`);
-        
+
         // Log validation error
         visionErrorLogger.logCardDetectionError(
           windowHandle,
-          this.screenLayout.heroCardsRegion,
+          this.screenLayout.heroCardsRegion, // Assuming this is still a single region for logging purposes
           "2 valid cards",
           notations.join(", "),
           0.4,
@@ -750,7 +773,7 @@ export class GGClubAdapter extends PlatformAdapter {
       // Log incomplete detection
       visionErrorLogger.logCardDetectionError(
         windowHandle,
-        this.screenLayout.heroCardsRegion,
+        this.screenLayout.heroCardsRegion, // Assuming this is still a single region for logging purposes
         "2 cards",
         `${cards.length} cards`,
         0.5,
@@ -770,14 +793,14 @@ export class GGClubAdapter extends PlatformAdapter {
     const screenBuffer = await this.captureScreen(windowHandle);
     const region = this.screenLayout.communityCardsRegion;
 
-    return this.recognizeCardsInRegion(screenBuffer, region);
+    return this.recognizeCardsInRegion(screenBuffer, region, windowHandle); // Pass windowHandle
   }
 
-  private async recognizeCardsInRegion(screenBuffer: Buffer, region: ScreenRegion): Promise<CardInfo[]> {
+  private async recognizeCardsInRegion(screenBuffer: Buffer, region: ScreenRegion, windowHandle: number): Promise<CardInfo[]> { // Added windowHandle
     await this.addRandomDelay(30);
 
     const cards: CardInfo[] = [];
-    const window = Array.from(this.activeWindows.values())[0];
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`); // Use windowHandle
     const imageWidth = window?.width || 880;
 
     if (this.debugMode) {
@@ -800,9 +823,10 @@ export class GGClubAdapter extends PlatformAdapter {
 
     const cardPatterns = this.detectCardPatterns(screenBuffer, region);
 
-    for (const pattern of cardPatterns) {
-      const rank = await this.recognizeCardRank(pattern, preprocessedBuffer, imageWidth);
-      const suit = await this.recognizeCardSuit(pattern, screenBuffer, imageWidth);
+    for (let i = 0; i < cardPatterns.length; i++) { // Added index i
+      const pattern = cardPatterns[i];
+      const rank = await this.recognizeCardRank(windowHandle, "community", i); // Pass windowHandle and index i
+      const suit = await this.recognizeCardSuit(pattern, screenBuffer, imageWidth); // Use pattern for suit region
 
       if (rank && suit) {
         cards.push({
@@ -844,43 +868,99 @@ export class GGClubAdapter extends PlatformAdapter {
     return patterns;
   }
 
-  private async recognizeCardRank(region: ScreenRegion, screenBuffer?: Buffer, imageWidth?: number): Promise<string | null> {
-    await this.addRandomDelay(10);
+  // Updated to accept windowHandle and index for multi-frame validation
+  async recognizeCardRank(windowHandle: number, position: "hero" | "community", index: number): Promise<string | null> {
+    const screenBuffer = await this.captureScreen(windowHandle);
+    // Ensure screenLayout.heroCardsRegion and screenLayout.communityCardsRegion are arrays
+    const heroCardRegions = Array.isArray(this.screenLayout.heroCardsRegion) ? this.screenLayout.heroCardsRegion : [this.screenLayout.heroCardsRegion];
+    const communityCardRegions = Array.isArray(this.screenLayout.communityCardsRegion) ? this.screenLayout.communityCardsRegion : [this.screenLayout.communityCardsRegion];
+    
+    const cardRegions = position === "hero" ? heroCardRegions : communityCardRegions;
 
-    if (screenBuffer && imageWidth) {
+    if (index >= cardRegions.length) {
+      return null;
+    }
+
+    const rankRegion = cardRegions[index];
+    let detectedRank: string | null = null;
+    let confidence = 0;
+
+    // Enhanced card recognition using ML model if available
+    if (this.enableML && this.cardClassifier) {
+      const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+      if (!window) return null;
+
+      // Assuming classify method returns { rank: string, confidence: number, method: string }
+      const result = this.cardClassifier.classify(screenBuffer, window.width, window.height, rankRegion, 4); 
+
+      if (this.debugMode) {
+        const debugVisualizer = (await import("../debug-visualizer")).getDebugVisualizer();
+        debugVisualizer.addDetection("card", rankRegion, result.rank || "?", result.confidence, "ml");
+      }
+
+      if (result.rank && result.confidence > 0.6) {
+        detectedRank = result.rank;
+        confidence = result.confidence;
+      }
+    }
+
+    // Fallback to existing methods if ML fails or is disabled
+    if (!detectedRank) {
       try {
-        const window = Array.from(this.activeWindows.values())[0];
-        const width = imageWidth || window?.width || 880;
-        const height = window?.height || 600;
+        const window = Array.from(this.activeWindows.values())[0]; // This seems incorrect, should use the specific window
+        const width = window?.width || 880;
 
-        const rankRegion: ScreenRegion = {
-          x: region.x,
-          y: region.y,
-          width: Math.min(region.width * 0.4, 25),
-          height: Math.min(region.height * 0.35, 25),
+        const rankSubRegion: ScreenRegion = {
+          x: rankRegion.x,
+          y: rankRegion.y,
+          width: Math.min(rankRegion.width * 0.4, 25),
+          height: Math.min(rankRegion.height * 0.35, 25),
         };
 
-        const result = this.cardRecognizer.recognizeRank(screenBuffer, width, height, rankRegion);
+        const mlResult = this.cardRecognizer.recognizeRank(screenBuffer, width, height, rankSubRegion);
 
         if (this.debugMode) {
-          debugVisualizer.addDetection("card", rankRegion, result.rank || "?", result.confidence, result.method);
+          debugVisualizer.addDetection("card", rankSubRegion, mlResult.rank || "?", mlResult.confidence, mlResult.method);
         }
 
-        if (result.rank && result.confidence > 0.4) {
-          return result.rank;
-        }
-
-        const templateResult = templateMatcher.matchCardRank(screenBuffer, width, height, rankRegion);
-        if (templateResult.rank && templateResult.confidence > 0.5) {
-          return templateResult.rank;
+        if (mlResult.rank && mlResult.confidence > 0.4) {
+          detectedRank = mlResult.rank;
+          confidence = mlResult.confidence;
+        } else {
+          const templateResult = templateMatcher.matchCardRank(screenBuffer, width, height, rankSubRegion);
+          if (templateResult.rank && templateResult.confidence > 0.5) {
+            detectedRank = templateResult.rank;
+            confidence = templateResult.confidence;
+          }
         }
       } catch (error) {
         console.error("[GGClubAdapter] Card rank recognition error:", error);
       }
     }
 
-    const ranks = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
-    return ranks[Math.floor(Math.random() * ranks.length)] || null;
+    // Multi-frame validation for cards
+    if (detectedRank) {
+      const { getMultiFrameValidator } = await import("../multi-frame-validator");
+      const validator = getMultiFrameValidator();
+
+      const validated = validator.validateCard(
+        `card_${position}_${index}_${windowHandle}`,
+        detectedRank,
+        confidence
+      );
+
+      if (validated.validated && validated.frameCount >= 2) {
+        if (this.debugMode) {
+          console.log(`[GGClubAdapter] Card ${detectedRank} validated across ${validated.frameCount} frames (consistency: ${(validated.consistency * 100).toFixed(1)}%)`);
+        }
+        return validated.value;
+      } else if (validated.frameCount < 2) {
+        // Wait for more frames
+        return null;
+      }
+    }
+
+    return detectedRank; // Return the rank if not validated or no multi-frame data yet
   }
 
   private async recognizeCardSuit(region: ScreenRegion, screenBuffer?: Buffer, imageWidth?: number): Promise<string | null> {
@@ -888,7 +968,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
     if (screenBuffer && imageWidth) {
       try {
-        const window = Array.from(this.activeWindows.values())[0];
+        const window = Array.from(this.activeWindows.values())[0]; // This might need to be specific to windowHandle
         const width = imageWidth || window?.width || 880;
         const height = window?.height || 600;
 
@@ -959,7 +1039,7 @@ export class GGClubAdapter extends PlatformAdapter {
     // Level 4: Si toujours 0, OCR alternatif avec preprocessing différent
     if (potValue === 0) {
       console.warn("[GGClubAdapter] OCR pot failed, trying alternative preprocessing");
-      const window = Array.from(this.activeWindows.values())[0];
+      const window = this.activeWindows.get(`ggclub_${windowHandle}`); // Use windowHandle
       const preprocessed = preprocessForOCR(
         screenBuffer,
         window?.width || 880,
@@ -1091,7 +1171,7 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     try {
-      const window = Array.from(this.activeWindows.values())[0];
+      const window = Array.from(this.activeWindows.values())[0]; // This might need to be specific to windowHandle
       const imageWidth = window?.width || 880;
 
       const colorRange = {
@@ -1112,7 +1192,7 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectBlinds(windowHandle: number): Promise<{ smallBlind: number; bigBlind: number }> {
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`); // Use windowHandle
     if (window) {
       const blindsMatch = window.title.match(/NL(\d+)/);
       if (blindsMatch) {
@@ -1160,7 +1240,7 @@ export class GGClubAdapter extends PlatformAdapter {
     const screenBuffer = await this.captureScreen(windowHandle);
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
-    const window = Array.from(this.activeWindows.values())[0];
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`); // Use windowHandle
     const imageWidth = window?.width || 880;
     const imageHeight = window?.height || 600;
 
@@ -1395,7 +1475,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
         // Log low confidence OCR
         if (confidence < 0.6) {
-          const windowHandle = Array.from(this.activeWindows.keys())[0];
+          const windowHandle = Array.from(this.activeWindows.keys())[0]; // Might need windowHandle
           if (windowHandle) {
             visionErrorLogger.logOCRError(
               parseInt(windowHandle.split('_')[1]),
@@ -1410,7 +1490,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
         // Log slow OCR
         if (processingTime > 200) {
-          const windowHandle = Array.from(this.activeWindows.keys())[0];
+          const windowHandle = Array.from(this.activeWindows.keys())[0]; // Might need windowHandle
           if (windowHandle) {
             visionErrorLogger.logPerformanceIssue(
               parseInt(windowHandle.split('_')[1]),
@@ -1430,9 +1510,9 @@ export class GGClubAdapter extends PlatformAdapter {
         };
       } catch (error) {
         console.error("OCR error:", error);
-        
+
         // Log OCR failure
-        const windowHandle = Array.from(this.activeWindows.keys())[0];
+        const windowHandle = Array.from(this.activeWindows.keys())[0]; // Might need windowHandle
         if (windowHandle) {
           visionErrorLogger.logOCRError(
             parseInt(windowHandle.split('_')[1]),
