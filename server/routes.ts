@@ -1,3 +1,6 @@
+
+import { getEventBus } from "./bot/event-bus";
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
@@ -997,6 +1000,37 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting OCR correction stats:", error);
       res.status(500).json({ error: "Failed to get OCR correction stats" });
+    }
+  });
+
+  // Event Bus Stats
+  app.get("/api/event-bus/stats", async (_req, res) => {
+    try {
+      const eventBus = getEventBus();
+      const streamInfo = await eventBus.getStreamInfo();
+      const pendingCount = await eventBus.getPendingCount();
+      
+      res.json({
+        streamInfo,
+        pendingCount,
+        isConsuming: eventBus.listenerCount("processed") > 0,
+      });
+    } catch (error) {
+      console.error("Error getting event bus stats:", error);
+      res.status(500).json({ error: "Failed to get event bus stats" });
+    }
+  });
+
+  app.post("/api/event-bus/trim", async (req, res) => {
+    try {
+      const { maxLength = 10000 } = req.body;
+      const eventBus = getEventBus();
+      
+      await eventBus.trimStream(maxLength);
+      
+      res.json({ success: true, message: `Stream trimmed to ${maxLength} events` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

@@ -70,6 +70,24 @@ app.use((req, res, next) => {
     log(`Warning: Could not initialize player profile: ${error}`);
   }
 
+  // Initialize Event Bus
+  try {
+    const { initializeEventBus } = await import("./bot/event-bus");
+    const { registerEventHandlers } = await import("./bot/event-handlers");
+    
+    const eventBus = await initializeEventBus();
+    await registerEventHandlers(eventBus);
+    
+    // Start consuming events in background
+    eventBus.startConsuming().catch(error => {
+      log(`Event bus consumer error: ${error}`);
+    });
+    
+    log("Event bus initialized and consuming events");
+  } catch (error) {
+    log(`Warning: Could not initialize event bus: ${error}`);
+  }
+
   await registerRoutes(httpServer, app);
 
   if (process.env.NODE_ENV === "development") {
