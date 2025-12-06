@@ -53,7 +53,7 @@ portable:
 
 publish:
   provider: github
-  owner: VOTRE-USERNAME-GITHUB
+  owner: bobibobini1-cell
   repo: gto-poker-bot
   releaseType: draft
 
