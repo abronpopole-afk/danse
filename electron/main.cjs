@@ -108,50 +108,9 @@ function startServer() {
     PORT: PORT.toString()
   };
 
-  // Détecter le chemin Node.js sur Windows
-  let nodePath = 'node';
-  if (process.platform === 'win32') {
-    const fs = require('fs');
-    
-    // 1. Essayer le Node.js embarqué avec Electron
-    if (process.resourcesPath) {
-      const embeddedNodePath = path.join(process.resourcesPath, 'node.exe');
-      if (fs.existsSync(embeddedNodePath)) {
-        nodePath = embeddedNodePath;
-        console.log('[Server] Using embedded Node.js:', nodePath);
-      }
-    }
-    
-    // 2. Si pas trouvé, chercher dans les emplacements standards
-    if (nodePath === 'node') {
-      const possiblePaths = [
-        'C:\\Program Files\\nodejs\\node.exe',
-        'C:\\Program Files (x86)\\nodejs\\node.exe',
-        path.join(process.env.ProgramFiles || 'C:\\Program Files', 'nodejs', 'node.exe'),
-        path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'nodejs', 'node.exe'),
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'nodejs', 'node.exe'),
-        path.join(process.env.APPDATA || '', 'npm', 'node.exe')
-      ];
-
-      for (const possiblePath of possiblePaths) {
-        try {
-          if (fs.existsSync(possiblePath)) {
-            nodePath = possiblePath;
-            console.log('[Server] Found Node.js at:', nodePath);
-            break;
-          }
-        } catch (e) {
-          // Continue à chercher
-        }
-      }
-    }
-    
-    // 3. Fallback : utiliser 'node' depuis PATH si toujours pas trouvé
-    if (nodePath === 'node') {
-      console.log('[Server] Using Node.js from system PATH');
-      console.warn('[Server] Node.js path: C:\\Program Files\\nodejs should be in PATH');
-    }
-  }
+  // Utiliser le Node.js embarqué d'Electron (TOUJOURS disponible)
+  // Évite tous les problèmes de chemins Windows, permissions, etc.
+  const nodePath = process.execPath;
   
   console.log('[Server] Starting with node path:', nodePath);
   console.log('[Server] Server path:', serverPath);
