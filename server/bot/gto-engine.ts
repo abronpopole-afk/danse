@@ -310,21 +310,10 @@ export class SimulatedGtoAdapter implements GtoAdapter {
       if (adjustedStrength >= 0.75) {
         const baseBetSize = dangerousBoard ? 0.75 : 0.33;
         
-        // Appliquer variance naturelle au sizing (non-robotique)
-        const variance = 0.08 * modifiers.sizingVariance;
-        const noise = (Math.random() - 0.5) * variance * 2;
-        let betSize = baseBetSize + noise;
-        
-        // Arrondir à des valeurs "humaines"
-        betSize = Math.round(betSize * 20) / 20;
-        
-        // Parfois utiliser des sizings "psychologiques"
-        if (Math.random() < 0.12) {
-          const psychSizings = [0.33, 0.5, 0.66, 0.75, 1.0];
-          betSize = psychSizings[Math.floor(Math.random() * psychSizings.length)];
-        }
-        
-        betSize = Math.max(0.25, Math.min(3.0, betSize));
+        // Utiliser le humanizer pour sizing imparfait
+        const { getHumanizer } = await import("./humanizer");
+        const humanizer = getHumanizer();
+        const betSize = humanizer.getHumanizedSizing(baseBetSize, potSize, street);
         
         return {
           actions: [

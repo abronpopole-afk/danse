@@ -268,8 +268,9 @@ export class TableSession extends EventEmitter {
 
     const humanizer = getHumanizer();
     const handStrength = this.estimateHandStrength();
+    const isStrongSpot = recommendation.confidence > 0.8 && data.facingBet < data.potSize * 0.5;
     
-    // Vérifier erreur intentionnelle (très rare)
+    // 1. Vérifier erreur intentionnelle (0.1-1%)
     const errorCheck = humanizer.shouldTriggerIntentionalError(handStrength);
     if (errorCheck.shouldError) {
       if (errorCheck.errorType === 'premature_fold' && handStrength > 0.8) {
@@ -277,26 +278,51 @@ export class TableSession extends EventEmitter {
         await storage.createActionLog({
           tableId: this.tableState.id,
           logType: "warning",
-          message: `[Humanization] Erreur intentionnelle: fold premium hand (0.2% chance)`,
+          message: `[Anti-Detection] Erreur humaine rare: fold premium hand (${(Math.random() * 0.9 + 0.1).toFixed(2)}%)`,
         });
       } else if (errorCheck.errorType === 'wrong_sizing') {
-        // Modifier le sizing si c'est un BET/RAISE
+        // Sizing volontairement bizarre
         if (selectedAction.includes("BET") || selectedAction.includes("RAISE")) {
-          const weirdSizing = [0.15, 0.22, 0.88, 1.33, 2.75][Math.floor(Math.random() * 5)];
+          const weirdSizing = [0.18, 0.23, 0.44, 0.88, 1.12, 1.33, 2.2, 2.75][Math.floor(Math.random() * 8)];
           selectedAction = selectedAction.includes("BET") 
             ? `BET ${Math.round(weirdSizing * 100)}%`
             : `RAISE ${Math.round(weirdSizing * 100)}%`;
+          await storage.createActionLog({
+            tableId: this.tableState.id,
+            logType: "warning",
+            message: `[Anti-Detection] Sizing imparfait intentionnel: ${weirdSizing}x pot`,
+          });
+        }
+      } else if (errorCheck.errorType === 'wrong_action') {
+        // Action incorrecte (check au lieu de bet)
+        if (selectedAction.includes("BET")) {
+          selectedAction = "CHECK";
+          await storage.createActionLog({
+            tableId: this.tableState.id,
+            logType: "warning",
+            message: `[Anti-Detection] Action incorrecte intentionnelle: check au lieu de bet`,
+          });
         }
       }
     }
     
-    // Vérifier fold aléatoire rare
+    // 2. Fold marginal dans strong spot (0.5%)
+    if (humanizer.shouldFoldMarginalInStrongSpot(handStrength, isStrongSpot)) {
+      selectedAction = "FOLD";
+      await storage.createActionLog({
+        tableId: this.tableState.id,
+        logType: "warning",
+        message: `[Anti-Detection] Fold conservateur main marginale en spot fort (0.5%)`,
+      });
+    }
+    
+    // 3. Vérifier fold aléatoire rare (tilt/fatigue)
     if (humanizer.shouldTriggerRandomFold() && handStrength < 0.6 && handStrength > 0.3) {
       selectedAction = "FOLD";
       await storage.createActionLog({
         tableId: this.tableState.id,
         logType: "warning",
-        message: `[Humanization] Fold aléatoire déclenché (simulation erreur humaine)`,
+        message: `[Anti-Detection] Fold aléatoire (fatigue/tilt)`,
       });
     }
 

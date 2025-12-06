@@ -317,26 +317,50 @@ export class Humanizer {
       sizingVariance: 1,
     };
 
+    let state = null;
     if (this.settings.enableDynamicProfile) {
       const profile = getPlayerProfile();
       modifiers = profile.getModifiers();
+      state = profile.getState();
     }
 
-    // Variance de base: ±5% à ±15% selon street
-    const baseVariance = street === "preflop" ? 0.05 : 0.10;
+    // Variance de base: ±5% à ±15% selon street (volontairement imparfait)
+    const baseVariance = street === "preflop" ? 0.08 : 0.12;
     
     // Appliquer le multiplicateur de variance (tilt/fatigue augmente)
-    const variance = baseVariance * modifiers.sizingVariance;
+    let variance = baseVariance * modifiers.sizingVariance;
+    
+    // Variations brusques dues au tilt (5-20% de deviation)
+    if (state && state.tiltLevel > 0.5) {
+      const tiltSpike = state.tiltLevel * 0.2; // Max 20% deviation
+      variance += tiltSpike;
+    }
+    
+    // Variations dues à la fatigue (sizing erratique)
+    if (state && state.fatigueLevel > 0.6) {
+      const fatigueNoise = state.fatigueLevel * 0.15; // Max 15% deviation
+      variance += fatigueNoise;
+    }
     
     // Ajouter du bruit gaussien
     const noise = gaussianRandom(0, variance);
     let adjustedSizing = baseSizing + noise;
     
-    // Arrondir à des valeurs "humaines" (multiples de 0.05)
-    adjustedSizing = Math.round(adjustedSizing * 20) / 20;
+    // Sizing volontairement imparfait: ne jamais être exactement GTO
+    if (Math.abs(adjustedSizing - baseSizing) < 0.02) {
+      adjustedSizing += randomInRange(-0.05, 0.05);
+    }
     
-    // Parfois utiliser des sizings "ronds" comme un humain
-    if (Math.random() < 0.15) {
+    // Arrondir à des valeurs "humaines" mais imparfaites
+    // Parfois arrondir à 0.05, parfois à des valeurs bizarres
+    if (Math.random() < 0.7) {
+      adjustedSizing = Math.round(adjustedSizing * 20) / 20; // Multiples de 0.05
+    } else {
+      adjustedSizing = Math.round(adjustedSizing * 100) / 100; // Valeurs bizarres
+    }
+    
+    // Parfois utiliser des sizings "psychologiques" ronds
+    if (Math.random() < 0.12) {
       const roundSizings = [0.33, 0.5, 0.66, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0];
       const nearest = roundSizings.reduce((prev, curr) => 
         Math.abs(curr - adjustedSizing) < Math.abs(prev - adjustedSizing) ? curr : prev
@@ -344,8 +368,19 @@ export class Humanizer {
       adjustedSizing = nearest;
     }
     
-    // Clamp entre 0.25 et 5.0 (min bet et over-bet max)
-    return clamp(adjustedSizing, 0.25, 5.0);
+    // Variations brusques aléatoires (tilt/frustration) - 2% de chance
+    if (state && Math.random() < 0.02) {
+      if (state.tiltLevel > 0.6) {
+        // Over-bet agressif (1.5x - 3x pot)
+        adjustedSizing = randomInRange(1.5, 3.0);
+      } else if (state.consecutiveLosses > 4) {
+        // Under-bet conservateur (0.25x - 0.4x pot)
+        adjustedSizing = randomInRange(0.25, 0.4);
+      }
+    }
+    
+    // Clamp entre 0.20 et 5.0 (permettre des sizings très bizarres)
+    return clamp(adjustedSizing, 0.20, 5.0);
   }
 
   /**
@@ -358,13 +393,16 @@ export class Humanizer {
   } {
     if (!this.settings.stealthModeEnabled) return { shouldError: false };
     
-    let errorProb = 0.002; // 0.2% de base
+    let errorProb = 0.001; // 0.1% de base (erreurs humaines rares)
     
-    // Augmenter avec fatigue/tilt
+    // Augmenter avec fatigue/tilt (jusqu'à 1%)
     if (this.settings.enableDynamicProfile) {
       const modifiers = getPlayerProfile().getModifiers();
-      errorProb += modifiers.errorProbability * 0.3;
+      errorProb += modifiers.errorProbability; // Max +10%
     }
+    
+    // Limiter à 1% maximum
+    errorProb = Math.min(0.01, errorProb);
     
     if (Math.random() < errorProb) {
       // Type d'erreur selon force de main
@@ -378,6 +416,34 @@ export class Humanizer {
     }
     
     return { shouldError: false };
+  }
+
+  /**
+   * Fold intentionnel de mains marginales dans des spots forts (0.5%)
+   * Simule des décisions conservatrices humaines
+   */
+  shouldFoldMarginalInStrongSpot(handStrength: number, isStrongSpot: boolean): boolean {
+    if (!this.settings.stealthModeEnabled) return false;
+    if (!isStrongSpot) return false;
+    
+    // Mains marginales uniquement (30-60% equity)
+    if (handStrength < 0.3 || handStrength > 0.6) return false;
+    
+    let foldProb = 0.005; // 0.5% de base
+    
+    // Augmenter avec fatigue/patience élevée
+    if (this.settings.enableDynamicProfile) {
+      const profile = getPlayerProfile();
+      const modifiers = profile.getModifiers();
+      const state = profile.getState();
+      
+      // Plus conservateur si fatigué ou si losing streak
+      if (state.fatigueLevel > 0.5) foldProb += 0.003;
+      if (state.consecutiveLosses > 3) foldProb += 0.002;
+      if (state.currentPatience > 0.7) foldProb += 0.002;
+    }
+    
+    return Math.random() < foldProb;
   }
 
   generateThinkingPauses(totalThinkingTime: number): number[] {

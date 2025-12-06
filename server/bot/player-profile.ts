@@ -264,31 +264,49 @@ export class PlayerProfile extends EventEmitter {
     const fatigueFactor = this.state.fatigueLevel;
     const focusFactor = this.state.currentFocus;
 
+    // Variations brusques si tilt/fatigue élevés
+    const isBrusqueVariation = (tiltFactor > 0.7 || fatigueFactor > 0.7) && Math.random() < 0.15;
+
     return {
       // Tilt = actions plus rapides, moins de réflexion
       // Fatigue = actions plus lentes (coordination réduite)
+      // Variations brusques = changements soudains de rythme
       delayMultiplier: Math.max(
         0.5,
-        1 - tiltFactor * 0.5 + fatigueFactor * 0.3
+        isBrusqueVariation 
+          ? (Math.random() < 0.5 ? 0.4 : 1.8) // Très rapide ou très lent
+          : 1 - tiltFactor * 0.5 + fatigueFactor * 0.3
       ),
 
       // Fatigue = plus de variance dans les mouvements et décisions
-      varianceMultiplier: 1 + fatigueFactor * 1.2 + tiltFactor * 0.5,
+      // Variations brusques = variance extrême
+      varianceMultiplier: isBrusqueVariation
+        ? 1.5 + Math.random() * 1.0 // 1.5-2.5x variance
+        : 1 + fatigueFactor * 1.2 + tiltFactor * 0.5,
 
       // Tilt + Fatigue = plus d'erreurs (tremblements, misclicks)
+      // Variations brusques = erreurs fréquentes
       errorProbability: Math.min(
         0.1,
-        (tiltFactor * 0.05 + fatigueFactor * 0.04) * (1 - focusFactor)
+        isBrusqueVariation
+          ? 0.08 + Math.random() * 0.02 // 8-10% erreurs
+          : (tiltFactor * 0.05 + fatigueFactor * 0.04) * (1 - focusFactor)
       ),
 
       // Tilt = plus agressif
-      aggressionShift: tiltFactor * 0.3 - this.state.currentPatience * 0.15,
+      // Variations brusques = comportement erratique
+      aggressionShift: isBrusqueVariation
+        ? (Math.random() < 0.5 ? 0.4 : -0.3) // Très agressif ou très passif
+        : tiltFactor * 0.3 - this.state.currentPatience * 0.15,
 
       // Tilt = range plus large (joue plus de mains)
       rangeWidening: 1 + tiltFactor * 0.3,
 
       // Tilt + Fatigue = sizing erratique
-      sizingVariance: 1 + tiltFactor * 0.4 + fatigueFactor * 0.3,
+      // Variations brusques = sizing complètement imparfait
+      sizingVariance: isBrusqueVariation
+        ? 1.6 + Math.random() * 0.6 // 1.6-2.2x variance
+        : 1 + tiltFactor * 0.4 + fatigueFactor * 0.3,
     };
   }
 
