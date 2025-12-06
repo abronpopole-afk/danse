@@ -59,12 +59,12 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
 
 echo.
 echo [4/8] Installation de node-gyp global...
-call npm install -g node-gyp
+call npm install -g node-gyp 2>nul
 echo node-gyp installe
 
 echo.
-echo [5/8] Configuration de npm...
-call npm config set msvs_version 2022
+echo [5/8] Preparation...
+echo Configuration prete
 
 echo.
 echo [6/8] Installation des dependances npm...
@@ -73,11 +73,24 @@ if "%INSTALL_DIR%"=="" set INSTALL_DIR=%CD%
 
 if exist "%INSTALL_DIR%\package.json" (
     cd /d "%INSTALL_DIR%"
-    call npm install
+    
+    echo Correction des versions de packages...
+    powershell -Command "(Get-Content package.json) -replace '\"@auth/express\": \"\^0.10.4\"', '\"@auth/express\": \"^0.12.1\"' | Set-Content package.json"
+    powershell -Command "(Get-Content package.json) -replace '\"@auth/core\": \"\^0.37.4\"', '\"@auth/core\": \"^0.40.0\"' | Set-Content package.json"
+    
+    echo Installation des dependances...
+    call npm install --legacy-peer-deps --ignore-scripts
     echo Dependances installees
 ) else (
     echo package.json non trouve dans %INSTALL_DIR%
-    echo Passez cette etape si vous n'avez pas encore clone le projet
+    echo.
+    echo IMPORTANT: Vous n'avez pas besoin de ce script si vous utilisez
+    echo le fichier .exe telecharge depuis GitHub Releases!
+    echo.
+    echo Ce script est uniquement pour les developpeurs qui veulent
+    echo compiler le projet depuis le code source.
+    echo.
+    goto :end
 )
 
 echo.
@@ -88,7 +101,7 @@ if exist "%INSTALL_DIR%\package.json" (
     if %errorLevel% equ 0 (
         echo robotjs compile avec succes
     ) else (
-        echo robotjs: compilation echouee (optionnel)
+        echo robotjs: compilation echouee - fonctionnalite optionnelle
     )
 )
 
@@ -101,12 +114,13 @@ if exist "%INSTALL_DIR%\native\binding.gyp" (
     if %errorLevel% equ 0 (
         echo Module DXGI compile avec succes
     ) else (
-        echo Module DXGI: compilation echouee (optionnel)
+        echo Module DXGI: compilation echouee - fonctionnalite optionnelle
     )
 ) else (
-    echo Module DXGI: binding.gyp non trouve
+    echo Module DXGI: binding.gyp non trouve - fonctionnalite optionnelle
 )
 
+:end
 echo.
 echo Creation des repertoires de donnees...
 if not exist "%APPDATA%\GTO Poker Bot" mkdir "%APPDATA%\GTO Poker Bot"
@@ -121,10 +135,10 @@ echo ========================================
 echo Installation terminee!
 echo ========================================
 echo.
-echo Modules compiles:
-echo   - robotjs: automatisation souris/clavier
-echo   - DXGI: capture d'ecran haute performance
+echo IMPORTANT: Si vous avez telecharge le .exe depuis GitHub Releases,
+echo vous pouvez simplement le lancer directement!
 echo.
-echo Vous pouvez maintenant lancer GTO Poker Bot!
+echo Ce script est uniquement necessaire pour compiler
+echo les modules natifs optionnels (DXGI, robotjs).
 echo.
 pause
