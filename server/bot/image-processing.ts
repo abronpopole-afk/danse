@@ -26,6 +26,9 @@ export interface ImageProcessingConfig {
   thresholdValue: number;
   adaptiveThreshold: boolean;
   noiseReductionLevel: "low" | "medium" | "high";
+  useOtsuThreshold: boolean;
+  useCLAHE: boolean;
+  sharpenAmount: number;
 }
 
 export const DEFAULT_PROCESSING_CONFIG: ImageProcessingConfig = {
@@ -34,6 +37,31 @@ export const DEFAULT_PROCESSING_CONFIG: ImageProcessingConfig = {
   thresholdValue: 128,
   adaptiveThreshold: true,
   noiseReductionLevel: "medium",
+  useOtsuThreshold: false,
+  useCLAHE: false,
+  sharpenAmount: 1.2,
+};
+
+export const OCR_OPTIMIZED_CONFIG: ImageProcessingConfig = {
+  blurRadius: 0,
+  contrastFactor: 1.5,
+  thresholdValue: 0,
+  adaptiveThreshold: false,
+  noiseReductionLevel: "medium",
+  useOtsuThreshold: true,
+  useCLAHE: false,
+  sharpenAmount: 1.5,
+};
+
+export const CARD_TEXT_CONFIG: ImageProcessingConfig = {
+  blurRadius: 0,
+  contrastFactor: 1.3,
+  thresholdValue: 0,
+  adaptiveThreshold: true,
+  noiseReductionLevel: "medium",
+  useOtsuThreshold: false,
+  useCLAHE: false,
+  sharpenAmount: 1.0,
 };
 
 export function rgbToHsv(r: number, g: number, b: number): HSVPixel {
@@ -212,6 +240,155 @@ export function applyContrastStretching(
   }
 
   return result;
+}
+
+export function applyUnsharpMask(
+  imageBuffer: Buffer,
+  width: number,
+  height: number,
+  amount: number = 1.5,
+  radius: number = 1,
+  channels: number = 4
+): Buffer {
+  const blurred = applyGaussianBlur(imageBuffer, width, height, radius, channels);
+  const result = Buffer.alloc(imageBuffer.length);
+
+  for (let i = 0; i < imageBuffer.length; i += channels) {
+    for (let c = 0; c < Math.min(channels, 3); c++) {
+      const original = imageBuffer[i + c];
+      const blur = blurred[i + c];
+      const sharpened = original + amount * (original - blur);
+      result[i + c] = Math.round(Math.min(255, Math.max(0, sharpened)));
+    }
+    if (channels === 4) {
+      result[i + 3] = imageBuffer[i + 3];
+    }
+  }
+
+  return result;
+}
+
+export function applyCLAHE(
+  imageBuffer: Buffer,
+  width: number,
+  height: number,
+  tileSize: number = 8,
+  clipLimit: number = 2.0,
+  channels: number = 4
+): Buffer {
+  const grayscale = toGrayscale(imageBuffer, width, height, channels);
+  const result = Buffer.alloc(imageBuffer.length);
+  
+  const tilesX = Math.ceil(width / tileSize);
+  const tilesY = Math.ceil(height / tileSize);
+  
+  const tileCDFs: Float32Array[][] = [];
+  
+  for (let ty = 0; ty < tilesY; ty++) {
+    tileCDFs[ty] = [];
+    
+    for (let tx = 0; tx < tilesX; tx++) {
+      const histogram = new Uint32Array(256);
+      let pixelCount = 0;
+      
+      const startX = tx * tileSize;
+      const startY = ty * tileSize;
+      const endX = Math.min(startX + tileSize, width);
+      const endY = Math.min(startY + tileSize, height);
+      
+      for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+          histogram[grayscale[y * width + x]]++;
+          pixelCount++;
+        }
+      }
+      
+      if (pixelCount === 0) {
+        tileCDFs[ty][tx] = new Float32Array(256).fill(0);
+        continue;
+      }
+      
+      const clipValue = Math.floor(clipLimit * pixelCount / 256);
+      let excess = 0;
+      
+      for (let i = 0; i < 256; i++) {
+        if (histogram[i] > clipValue) {
+          excess += histogram[i] - clipValue;
+          histogram[i] = clipValue;
+        }
+      }
+      
+      const redistribute = Math.floor(excess / 256);
+      for (let i = 0; i < 256; i++) {
+        histogram[i] += redistribute;
+      }
+      
+      const cdf = new Float32Array(256);
+      cdf[0] = histogram[0] / pixelCount;
+      for (let i = 1; i < 256; i++) {
+        cdf[i] = cdf[i - 1] + histogram[i] / pixelCount;
+      }
+      
+      tileCDFs[ty][tx] = cdf;
+    }
+  }
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const srcOffset = (y * width + x) * channels;
+      const grayVal = grayscale[y * width + x];
+      
+      const txCenter = (x + 0.5) / tileSize - 0.5;
+      const tyCenter = (y + 0.5) / tileSize - 0.5;
+      
+      const tx0 = Math.max(0, Math.floor(txCenter));
+      const ty0 = Math.max(0, Math.floor(tyCenter));
+      const tx1 = Math.min(tilesX - 1, tx0 + 1);
+      const ty1 = Math.min(tilesY - 1, ty0 + 1);
+      
+      const xRatio = Math.max(0, Math.min(1, txCenter - tx0));
+      const yRatio = Math.max(0, Math.min(1, tyCenter - ty0));
+      
+      const v00 = tileCDFs[ty0][tx0][grayVal];
+      const v10 = tileCDFs[ty0][tx1][grayVal];
+      const v01 = tileCDFs[ty1][tx0][grayVal];
+      const v11 = tileCDFs[ty1][tx1][grayVal];
+      
+      const top = v00 * (1 - xRatio) + v10 * xRatio;
+      const bottom = v01 * (1 - xRatio) + v11 * xRatio;
+      const interpolated = top * (1 - yRatio) + bottom * yRatio;
+      
+      const enhanced = Math.round(interpolated * 255);
+      
+      result[srcOffset] = enhanced;
+      result[srcOffset + 1] = enhanced;
+      result[srcOffset + 2] = enhanced;
+      
+      if (channels === 4) {
+        result[srcOffset + 3] = imageBuffer[srcOffset + 3];
+      }
+    }
+  }
+  
+  return result;
+}
+
+export function applyOtsuThreshold(
+  imageBuffer: Buffer,
+  width: number,
+  height: number,
+  channels: number = 4
+): Buffer {
+  const grayscale = toGrayscale(imageBuffer, width, height, channels);
+  
+  const histogram = new Uint32Array(256);
+  for (let i = 0; i < grayscale.length; i++) {
+    histogram[grayscale[i]]++;
+  }
+  
+  const threshold = calculateOtsuThreshold(histogram);
+  
+  return applyThreshold(imageBuffer, width, height, threshold, channels);
 }
 
 export function applyThreshold(
@@ -418,23 +595,32 @@ export function preprocessForOCR(
 ): Buffer {
   let processed = Buffer.from(imageBuffer);
 
-  if (config.blurRadius > 0) {
-    processed = applyGaussianBlur(processed, width, height, config.blurRadius, channels);
+  if (config.sharpenAmount > 0) {
+    processed = applyUnsharpMask(processed, width, height, config.sharpenAmount, 1, channels);
   }
 
-  if (config.contrastFactor !== 1.0) {
+  if (config.useCLAHE) {
+    processed = applyCLAHE(processed, width, height, 8, 2.5, channels);
+  } else if (config.contrastFactor !== 1.0) {
     processed = applyContrastStretching(processed, width, height, config.contrastFactor, channels);
+  }
+
+  if (config.blurRadius > 0) {
+    processed = applyGaussianBlur(processed, width, height, config.blurRadius, channels);
   }
 
   if (config.adaptiveThreshold) {
     const blockSize = config.noiseReductionLevel === "high" ? 15 : 
                       config.noiseReductionLevel === "medium" ? 11 : 7;
     processed = applyAdaptiveThreshold(processed, width, height, blockSize, 2, channels);
+  } else if (config.useOtsuThreshold) {
+    processed = applyOtsuThreshold(processed, width, height, channels);
   } else {
     processed = applyThreshold(processed, width, height, config.thresholdValue, channels);
   }
 
   if (config.noiseReductionLevel !== "low") {
+    processed = applyMorphologicalOperation(processed, width, height, "close", 3, channels);
     processed = applyMorphologicalOperation(processed, width, height, "open", 3, channels);
   }
 
@@ -548,6 +734,9 @@ export function detectSuitByHSV(
     thresholdValue: 128,
     adaptiveThreshold: true,
     noiseReductionLevel: "medium",
+    useOtsuThreshold: false,
+    useCLAHE: false,
+    sharpenAmount: 1.0,
   }, channels);
 
   const heartsResult = detectColorHSV(processedImageBuffer, width, height, region, POKER_SUIT_HSV_RANGES.hearts, channels);
