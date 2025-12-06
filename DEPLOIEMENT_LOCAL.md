@@ -193,7 +193,40 @@ redis-cli ping  # Doit retourner "PONG"
 
 ### 1.4 Installation des Build Tools pour Modules Natifs
 
-#### Windows
+#### Windows - Installation Automatique (RECOMMANDÉE)
+
+**Le script `setup.ps1` installe automatiquement tous les prérequis :**
+
+```powershell
+# Exécuter en PowerShell Administrateur
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\script\setup.ps1
+```
+
+**OU double-cliquez sur `script\SETUP.bat` (en tant qu'administrateur)**
+
+Le script installe :
+- Chocolatey (gestionnaire de paquets)
+- Node.js 20 LTS
+- Python 3.11 + OpenCV + numpy
+- Visual Studio 2022 Build Tools (C++)
+- PostgreSQL 16
+- Git
+- node-gyp
+- Modules natifs (robotjs, sharp, screenshot-desktop, etc.)
+- Compile le module DXGI Desktop Duplication
+
+**Options du script :**
+```powershell
+.\setup.ps1 -SkipPostgres      # Si PostgreSQL déjà installé
+.\setup.ps1 -SkipPython        # Si Python déjà installé
+.\setup.ps1 -SkipDXGI          # Ne pas compiler DXGI
+.\setup.ps1 -LaunchBot         # Démarrer après installation
+.\setup.ps1 -InstallPath "D:\Bot"  # Chemin personnalisé
+```
+
+#### Windows - Installation Manuelle
+
 ```bash
 # Installer windows-build-tools (en PowerShell Administrateur)
 npm install -g windows-build-tools
@@ -731,15 +764,34 @@ Le système intègre **DXGI Desktop Duplication API** pour capture ultra-rapide 
 - Fallback automatique vers screenshot-desktop si non disponible
 - Compatible Windows 8+
 
-### 10.2 Installation DXGI (optionnel)
+### 10.2 Installation DXGI
+
+#### Installation Automatique (RECOMMANDÉE)
+
+Le script `setup.ps1` compile automatiquement DXGI :
+
+```powershell
+.\script\setup.ps1
+```
+
+**OU** utilisez le script dédié :
+
+```batch
+script\compile-dxgi.bat
+```
+
+#### Installation Manuelle
 
 **Prérequis** :
-```bash
-# Visual Studio Build Tools (C++ compiler)
-npm install --global windows-build-tools
+```powershell
+# Visual Studio 2022 Build Tools
+choco install visualstudio2022buildtools -y
+choco install visualstudio2022-workload-vctools -y
 
-# node-gyp
+# node-gyp + node-addon-api
 npm install -g node-gyp
+npm install node-addon-api
+npm config set msvs_version 2022
 ```
 
 **Compilation du module natif** :
@@ -753,6 +805,10 @@ Le module compilé sera dans `native/build/Release/dxgi-capture.node`
 
 **Vérification** :
 ```bash
+# Vérifier avec le script
+script\check-modules.bat
+
+# OU manuellement
 node -e "console.log(require('./native/build/Release/dxgi-capture.node'))"
 ```
 

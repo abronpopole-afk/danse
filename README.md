@@ -294,6 +294,35 @@ npm run dev
 ```
 
 ### Sur Windows Local (Capture + Contrôle)
+
+#### Installation Automatique (RECOMMANDÉE)
+
+```powershell
+# 1. Télécharger le projet depuis Replit (ZIP)
+# 2. Extraire dans C:\Users\VotreNom\poker-bot
+# 3. Exécuter en PowerShell Administrateur :
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\script\setup.ps1
+
+# OU double-cliquez sur script\SETUP.bat (en admin)
+```
+
+Le script `setup.ps1` installe automatiquement :
+- Node.js 20 LTS, Python 3.11, Git
+- Visual Studio 2022 Build Tools
+- PostgreSQL 16
+- Tous les modules natifs (robotjs, sharp, etc.)
+- Compile le module DXGI (capture ultra-rapide)
+
+**Options disponibles :**
+```powershell
+.\setup.ps1 -SkipPostgres      # Si PostgreSQL déjà installé
+.\setup.ps1 -SkipDXGI          # Ne pas compiler DXGI
+.\setup.ps1 -LaunchBot         # Démarrer après installation
+```
+
+#### Installation Manuelle
+
 ```bash
 # Cloner le projet
 git clone <repo-url>
