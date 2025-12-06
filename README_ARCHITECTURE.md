@@ -7,13 +7,17 @@ Le bot est construit avec une architecture modulaire et scalable permettant de g
 
 ## 📊 Pipeline de Vision
 
+Voir le pipeline complet dans [`server/bot/ocr-pipeline/`](server/bot/ocr-pipeline/)
+
 ### 1. Capture d'Écran
 
 **DXGI Desktop Duplication** (Recommandé) :
 - Capture GPU directe via DirectX
 - 6× plus rapide que screenshot-desktop
 - 0 tearing, support multi-monitors
-- Implémentation : `native/dxgi-capture.cpp`
+- **Implémentation** : 
+  - [`native/dxgi-capture.cpp`](native/dxgi-capture.cpp) - Module natif C++
+  - [`server/bot/dxgi-capture.ts`](server/bot/dxgi-capture.ts) - Wrapper TypeScript
 
 **Fallback Screenshot-Desktop** :
 - Solution de secours si DXGI indisponible
@@ -21,31 +25,59 @@ Le bot est construit avec une architecture modulaire et scalable permettant de g
 
 ### 2. Détection de Changements
 
-**Diff Detector** (`server/bot/diff-detector.ts`) :
+**Diff Detector** ([`server/bot/diff-detector.ts`](server/bot/diff-detector.ts)) :
 - Compare frame actuelle avec frame précédente
 - Skip OCR si aucun changement détecté
 - Optimisation : -70% CPU
 
+**Frame Buffer** ([`ocr-pipeline/frames/frame-buffer.ts`](server/bot/ocr-pipeline/frames/frame-buffer.ts)) :
+- Buffer circulaire pour historique
+- Keyframe detection
+- Diff calculation optimisé
+
 ### 3. Template Matching
 
-**OpenCV Templates** (`server/bot/template-matching.ts`) :
+**OpenCV Templates** ([`server/bot/template-matching.ts`](server/bot/template-matching.ts)) :
 - Détection boutons (CALL, RAISE, FOLD)
 - Détection suits (♠ ♥ ♦ ♣)
 - Précision : ~100% sur éléments statiques
 
-### 4. OCR Multi-Thread
+### 4. OCR Pipeline Hiérarchique
 
-**OCR Pool** (`server/bot/ocr-pool.ts`) :
+**ONNX OCR Engine** ([`ml-ocr/onnx-ocr-engine.ts`](server/bot/ml-ocr/onnx-ocr-engine.ts)) :
+- Inférence ultra-rapide (10x Tesseract)
+- Modèle ONNX Runtime optimisé
+- CTC Decoding pour séquences
+- **Priorité 1** dans fallback
+
+**Poker OCR Engine ML** ([`ml-ocr/poker-ocr-engine.ts`](server/bot/ml-ocr/poker-ocr-engine.ts)) :
+- CNN custom JavaScript
+- Card Classifier ML ([`ml-ocr/card-classifier-ml.ts`](server/bot/ml-ocr/card-classifier-ml.ts))
+- **Priorité 2** dans fallback
+
+**Tesseract OCR** ([`ocr-pipeline/adapters/tesseract-adapter.ts`](server/bot/ocr-pipeline/adapters/tesseract-adapter.ts)) :
+- OCR Pool multi-thread ([`ocr-pool.ts`](server/bot/ocr-pool.ts))
 - Pool de 4 workers Tesseract
-- Traitement parallèle des régions
-- Cache LRU pour résultats
+- Cache LRU pour résultats ([`ocr-cache.ts`](server/bot/ocr-cache.ts))
+- **Priorité 3** dans fallback
 
-### 5. Classification CNN
+**Fallback Manager** ([`ocr-pipeline/fallback-manager.ts`](server/bot/ocr-pipeline/fallback-manager.ts)) :
+- Gestion hiérarchique ONNX → ML → Tesseract
+- Retry logic avec délais
+- Timeout par opération
+- Statistiques par adapter
 
-**Card Classifier** (`server/bot/card-classifier.ts`) :
-- CNN 4 couches : 64×64 → rank + suit
-- Précision : 98-99%
-- Poids : 1-3 MB
+### 5. Validation & Correction
+
+**Multi-Frame Validator** ([`multi-frame-validator.ts`](server/bot/multi-frame-validator.ts)) :
+- Consensus 100% sur 2-3 frames
+- Boost confiance +20% si validé
+- Élimine faux positifs animations
+
+**OCR Error Correction** ([`ocr-error-correction.ts`](server/bot/ocr-error-correction.ts)) :
+- Patterns communs (o→0, l→1)
+- Validation contexte poker
+- Post-processing intelligent
 
 ### 6. Debug Visualizer
 

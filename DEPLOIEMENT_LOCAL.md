@@ -462,7 +462,7 @@ Recommandations :
 
 ### 7.1 Moteur Monte Carlo
 
-Le système intègre un **moteur Monte Carlo** pour calculs postflop avancés :
+Le système intègre un **moteur Monte Carlo** ([`server/bot/gto-advanced.ts`](server/bot/gto-advanced.ts)) pour calculs postflop avancés :
 
 **Fonctionnalités** :
 - Simulation de 10,000+ scénarios en 100-200ms
@@ -816,13 +816,13 @@ const onnxEngine = await getONNXOCREngine({
 
 ### 10.2 Poker OCR Engine (Pure JavaScript ML)
 
-Le système intègre également un **moteur OCR JavaScript** basé sur des réseaux de neurones convolutifs (CNN) :
+Le système intègre également un **moteur OCR JavaScript** ([`server/bot/ml-ocr/poker-ocr-engine.ts`](server/bot/ml-ocr/poker-ocr-engine.ts)) basé sur des réseaux de neurones convolutifs (CNN) :
 
 **Architecture** :
-- **Neural Network** : Implémentation pure JavaScript (pas de dépendances externes TensorFlow/PyTorch)
-- **Card Classifier** : CNN pour reconnaissance de rangs et couleurs de cartes
-- **Training Pipeline** : Système d'entraînement avec augmentation de données
-- **Data Collector** : Collecte automatique d'exemples pour amélioration continue
+- **Neural Network** ([`neural-network.ts`](server/bot/ml-ocr/neural-network.ts)) : Implémentation pure JavaScript (pas de dépendances externes TensorFlow/PyTorch)
+- **Card Classifier** ([`card-classifier-ml.ts`](server/bot/ml-ocr/card-classifier-ml.ts)) : CNN pour reconnaissance de rangs et couleurs de cartes
+- **Training Pipeline** ([`training-pipeline.ts`](server/bot/ml-ocr/training-pipeline.ts)) : Système d'entraînement avec augmentation de données
+- **Data Collector** ([`data-collector.ts`](server/bot/ml-ocr/data-collector.ts)) : Collecte automatique d'exemples pour amélioration continue
 
 **Fonctionnalités** :
 - Reconnaissance de cartes (rangs : 2-A, couleurs : ♠♥♦♣)
@@ -1479,7 +1479,7 @@ curl http://localhost:5000/api/self-detection/patterns
 
 ### 13.1 Erreurs Humaines Simulées
 
-Le système simule maintenant des **erreurs intentionnelles** pour paraître humain :
+Le système simule maintenant des **erreurs intentionnelles** ([`server/bot/cognitive-errors.ts`](server/bot/cognitive-errors.ts)) pour paraître humain :
 
 **Types d'erreurs** :
 - **Misclick rare** : 0.1-0.5% des actions
@@ -1490,6 +1490,13 @@ Le système simule maintenant des **erreurs intentionnelles** pour paraître hum
 - **Approximations stratégiques** : Ranges imprécis
 - **Clics hésitants** : Mouvements interrompus puis repris (1.2%)
 - **Actions incorrectes** : Check au lieu de bet (rare)
+
+**Fichiers sources** :
+- [`cognitive-errors.ts`](server/bot/cognitive-errors.ts) - Erreurs cognitives
+- [`humanizer.ts`](server/bot/humanizer.ts) - Timing et mouvements
+- [`human-behavior-dataset.ts`](server/bot/human-behavior-dataset.ts) - Dataset 500+ joueurs
+- [`anti-pattern-detector.ts`](server/bot/anti-pattern-detector.ts) - Détection patterns suspects
+- [`self-detection.ts`](server/bot/self-detection.ts) - Auto-analyse inversée
 
 **Configuration automatique** :
 ```typescript

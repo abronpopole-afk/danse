@@ -112,47 +112,146 @@ Le bot utilise une architecture modulaire avec séparation des responsabilités 
 
 ### ✅ Actuellement Implémenté
 
-- **Vision par ordinateur** : 
-  - OCR Tesseract + régions calibrées
-  - Template Matching (OpenCV) pour boutons et suits
-  - CNN pour reconnaissance de cartes (64×64)
-  - DXGI Desktop Duplication (6× plus rapide)
-  - Diff-Based OCR (optimisation frame-to-frame)
-  - Debug Visualizer avec annotations
+#### 🎯 Vision & OCR (Pipeline Complet)
+- **OCR Pipeline** ([`server/bot/ocr-pipeline/`](server/bot/ocr-pipeline/))
+  - ONNX OCR Engine ultra-rapide (10x Tesseract) - [`ml-ocr/onnx-ocr-engine.ts`](server/bot/ml-ocr/onnx-ocr-engine.ts)
+  - Poker OCR Engine (ML + CNN) - [`ml-ocr/poker-ocr-engine.ts`](server/bot/ml-ocr/poker-ocr-engine.ts)
+  - Tesseract fallback - [`ocr-pipeline/adapters/tesseract-adapter.ts`](server/bot/ocr-pipeline/adapters/tesseract-adapter.ts)
+  - Template Matching OpenCV - [`template-matching.ts`](server/bot/template-matching.ts)
+  - HSV Color Detection pour cartes - [`image-processing.ts`](server/bot/image-processing.ts)
+  - Multi-Frame Validator (100% consensus) - [`multi-frame-validator.ts`](server/bot/multi-frame-validator.ts)
+  - Fallback Manager hiérarchique - [`ocr-pipeline/fallback-manager.ts`](server/bot/ocr-pipeline/fallback-manager.ts)
 
-- **GTO Engine** : 
-  - Solver externe avec cache Redis
-  - Monte Carlo equity estimation (500 simulations)
-  - Range splitting multi-street
-  - Opponent modeling (VPIP, PFR, AF)
-  - Mixed strategies randomisées
+- **Capture d'écran**
+  - DXGI Desktop Duplication (6× plus rapide, Windows) - [`dxgi-capture.ts`](server/bot/dxgi-capture.ts) + [`native/dxgi-capture.cpp`](native/dxgi-capture.cpp)
+  - Diff Detector (optimisation -70% CPU) - [`diff-detector.ts`](server/bot/diff-detector.ts)
+  - Frame Buffer circulaire - [`ocr-pipeline/frames/frame-buffer.ts`](server/bot/ocr-pipeline/frames/frame-buffer.ts)
 
-- **Anti-détection** : 
-  - Timing humain, mouvements de souris, erreurs cognitives
-  - Faux mouvements humains
-  - Variation du style selon l'heure
-  - Simulation d'hésitation
-  - Erreurs cognitives aléatoires
+- **Calibration & Normalisation**
+  - Auto-Calibration avec drift detection - [`auto-calibration.ts`](server/bot/auto-calibration.ts)
+  - Region Manager avec templates - [`ocr-pipeline/regions/region-manager.ts`](server/bot/ocr-pipeline/regions/region-manager.ts)
+  - Frame Normalizer (preprocessing) - [`ocr-pipeline/normalization/frame-normalizer.ts`](server/bot/ocr-pipeline/normalization/frame-normalizer.ts)
 
-- **Multi-tables** : 
-  - Gestion jusqu'à 24 tables simultanées
-  - Worker pool pour vision parallèle
-  - Auto-calibration par plateforme
+#### 🧠 GTO & Décisions
+- **GTO Engine Avancé** ([`gto-advanced.ts`](server/bot/gto-advanced.ts))
+  - Monte Carlo 10,000+ simulations (100-200ms)
+  - Range construction multi-street
+  - Nash Equilibrium solver
+  - Equity calculation avec card removal
+  
+- **GTO Engine Standard** ([`gto-engine.ts`](server/bot/gto-engine.ts))
+  - GTO Cache chiffré (LRU 10k, TTL 60min) - [`gto-cache.ts`](server/bot/gto-cache.ts)
+  - Opponent Profiler adaptatif - [`opponent-profiler.ts`](server/bot/opponent-profiler.ts)
+  - Range Auto-Update hebdomadaire - [`range-updater.ts`](server/bot/range-updater.ts)
+  - Mixed strategies GTO
 
-- **Platform Support** : GGClub (extensible à d'autres plateformes)
+#### 🎭 Anti-Détection (Human Behavior)
+- **Human Behavior Dataset** ([`human-behavior-dataset.ts`](server/bot/human-behavior-dataset.ts))
+  - 500+ joueurs réels analysés
+  - Timings authentiques par street
+  - Sizing distributions réelles
+  - Error patterns observés (2.5% mistakes)
 
-- **ML/OCR** :
-  - Data Collector pour entraînement
-  - Neural Network pour cartes
-  - Training Pipeline automatisé
-  - Support ONNX Runtime
+- **Player Profile Dynamique** ([`player-profile.ts`](server/bot/player-profile.ts))
+  - Tilt/Fatigue/Focus simulation
+  - Rythme circadien
+  - Transitions automatiques de personnalité
+  - Persistance DB ([`schema.ts`](shared/schema.ts) - `player_profile_state`)
 
-- **Tests** :
-  - Suite complète de tests (6 phases)
-  - Tests multi-résolution (1080p, 1440p, 4K)
-  - Tests multi-DPI (100%-200%)
-  - Tests de robustesse
-  - Collection de dataset automatisée
+- **Humanizer** ([`humanizer.ts`](server/bot/humanizer.ts))
+  - Timing Gaussien avec variance
+  - Mouvements Bézier + tremblements (80-120Hz)
+  - Loi de Fitts pour trajectoires
+  - Erreurs intentionnelles (0.1-1%)
+
+- **Cognitive Errors** ([`cognitive-errors.ts`](server/bot/cognitive-errors.ts))
+  - Misclicks simulés (0.1%)
+  - Fold de mains fortes (0.5%)
+  - Sizing imparfait volontaire
+  - Erreurs pot odds
+
+- **Anti-Pattern Detector** ([`anti-pattern-detector.ts`](server/bot/anti-pattern-detector.ts))
+  - 7 métriques vs baseline humain
+  - Auto-ajustements si patterns suspects
+  - Self-Detection inversée - [`self-detection.ts`](server/bot/self-detection.ts)
+
+- **Autres Simulations**
+  - Chat Simulator - [`chat-simulator.ts`](server/bot/chat-simulator.ts)
+  - Safe Mode auto - [`safe-mode.ts`](server/bot/safe-mode.ts)
+
+#### 🏗️ Architecture & Performance
+- **Event Bus Redis** ([`event-bus.ts`](server/bot/event-bus.ts))
+  - Système distribué 200+ tables
+  - Redis Streams avec persistence
+  - Event replay automatique
+
+- **Worker Threads** ([`server/bot/workers/`](server/bot/workers/))
+  - Vision Worker Pool (4 workers) - [`vision-worker-thread.ts`](server/bot/workers/vision-worker-thread.ts)
+  - GTO Worker Thread - [`gto-worker-thread.ts`](server/bot/workers/gto-worker-thread.ts)
+  - Humanizer Worker Thread - [`humanizer-worker-thread.ts`](server/bot/workers/humanizer-worker-thread.ts)
+  - Worker Manager - [`worker-manager.ts`](server/bot/workers/worker-manager.ts)
+
+- **Task Scheduler** ([`task-scheduler.ts`](server/bot/task-scheduler.ts))
+  - Priority-based event loop
+  - Throttling 6 tables max
+  - Health check automatique
+
+#### 🎮 Multi-Comptes & Plateformes
+- **Platform Manager** ([`platform-manager.ts`](server/bot/platform-manager.ts))
+  - Gestion multi-comptes isolés
+  - Auto-reconnect
+  - State synchronisation
+
+- **Platform Adapters** ([`server/bot/platforms/`](server/bot/platforms/))
+  - GGClub Adapter - [`ggclub.ts`](server/bot/platforms/ggclub.ts)
+  - Table Manager - [`table-manager.ts`](server/bot/table-manager.ts)
+
+#### 🔒 Sécurité
+- **Chiffrement** ([`crypto.ts`](server/bot/crypto.ts) + [`db-encryption.ts`](server/bot/db-encryption.ts))
+  - AES-256-GCM pour mots de passe
+  - DB encryption pour ranges/cache
+  - Log Sanitizer - [`log-sanitizer.ts`](server/bot/log-sanitizer.ts)
+
+#### 🧪 ML & Training
+- **Poker OCR ML** ([`server/bot/ml-ocr/`](server/bot/ml-ocr/))
+  - Card Classifier CNN - [`card-classifier-ml.ts`](server/bot/ml-ocr/card-classifier-ml.ts)
+  - Neural Network custom - [`neural-network.ts`](server/bot/ml-ocr/neural-network.ts)
+  - Training Pipeline - [`training-pipeline.ts`](server/bot/ml-ocr/training-pipeline.ts)
+  - Data Collector auto - [`data-collector.ts`](server/bot/ml-ocr/data-collector.ts)
+
+#### 📊 Debug & Tests
+- **Vision Debugging**
+  - Debug Visualizer - [`debug-visualizer.ts`](server/bot/debug-visualizer.ts)
+  - Vision Error Logger - [`vision-error-logger.ts`](server/bot/vision-error-logger.ts)
+  - Replay Viewer - [`replay-viewer.ts`](server/bot/replay-viewer.ts)
+
+- **Tests Automatisés** ([`server/bot/tests/`](server/bot/tests/))
+  - Comprehensive Test Suite - [`comprehensive-test-suite.ts`](server/bot/tests/comprehensive-test-suite.ts)
+  - GGClub Capture Test - [`ggclub-capture-test.ts`](server/bot/tests/ggclub-capture-test.ts)
+  - Multi-Table Performance - [`multi-table-performance.ts`](server/bot/tests/multi-table-performance.ts)
+  - E2E Test - [`e2e-test.ts`](server/bot/tests/e2e-test.ts)
+
+#### 📱 Frontend (Dashboard)
+- **Pages** ([`client/src/pages/`](client/src/pages/))
+  - Dashboard principal - [`dashboard.tsx`](client/src/pages/dashboard.tsx)
+  - Settings complets - [`settings.tsx`](client/src/pages/settings.tsx)
+  - Debug tools - [`debug.tsx`](client/src/pages/debug.tsx)
+  - Remote control - [`remote.tsx`](client/src/pages/remote.tsx)
+
+- **Composants Poker** ([`client/src/components/poker/`](client/src/components/poker/))
+  - Action Log - [`action-log.tsx`](client/src/components/poker/action-log.tsx)
+  - Stack Visualizer - [`stack-visualizer.tsx`](client/src/components/poker/stack-visualizer.tsx)
+  - Tilt Monitor - [`tilt-monitor.tsx`](client/src/components/poker/tilt-monitor.tsx)
+  - Table Visualizer - [`table-visualizer.tsx`](client/src/components/poker/table-visualizer.tsx)
+
+- **Composants Settings** ([`client/src/components/settings/`](client/src/components/settings/))
+  - Humanizer Panel - [`humanizer-panel.tsx`](client/src/components/settings/humanizer-panel.tsx)
+  - Profile Panel - [`profile-panel.tsx`](client/src/components/settings/profile-panel.tsx)
+
+- **API Client** ([`client/src/lib/api.ts`](client/src/lib/api.ts))
+  - WebSocket connection
+  - REST API wrapper
+  - Player Profile API
 
 ## 📋 Prérequis
 
