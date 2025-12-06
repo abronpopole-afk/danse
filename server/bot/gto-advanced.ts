@@ -883,6 +883,8 @@ export class AdvancedGtoAdapter implements GtoAdapter {
   private bluffingManager: BluffingManager;
   private debugMode = false;
   private currentVillainId: string = "villain_0";
+  private currentTableId: string = "table_0";
+  private currentVillainSeat: number = 0;
   public injectedNoise: number = 0; // Bruit injecté par anti-detection (0-1)
 
   constructor() {
@@ -897,12 +899,53 @@ export class AdvancedGtoAdapter implements GtoAdapter {
     this.debugMode = enabled;
   }
 
-  setCurrentVillain(villainId: string): void {
+  setCurrentVillain(villainId: string, seat: number = 0): void {
     this.currentVillainId = villainId;
+    this.currentVillainSeat = seat;
   }
 
-  updateVillainAction(action: string, context: { street: string; facingBet: boolean; wasThreeBet: boolean; wasCbet: boolean; position: string }): void {
+  setCurrentTable(tableId: string): void {
+    this.currentTableId = tableId;
+  }
+
+  async updateVillainAction(
+    action: string, 
+    context: { 
+      street: string; 
+      facingBet: boolean; 
+      wasThreeBet: boolean; 
+      wasCbet: boolean; 
+      position: string;
+      betSize?: number;
+      potSize?: number;
+    }
+  ): Promise<void> {
     this.playerProfiler.updateProfile(this.currentVillainId, action, context);
+    
+    // Mettre à jour opponent profiler
+    const { getOpponentProfiler } = await import("./opponent-profiler");
+    const opponentProfiler = getOpponentProfiler();
+    
+    opponentProfiler.updateOpponentAction(
+      this.currentVillainId,
+      this.currentVillainSeat,
+      {
+        action,
+        street: context.street,
+        betSize: context.betSize,
+        facingBet: context.facingBet ? (context.betSize || 0) : 0,
+        potSize: context.potSize || 0,
+        wasPreflop: context.street === "preflop",
+        wasCbet: context.wasCbet,
+      }
+    );
+  }
+
+  async recordHandResult(result: number, potSize: number): Promise<void> {
+    const { getOpponentProfiler } = await import("./opponent-profiler");
+    const opponentProfiler = getOpponentProfiler();
+    
+    opponentProfiler.recordHandResult(this.currentVillainId, result, potSize);
   }
 
   async getRecommendation(context: HandContext): Promise<GtoRecommendation> {
@@ -1009,11 +1052,26 @@ export class AdvancedGtoAdapter implements GtoAdapter {
     };
   }
 
-  private getPostflopRecommendation(
+  private async getPostflopRecommendation(
     context: HandContext,
     villainProfile: PlayerProfile,
     exploit: { adjustment: string; factor: number }
-  ): GtoRecommendation {
+  ): Promise<GtoRecommendation> {
+    // Récupérer ajustements exploitatifs
+    const { getOpponentProfiler } = await import("./opponent-profiler");
+    const opponentProfiler = getOpponentProfiler();
+    
+    const exploitAdjustment = opponentProfiler.getExploitativeAdjustment(
+      this.currentVillainId,
+      this.currentTableId,
+      {
+        street: context.street,
+        facingBet: context.facingBet,
+        potSize: context.potSize,
+        position: context.heroPosition,
+      }
+    );
+
     // Ajuster précision selon street (river = moins de runouts possibles)
     const simulations = context.street === "river" ? 1000 : 
                        context.street === "turn" ? 2000 : 3000;
@@ -1036,16 +1094,29 @@ export class AdvancedGtoAdapter implements GtoAdapter {
       villainProfile
     );
 
+    // Appliquer ajustements exploitatifs
+    bluffStrategy.bluffFrequency = Math.max(
+      0,
+      Math.min(0.6, bluffStrategy.bluffFrequency + exploitAdjustment.bluffFrequencyShift)
+    );
+
     const actions: Array<{ action: string; probability: number; ev: number }> = [];
+
+    // Facteurs d'ajustement exploitatif
+    const aggressionMult = 1 + exploitAdjustment.aggressionShift;
+    const sizingMult = exploitAdjustment.valueBetSizingShift;
 
     if (context.facingBet === 0) {
       if (equity.equity > 0.7) {
-        const betSize = this.calculateOptimalBetSize(equity.equity, context.potSize, context.street);
-        actions.push({ action: `BET ${betSize}%`, probability: 0.7, ev: equity.equity * 0.6 });
-        actions.push({ action: "CHECK", probability: 0.3, ev: equity.equity * 0.3 });
+        const baseBetSize = this.calculateOptimalBetSize(equity.equity, context.potSize, context.street);
+        const adjustedBetSize = Math.round(baseBetSize * sizingMult);
+        const betProb = Math.min(0.9, 0.7 * aggressionMult);
+        actions.push({ action: `BET ${adjustedBetSize}%`, probability: betProb, ev: equity.equity * 0.6 });
+        actions.push({ action: "CHECK", probability: 1 - betProb, ev: equity.equity * 0.3 });
       } else if (equity.equity > 0.5) {
-        actions.push({ action: "BET 33%", probability: 0.5, ev: equity.equity * 0.4 });
-        actions.push({ action: "CHECK", probability: 0.5, ev: equity.equity * 0.35 });
+        const betSize = Math.round(33 * sizingMult);
+        actions.push({ action: `BET ${betSize}%`, probability: 0.5 * aggressionMult, ev: equity.equity * 0.4 });
+        actions.push({ action: "CHECK", probability: 0.5 / aggressionMult, ev: equity.equity * 0.35 });
       } else if (bluffStrategy.bluffFrequency > 0 && Math.random() < bluffStrategy.bluffFrequency) {
         const bluffSize = bluffStrategy.blockerValue > 0.5 ? 75 : 50;
         actions.push({ action: `BET ${bluffSize}%`, probability: bluffStrategy.bluffFrequency, ev: bluffStrategy.blockerValue * 0.2 });
@@ -1056,19 +1127,21 @@ export class AdvancedGtoAdapter implements GtoAdapter {
       }
     } else {
       const adjustedEquity = equity.equity + (context.isInPosition ? 0.05 : 0);
+      const rangeAdjustedOdds = potOdds / exploitAdjustment.rangeAdjustment;
 
-      if (adjustedEquity >= potOdds + 0.15) {
+      if (adjustedEquity >= rangeAdjustedOdds + 0.15) {
         if (adjustedEquity > 0.75) {
-          actions.push({ action: "RAISE", probability: 0.5, ev: adjustedEquity * 0.7 });
-          actions.push({ action: "CALL", probability: 0.5, ev: adjustedEquity * 0.5 });
+          const raiseProb = Math.min(0.7, 0.5 * aggressionMult);
+          actions.push({ action: "RAISE", probability: raiseProb, ev: adjustedEquity * 0.7 });
+          actions.push({ action: "CALL", probability: 1 - raiseProb, ev: adjustedEquity * 0.5 });
         } else {
           actions.push({ action: "CALL", probability: 0.8, ev: adjustedEquity * 0.4 });
-          actions.push({ action: "RAISE", probability: 0.1, ev: adjustedEquity * 0.3 });
+          actions.push({ action: "RAISE", probability: 0.1 * aggressionMult, ev: adjustedEquity * 0.3 });
           actions.push({ action: "FOLD", probability: 0.1, ev: 0 });
         }
-      } else if (adjustedEquity >= potOdds - 0.05) {
+      } else if (adjustedEquity >= rangeAdjustedOdds - 0.05) {
         const impliedOddsBonus = this.calculateImpliedOddsBonus(context);
-        if (adjustedEquity + impliedOddsBonus >= potOdds) {
+        if (adjustedEquity + impliedOddsBonus >= rangeAdjustedOdds) {
           actions.push({ action: "CALL", probability: 0.6, ev: (adjustedEquity - potOdds) * context.potSize });
           actions.push({ action: "FOLD", probability: 0.4, ev: 0 });
         } else {
@@ -1094,7 +1167,9 @@ export class AdvancedGtoAdapter implements GtoAdapter {
     if (this.debugMode) {
       console.log(`[GTO Advanced] Equity: ${(equity.equity * 100).toFixed(1)}%, PotOdds: ${(potOdds * 100).toFixed(1)}%`);
       console.log(`[GTO Advanced] Best action: ${bestAction}, Confidence: ${(confidence * 100).toFixed(1)}%`);
-      console.log(`[GTO Advanced] Exploit: ${exploit.adjustment} (factor: ${exploit.factor})`);
+      console.log(`[GTO Advanced] Player exploit: ${exploit.adjustment} (factor: ${exploit.factor})`);
+      console.log(`[GTO Advanced] Opponent exploit: ${exploitAdjustment.reason} (conf: ${(exploitAdjustment.confidence * 100).toFixed(0)}%)`);
+      console.log(`[GTO Advanced] Adjustments: aggr=${exploitAdjustment.aggressionShift.toFixed(2)}, range=${exploitAdjustment.rangeAdjustment.toFixed(2)}, bluff=${exploitAdjustment.bluffFrequencyShift.toFixed(2)}`);
     }
 
     return {

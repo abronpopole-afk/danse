@@ -348,6 +348,20 @@ export class TableSession extends EventEmitter {
       this.tableState.currentPot
     );
 
+    // Mettre à jour table dynamics
+    const { getOpponentProfiler } = await import("./opponent-profiler");
+    const opponentProfiler = getOpponentProfiler();
+    
+    opponentProfiler.updateTableDynamics(
+      this.tableState.id,
+      {
+        handNumber: `${this.tableState.handsPlayed}`,
+        potSize: this.tableState.currentPot,
+        heroAction: this.tableState.lastHumanizedAction?.action || "UNKNOWN",
+        heroResult: result,
+      }
+    );
+
     await storage.createHandHistory({
       tableId: this.tableState.id,
       handNumber: `${Date.now()}`,
