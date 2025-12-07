@@ -340,10 +340,18 @@ function startServer() {
   console.log('[Server] Working directory:', path.join(__dirname, '..'));
 
   try {
-    // Changer le working directory pour le serveur
-    process.chdir(path.join(__dirname, '..'));
+    // Ne PAS changer le working directory si on est dans un .asar
+    // car process.chdir ne fonctionne pas avec les archives asar
+    const targetDir = path.join(__dirname, '..');
+    if (!targetDir.includes('.asar')) {
+      console.log('[Server] Changing working directory to:', targetDir);
+      process.chdir(targetDir);
+    } else {
+      console.log('[Server] Running from asar archive, skipping chdir');
+    }
 
     console.log('[Server] Checking if server file exists...');
+    // Pour les fichiers dans .asar, fs.existsSync fonctionne quand même
     if (!fs.existsSync(serverPath)) {
       throw new Error('Fichier serveur introuvable: ' + serverPath);
     }
