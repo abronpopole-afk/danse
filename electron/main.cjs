@@ -39,30 +39,30 @@ function parseEnvFile(filePath) {
 
 // Charger .env depuis le bon emplacement
 function loadEnvFile() {
-  // Pour Electron packagé, utiliser le dossier de l'app
-  const isPackaged = !process.defaultApp && !process.argv.includes('--dev');
+  // Pour les exe portables, PORTABLE_EXECUTABLE_DIR contient le VRAI dossier de l'exe
+  // (l'exe s'extrait dans un dossier temp mais cette variable pointe vers l'original)
+  const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
   
-  // process.resourcesPath pointe vers le dossier resources de l'app packagée
-  // Son parent est le dossier d'installation
-  let appDir;
-  if (isPackaged && process.resourcesPath) {
-    appDir = path.dirname(process.resourcesPath);
-  } else {
-    appDir = path.dirname(process.execPath);
+  const possibleEnvPaths = [];
+  
+  // PRIORITÉ 1: Dossier de l'exe portable (là où l'utilisateur a placé l'exe)
+  if (portableDir) {
+    possibleEnvPaths.push(path.join(portableDir, '.env'));
   }
   
-  const possibleEnvPaths = [
-    path.join(appDir, '.env'), // Dossier de l'application (priorité 1)
-    path.join(process.cwd(), '.env'), // Répertoire de travail actuel (priorité 2)
-    path.join(path.dirname(process.execPath), '.env'), // À côté de l'exe
-    path.join(path.dirname(process.execPath), '..', '.env'), // Parent de l'exe
-    path.join(__dirname, '.env'), // Dossier du script
-    path.join(__dirname, '..', '.env'), // Parent du script
-  ];
+  // PRIORITÉ 2: Répertoire de travail actuel
+  possibleEnvPaths.push(path.join(process.cwd(), '.env'));
+  
+  // Autres emplacements possibles
+  if (process.resourcesPath) {
+    possibleEnvPaths.push(path.join(path.dirname(process.resourcesPath), '.env'));
+  }
+  possibleEnvPaths.push(path.join(path.dirname(process.execPath), '.env'));
+  possibleEnvPaths.push(path.join(__dirname, '.env'));
+  possibleEnvPaths.push(path.join(__dirname, '..', '.env'));
 
   console.log('[Electron] ====== RECHERCHE .ENV ======');
-  console.log('[Electron] isPackaged:', isPackaged);
-  console.log('[Electron] appDir:', appDir);
+  console.log('[Electron] PORTABLE_EXECUTABLE_DIR:', portableDir || '(non défini)');
   console.log('[Electron] process.execPath:', process.execPath);
   console.log('[Electron] process.resourcesPath:', process.resourcesPath);
   console.log('[Electron] process.cwd():', process.cwd());
@@ -244,14 +244,9 @@ app.whenReady().then(() => {
   if (!envLoaded) {
     const { dialog } = require('electron');
     
-    // Déterminer le dossier correct
-    const isPackaged = !process.defaultApp;
-    let appDir;
-    if (isPackaged && process.resourcesPath) {
-      appDir = path.dirname(process.resourcesPath);
-    } else {
-      appDir = path.dirname(process.execPath);
-    }
+    // Pour exe portable, utiliser PORTABLE_EXECUTABLE_DIR
+    const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+    const targetDir = portableDir || path.dirname(process.execPath);
     
     dialog.showErrorBox(
       'Base de données non configurée',
@@ -260,11 +255,10 @@ app.whenReady().then(() => {
       '1. Ouvrir le dossier "script"\n' +
       '2. Click droit sur INIT-DATABASE.bat\n' +
       '3. Exécuter en tant qu\'administrateur\n' +
-      '4. Copier le .env généré dans:\n' +
-      '   ' + appDir + '\n\n' +
-      'Ou lancer l\'application depuis le dossier contenant le .env:\n' +
-      '   cd "chemin\\vers\\dossier\\avec\\.env"\n' +
-      '   "' + process.execPath + '"'
+      '4. Copier le .env généré dans le MÊME dossier que l\'exe:\n' +
+      '   ' + targetDir + '\n\n' +
+      'Le fichier attendu est:\n' +
+      '   ' + path.join(targetDir, '.env')
     );
     return;
   }
