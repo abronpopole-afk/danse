@@ -97,6 +97,24 @@ function startServer() {
   }
 
   const serverPath = path.join(__dirname, '..', 'dist', 'index.cjs');
+  const envPath = path.join(__dirname, '..', '.env');
+
+  // Vérifier si .env existe
+  if (!require('fs').existsSync(envPath)) {
+    const { dialog } = require('electron');
+    dialog.showErrorBox(
+      'Base de données non configurée',
+      'Le fichier .env est manquant.\n\n' +
+      'Veuillez lancer le script "INIT-DATABASE.bat" dans le dossier "script" pour initialiser la base de données PostgreSQL.\n\n' +
+      'Étapes:\n' +
+      '1. Ouvrir le dossier "script"\n' +
+      '2. Clic droit sur "INIT-DATABASE.bat"\n' +
+      '3. Exécuter en tant qu\'administrateur\n' +
+      '4. Relancer l\'application'
+    );
+    app.quit();
+    return;
+  }
 
   process.env.NODE_ENV = 'production';
   process.env.PORT = PORT.toString();
@@ -116,7 +134,24 @@ function startServer() {
   } catch (error) {
     console.error('[Server] Failed to start:', error);
 
-    // Retry après 3 secondes
+    // Afficher une erreur si la BDD n'est pas accessible
+    if (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('ECONNREFUSED'))) {
+      const { dialog } = require('electron');
+      dialog.showErrorBox(
+        'Erreur de base de données',
+        'Impossible de se connecter à la base de données PostgreSQL.\n\n' +
+        'Vérifiez que:\n' +
+        '1. PostgreSQL est installé et démarré\n' +
+        '2. Le fichier .env contient DATABASE_URL\n' +
+        '3. La base de données "poker_bot" existe\n\n' +
+        'Lancez "INIT-DATABASE.bat" pour configurer automatiquement.\n\n' +
+        'Erreur: ' + error.message
+      );
+      app.quit();
+      return;
+    }
+
+    // Retry après 3 secondes pour autres erreurs
     if (!app.isQuitting) {
       setTimeout(() => {
         serverStarted = false;
