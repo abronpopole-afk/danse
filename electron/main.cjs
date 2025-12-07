@@ -48,9 +48,11 @@ function waitForServer(port, maxAttempts = 30) {
 // Parser .env manuellement (sans dépendance externe)
 function parseEnvFile(filePath) {
   try {
+    console.log(`[Electron] Lecture du fichier .env: ${filePath}`);
     const content = fs.readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/); // Gérer les retours à la ligne Windows (\r\n)
     
+    let parsedCount = 0;
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
@@ -67,8 +69,25 @@ function parseEnvFile(filePath) {
         value = value.slice(1, -1);
       }
       
+      // Enlever les caractères BOM potentiels (Windows)
+      if (key.charCodeAt(0) === 0xFEFF) {
+        continue;
+      }
+      
       process.env[key] = value;
+      parsedCount++;
+      
+      // Log (masquer les valeurs sensibles)
+      const safeValue = key.toLowerCase().includes('password') || 
+                        key.toLowerCase().includes('secret') || 
+                        key.toLowerCase().includes('key') ||
+                        key === 'DATABASE_URL'
+        ? '***' 
+        : value.substring(0, 50);
+      console.log(`[Electron] ${key} = ${safeValue}`);
     }
+    
+    console.log(`[Electron] ${parsedCount} variables chargées depuis .env`);
     return true;
   } catch (err) {
     console.log(`[Electron] Erreur parsing ${filePath}:`, err.message);
