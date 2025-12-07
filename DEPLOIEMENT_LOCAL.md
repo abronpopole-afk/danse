@@ -93,8 +93,10 @@ npm --version
 #### Windows
 1. Télécharger depuis https://www.postgresql.org/download/windows/
 2. Installer PostgreSQL 16
-3. Définir un mot de passe pour l'utilisateur `postgres`
+3. **IMPORTANT** : Définir un mot de passe pour l'utilisateur `postgres` et le noter
 4. Noter le port (par défaut : 5432)
+
+**Note** : Le mot de passe `postgres` sera nécessaire lors de l'initialisation de la base de données avec le script `init-database-windows.ps1`
 
 #### Linux (Ubuntu/Debian)
 ```bash
@@ -289,6 +291,26 @@ Cela créera les fichiers dans `dist/workers/` :
 
 ### 2.3 Configuration de la base de données
 
+#### Windows - Méthode Automatique (RECOMMANDÉE)
+
+Utiliser le script PowerShell qui initialise tout automatiquement :
+
+```powershell
+# Ouvrir PowerShell en Administrateur
+cd chemin\vers\poker-bot
+.\script\init-database-windows.ps1
+
+# OU double-cliquez sur script\INIT-DATABASE.bat (en tant qu'administrateur)
+```
+
+Le script vous demandera le mot de passe de l'utilisateur `postgres` (défini lors de l'installation de PostgreSQL), puis :
+- Créera la base de données `poker_bot`
+- Créera toutes les tables nécessaires
+- Générera le fichier `.env` avec les identifiants
+- Sauvegardera les informations dans `DATABASE_INFO.txt`
+
+#### Méthode Manuelle
+
 1. Créer un fichier `.env` à la racine du projet :
 ```bash
 touch .env
@@ -313,11 +335,15 @@ NODE_ENV=development
 # Session secret (générer une clé aléatoire)
 SESSION_SECRET=votre_secret_super_securise_ici
 
+# Clés de chiffrement (générer avec script/generate-encryption-key.ts)
+ENCRYPTION_KEY=votre_cle_de_chiffrement_64_caracteres_hex
+DB_ENCRYPTION_KEY=votre_cle_de_chiffrement_db_64_caracteres_hex
+
 # Optionnel : API GTO Wizard
 GTO_WIZARD_API_KEY=votre_cle_api_ici
 ```
 
-3. Initialiser la base de données :
+3. Initialiser la base de données manuellement :
 ```bash
 # Installer les dépendances globales
 npm install -g drizzle-kit tsx

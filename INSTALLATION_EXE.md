@@ -10,14 +10,18 @@
 1. **Ouvrir le dossier `script`** dans le répertoire de l'application
 2. **Clic droit** sur `INIT-DATABASE.bat`
 3. **Sélectionner** "Exécuter en tant qu'administrateur"
-4. **Attendre** la fin de l'installation (5-10 minutes)
+4. **Entrer le mot de passe PostgreSQL** quand demandé (défini lors de l'installation de PostgreSQL)
+5. **Attendre** la fin de l'installation (5-10 minutes)
 
 Le script va automatiquement :
 - ✅ Installer PostgreSQL 16 (si nécessaire)
+- ✅ Se connecter avec le mot de passe fourni
 - ✅ Créer la base de données `poker_bot`
 - ✅ Créer toutes les tables nécessaires
 - ✅ Générer le fichier `.env` avec les identifiants
 - ✅ Sauvegarder les informations de connexion dans `DATABASE_INFO.txt`
+
+**Note**: Si PostgreSQL est déjà installé, le script vous demandera le mot de passe de l'utilisateur `postgres` pour créer la base de données.
 
 ### Étape 2 : Lancer l'Application
 
@@ -56,12 +60,52 @@ URL complète    : postgresql://poker_bot:[password]@localhost:5432/poker_bot
    - Chercher "postgresql-x64-16"
    - Démarrer le service
 
-2. **Réinitialiser la base de données**
-   - Relancer `INIT-DATABASE.bat` en administrateur
+2. **Erreur d'authentification PostgreSQL**
+   - Le script demande le mot de passe de l'utilisateur `postgres`
+   - C'est le mot de passe défini lors de l'installation de PostgreSQL
+   - Si vous l'avez oublié, voir la section "Réinitialiser le mot de passe PostgreSQL" ci-dessous
 
-3. **Vérifier les ports**
+3. **Réinitialiser la base de données**
+   - Relancer `INIT-DATABASE.bat` en administrateur
+   - Entrer le bon mot de passe PostgreSQL
+
+4. **Vérifier les ports**
    - PostgreSQL utilise le port 5432 par défaut
    - Assurez-vous qu'il n'est pas bloqué par un firewall
+
+### Réinitialiser le mot de passe PostgreSQL
+
+Si vous avez oublié le mot de passe de l'utilisateur `postgres` :
+
+1. **Arrêter le service PostgreSQL**
+   - Services Windows > postgresql-x64-16 > Arrêter
+
+2. **Modifier le fichier pg_hba.conf**
+   - Ouvrir `C:\Program Files\PostgreSQL\16\data\pg_hba.conf`
+   - Changer `md5` en `trust` pour localhost (toutes les lignes)
+   - Sauvegarder
+
+3. **Redémarrer PostgreSQL**
+   - Services Windows > postgresql-x64-16 > Démarrer
+
+4. **Se connecter et changer le mot de passe**
+   ```cmd
+   cd "C:\Program Files\PostgreSQL\16\bin"
+   psql -U postgres
+   ALTER USER postgres PASSWORD 'nouveau_mot_de_passe';
+   \q
+   ```
+
+5. **Remettre md5 dans pg_hba.conf**
+   - Ouvrir `C:\Program Files\PostgreSQL\16\data\pg_hba.conf`
+   - Remettre `md5` à la place de `trust`
+   - Sauvegarder
+
+6. **Redémarrer PostgreSQL**
+   - Services Windows > postgresql-x64-16 > Redémarrer
+
+7. **Relancer l'initialisation**
+   - Exécuter `INIT-DATABASE.bat` avec le nouveau mot de passe
 
 ### Écran Noir au Démarrage
 

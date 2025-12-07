@@ -39,6 +39,25 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 .\setup.ps1 -LaunchBot
 ```
 
+### Initialisation de la base de donnees uniquement
+
+Si vous voulez seulement initialiser la base de donnees PostgreSQL :
+
+```powershell
+# Methode interactive (recommandee)
+.\script\init-database-windows.ps1
+
+# Le script vous demandera le mot de passe PostgreSQL
+
+# OU fournir le mot de passe directement
+.\script\init-database-windows.ps1 -PostgresPassword "VotreMotDePassePostgres"
+
+# Options avancees
+.\script\init-database-windows.ps1 -DbName "poker_bot" -DbUser "poker_bot" -PostgresPassword "VotreMotDePassePostgres"
+```
+
+**Note importante** : Le mot de passe `PostgresPassword` est le mot de passe de l'utilisateur `postgres` defini lors de l'installation de PostgreSQL, PAS le mot de passe qui sera cree pour l'utilisateur `poker_bot`.
+
 ### Methode 3 : Installation basique (ancien script)
 
 ```powershell
