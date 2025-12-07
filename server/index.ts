@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite } from "./vite";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { storage } from "./storage";
@@ -118,6 +117,8 @@ app.use((req, res, next) => {
   await registerRoutes(httpServer, app);
 
   if (process.env.NODE_ENV === "development") {
+    // Import dynamique de vite uniquement en dev (pas inclus dans le bundle prod)
+    const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   } else {
     serveStatic(app);
