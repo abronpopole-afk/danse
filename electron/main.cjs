@@ -45,6 +45,11 @@ function loadEnvFile() {
   // AppData pour version installée (copié par l'installeur NSIS)
   const appDataDir = process.env.APPDATA ? path.join(process.env.APPDATA, 'GTO Poker Bot') : null;
   
+  // Dossier Documents de l'utilisateur
+  const userProfile = process.env.USERPROFILE || process.env.HOME;
+  const documentsDir = userProfile ? path.join(userProfile, 'Documents', 'GTO Poker Bot') : null;
+  const downloadsDir = userProfile ? path.join(userProfile, 'Downloads') : null;
+  
   const possibleEnvPaths = [];
   
   // PRIORITÉ 1: Dossier de l'exe portable
@@ -57,14 +62,27 @@ function loadEnvFile() {
     possibleEnvPaths.push(path.join(appDataDir, '.env'));
   }
   
-  // PRIORITÉ 3: Répertoire de travail actuel
-  possibleEnvPaths.push(path.join(process.cwd(), '.env'));
+  // PRIORITÉ 3: Documents/GTO Poker Bot (emplacement intuitif pour l'utilisateur)
+  if (documentsDir) {
+    possibleEnvPaths.push(path.join(documentsDir, '.env'));
+  }
   
   // PRIORITÉ 4: Dossier d'installation (à côté de l'exe)
   if (process.resourcesPath) {
     possibleEnvPaths.push(path.join(path.dirname(process.resourcesPath), '.env'));
   }
   possibleEnvPaths.push(path.join(path.dirname(process.execPath), '.env'));
+  
+  // PRIORITÉ 5: Répertoire de travail actuel
+  possibleEnvPaths.push(path.join(process.cwd(), '.env'));
+  
+  // PRIORITÉ 6: Downloads (cas où l'utilisateur télécharge et lance depuis là)
+  if (downloadsDir) {
+    possibleEnvPaths.push(path.join(downloadsDir, '.env'));
+    // Aussi chercher dans gto-poker-bot-main dans Downloads
+    possibleEnvPaths.push(path.join(downloadsDir, 'gto-poker-bot-main', '.env'));
+    possibleEnvPaths.push(path.join(downloadsDir, 'gto-poker-bot-main (3)', 'gto-poker-bot-main', '.env'));
+  }
   
   // Fallbacks
   possibleEnvPaths.push(path.join(__dirname, '.env'));
@@ -256,19 +274,22 @@ app.whenReady().then(() => {
     
     // Pour exe portable, utiliser PORTABLE_EXECUTABLE_DIR
     const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+    const userProfile = process.env.USERPROFILE || process.env.HOME || '';
+    const appDataPath = process.env.APPDATA ? path.join(process.env.APPDATA, 'GTO Poker Bot', '.env') : 'N/A';
     const targetDir = portableDir || path.dirname(process.execPath);
     
     dialog.showErrorBox(
       'Base de données non configurée',
       'Le fichier .env est manquant ou invalide.\n\n' +
-      'Étapes:\n' +
-      '1. Ouvrir le dossier "script"\n' +
-      '2. Click droit sur INIT-DATABASE.bat\n' +
-      '3. Exécuter en tant qu\'administrateur\n' +
-      '4. Copier le .env généré dans le MÊME dossier que l\'exe:\n' +
-      '   ' + targetDir + '\n\n' +
-      'Le fichier attendu est:\n' +
-      '   ' + path.join(targetDir, '.env')
+      'Copiez votre fichier .env vers UN de ces emplacements:\n\n' +
+      '1. (Recommandé) AppData:\n' +
+      '   ' + appDataPath + '\n\n' +
+      '2. Documents:\n' +
+      '   ' + path.join(userProfile, 'Documents', 'GTO Poker Bot', '.env') + '\n\n' +
+      '3. À côté de l\'exe:\n' +
+      '   ' + path.join(targetDir, '.env') + '\n\n' +
+      'Si vous n\'avez pas de .env, lancez INIT-DATABASE.bat\n' +
+      'depuis le dossier "script" (clic droit > Administrateur)'
     );
     return;
   }
