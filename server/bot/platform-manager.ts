@@ -102,7 +102,7 @@ export class PlatformManager extends EventEmitter {
       logger.session("PlatformManager", `✅ CONNECTÉ à ${config.platformName}`, { 
         username: config.credentials.username 
       });
-      
+
       this.startPolling();
       this.emit("statusChange", this.status);
 
@@ -434,52 +434,52 @@ export class PlatformManager extends EventEmitter {
       });
     }
   }
-  
+
   private async pollAllGameStatesThrottled(): Promise<void> {
     if (!this.adapter || this.status !== "running") return;
-    
+
     const tables = Array.from(this.managedTables.values());
     const tableManager = getTableManager();
-    
+
     const safeModeManager = getSafeModeManager();
     const tableLimit = safeModeManager.shouldReduceTables();
-    
+
     // Récupérer les tables prioritaires en premier
     let prioritizedTables = tableManager.getPrioritizedTables()
       .map(session => tables.find(t => t.tableSession.getId() === session.getId()))
       .filter(Boolean) as ManagedTable[];
-    
+
     // Limiter le nombre de tables en mode conservateur
     if (tableLimit.reduce) {
       prioritizedTables = prioritizedTables.slice(0, tableLimit.maxTables);
     }
-    
+
     // Poll par batch de 6 tables max simultanément
     const batchSize = 6;
     for (let i = 0; i < prioritizedTables.length; i += batchSize) {
       const batch = prioritizedTables.slice(i, i + batchSize);
-      
+
       await Promise.all(batch.map(async (managedTable) => {
         try {
           const gameState = await this.adapter!.getGameState(managedTable.windowHandle);
-          
+
           if (!gameState || !this.validateGameState(gameState)) {
             managedTable.tableSession.incrementError();
             return;
           }
-          
+
           // Vérifier la confiance de l'état détecté
           const stateConfidenceResult = await this.validateStateConfidence(
             managedTable.windowHandle,
             gameState
           );
-          
+
           if (!stateConfidenceResult.proceed) {
             console.warn(`[PlatformManager] Low confidence for window ${managedTable.windowHandle}: ${stateConfidenceResult.reason}`);
             managedTable.tableSession.incrementError();
             return;
           }
-          
+
           managedTable.lastGameState = gameState;
           this.updateTableSession(managedTable, gameState);
           managedTable.tableSession.resetErrors();
@@ -487,7 +487,7 @@ export class PlatformManager extends EventEmitter {
           managedTable.tableSession.incrementError();
         }
       }));
-      
+
       // Petit délai entre les batchs pour réduire la charge CPU
       if (i + batchSize < prioritizedTables.length) {
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -572,7 +572,7 @@ export class PlatformManager extends EventEmitter {
 
   private stopPolling(): void {
     const scheduler = getTaskScheduler();
-    
+
     // Désactiver les tâches mais ne pas arrêter le scheduler
     // (il peut être utilisé par d'autres composants)
     scheduler.disableTask("window_scan");
@@ -604,20 +604,20 @@ export class PlatformManager extends EventEmitter {
     const pollPromises = Array.from(this.managedTables.values()).map(async (managedTable) => {
       try {
         const gameState = await this.adapter!.getGameState(managedTable.windowHandle);
-        
+
         if (!gameState || !this.validateGameState(gameState)) {
           managedTable.tableSession.incrementError();
           console.warn(`Invalid game state for window ${managedTable.windowHandle}`);
           return;
         }
-        
+
         managedTable.lastGameState = gameState;
         this.updateTableSession(managedTable, gameState);
         managedTable.tableSession.resetErrors();
       } catch (error) {
         console.error(`Error polling game state for window ${managedTable.windowHandle}:`, error);
         managedTable.tableSession.incrementError();
-        
+
         if (!managedTable.tableSession.isHealthy()) {
           this.emit("tableUnhealthy", { 
             windowHandle: managedTable.windowHandle,
@@ -629,7 +629,7 @@ export class PlatformManager extends EventEmitter {
 
     await Promise.all(pollPromises);
   }
-  
+
   private validateGameState(gameState: GameTableState): boolean {
     return gameState.potSize >= 0 && 
            gameState.heroStack >= 0 &&
@@ -644,7 +644,7 @@ export class PlatformManager extends EventEmitter {
     const isNewHand = gameState.currentStreet === "preflop" && 
                       tableState.currentStreet !== "preflop" &&
                       gameState.heroCards.length === 2;
-    
+
     if (isNewHand) {
       managedTable.tableSession.processNewHand({
         heroCards: gameState.heroCards.map(c => cardInfoToNotation(c)),
@@ -658,12 +658,12 @@ export class PlatformManager extends EventEmitter {
     // Détection changement de street
     if (gameState.currentStreet !== "unknown" && gameState.currentStreet !== tableState.currentStreet) {
       const communityCards = gameState.communityCards.map(c => cardInfoToNotation(c));
-      
+
       if (communityCards.length > 0) {
         managedTable.tableSession.processCommunityCards(communityCards, gameState.currentStreet)
           .catch(error => console.error("Error processing community cards:", error));
       }
-      
+
       managedTable.tableSession.updateState({
         currentStreet: gameState.currentStreet,
       });
@@ -674,7 +674,7 @@ export class PlatformManager extends EventEmitter {
       currentPot: gameState.potSize,
       facingBet: gameState.facingBet,
     });
-    
+
     managedTable.tableSession.updateActivity();
   }
 

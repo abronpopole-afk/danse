@@ -95,30 +95,70 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    logger.debug('[Storage]', 'Recherche utilisateur par username', { username });
     const result = await this.db.select().from(this.schema.users).where(eq(this.schema.users.username, username));
+    if (result[0]) {
+      logger.info('[Storage]', '✅ Utilisateur trouvé', { 
+        username,
+        userId: result[0].id 
+      });
+    } else {
+      logger.warning('[Storage]', '⚠️ Utilisateur non trouvé', { username });
+    }
     return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    logger.info('[Storage]', 'Création nouvel utilisateur', { username: insertUser.username });
     const result = await this.db.insert(this.schema.users).values(insertUser).returning();
+    logger.session('[Storage]', '✅ Utilisateur créé avec succès', { 
+      userId: result[0].id,
+      username: result[0].username 
+    });
     return result[0];
   }
 
   async createBotSession(session: InsertBotSession): Promise<BotSession> {
+    logger.info('[Storage]', 'Création nouvelle session bot', { 
+      userId: session.userId,
+      platform: session.platform 
+    });
     const result = await this.db.insert(this.schema.botSessions).values(session).returning();
+    logger.session('[Storage]', '✅ Session bot créée', { 
+      sessionId: result[0].id,
+      status: result[0].status 
+    });
     return result[0];
   }
 
   async getBotSession(id: string): Promise<BotSession | undefined> {
+    logger.debug('[Storage]', 'Récupération session bot', { sessionId: id });
     const result = await this.db.select().from(this.schema.botSessions).where(eq(this.schema.botSessions.id, id));
+    if (result[0]) {
+      logger.info('[Storage]', '✅ Session trouvée', { 
+        sessionId: id,
+        status: result[0].status 
+      });
+    } else {
+      logger.warning('[Storage]', '⚠️ Session non trouvée', { sessionId: id });
+    }
     return result[0];
   }
 
   async getActiveBotSession(): Promise<BotSession | undefined> {
+    logger.debug('[Storage]', 'Recherche session active...');
     const result = await this.db.select().from(this.schema.botSessions)
       .where(eq(this.schema.botSessions.status, "running"))
       .orderBy(desc(this.schema.botSessions.startedAt))
       .limit(1);
+    if (result[0]) {
+      logger.session('[Storage]', '✅ Session active trouvée', { 
+        sessionId: result[0].id,
+        startedAt: result[0].startedAt 
+      });
+    } else {
+      logger.info('[Storage]', 'ℹ️ Aucune session active');
+    }
     return result[0];
   }
 
@@ -145,9 +185,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTablesBySession(sessionId: string): Promise<PokerTable[]> {
-    return await this.db.select().from(this.schema.pokerTables)
+    logger.debug('[Storage]', 'Récupération tables pour session', { sessionId });
+    const tables = await this.db.select().from(this.schema.pokerTables)
       .where(eq(this.schema.pokerTables.sessionId, sessionId))
       .orderBy(desc(this.schema.pokerTables.createdAt));
+    logger.info('[Storage]', '✅ Tables récupérées', { 
+      sessionId,
+      tableCount: tables.length,
+      tables: tables.map(t => ({ id: t.id, name: t.tableName, status: t.status }))
+    });
+    return tables;
   }
 
   async updatePokerTable(id: string, updates: Partial<PokerTable>): Promise<PokerTable | undefined> {
@@ -285,13 +332,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlatformConfig(): Promise<PlatformConfig | undefined> {
+    logger.debug('[Storage]', 'Récupération configuration plateforme...');
     const result = await this.db.select().from(this.schema.platformConfig).limit(1);
+    if (result[0]) {
+      logger.info('[Storage]', '✅ Config plateforme trouvée', { 
+        platform: result[0].platformName,
+        enabled: result[0].enabled,
+        connectionStatus: result[0].connectionStatus 
+      });
+    } else {
+      logger.warning('[Storage]', '⚠️ Aucune config plateforme');
+    }
     return result[0];
   }
 
   async updatePlatformConfig(updates: Partial<PlatformConfig>): Promise<PlatformConfig> {
+    logger.info('[Storage]', 'Mise à jour config plateforme', { 
+      platform: updates.platformName,
+      updates: Object.keys(updates) 
+    });
     const existing = await this.getPlatformConfig();
     if (!existing) {
+      logger.warning('[Storage]', 'Config non existante, création...');
       const platformName = updates.platformName || "unknown";
       return this.createPlatformConfig({ 
         platformName,
