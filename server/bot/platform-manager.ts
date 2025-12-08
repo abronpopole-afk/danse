@@ -17,7 +17,7 @@ import { getGtoAdapter, HandContext } from "./gto-engine";
 import { storage } from "../storage";
 import { getTaskScheduler } from "./task-scheduler";
 import { getSafeModeManager } from "./safe-mode";
-import { logger } from "../logger";
+import { logger } from "../../logger";
 
 export interface PlatformManagerConfig {
   platformName: string;

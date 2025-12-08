@@ -34,7 +34,7 @@ import { ocrPool, OCRWorkerPool } from "../ocr-pool";
 import { getAutoCalibrationManager, AutoCalibrationManager } from "../auto-calibration";
 import { visionErrorLogger } from "../vision-error-logger";
 import { PokerOCREngine, getPokerOCREngine } from "../ml-ocr";
-import { logger } from "../logger";
+import { logger } from "../../logger";
 import { getHumanizer } from "../humanizer"; // Import humanizer
 
 // Import helper functions
