@@ -22,13 +22,16 @@ Chaque configuration stocke un `account_id` optionnel :
 ```sql
 -- platform_config : un par compte
 CREATE TABLE platform_config (
-  id SERIAL PRIMARY KEY,
-  account_id TEXT,  -- Identifiant unique du compte
-  platform_name TEXT,
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform_name TEXT NOT NULL,
   username TEXT,
-  password TEXT,  -- Chiffré AES-256-GCM
-  enabled BOOLEAN DEFAULT false,
-  ...
+  account_id TEXT NOT NULL,  -- Identifiant unique du compte
+  enabled BOOLEAN NOT NULL DEFAULT false,
+  connection_status TEXT DEFAULT 'disconnected',
+  last_connection_at TIMESTAMP,
+  settings JSONB,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Configurations partagées ou par compte

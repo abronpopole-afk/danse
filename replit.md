@@ -34,7 +34,7 @@ Utilizes Express.js with TypeScript, a WebSocket Server, Drizzle ORM, and Node.j
 -   **Anti-Detection Architecture:** Multi-layered defense including timing humanization, natural mouse movements, behavioral patterns, and player profile integration to mimic human play.
 
 ### Database Architecture
-Uses PostgreSQL with Drizzle ORM. The schema includes tables for users, bot sessions, poker tables, hand histories, action logs, bot stats, and configuration for humanizer, GTO, platform, and player profile state. Key decisions include AES-256-GCM password encryption and JSONB for flexible player profile state.
+Uses PostgreSQL with Drizzle ORM. The schema includes tables for users, bot sessions, poker tables, hand histories, action logs, bot stats, and configuration for humanizer, GTO, platform, and player profile state. Key decisions include AES-256-GCM password encryption, JSONB for flexible settings and player profile state, and accountId field for multi-account support in platform_config.
 
 ## External Dependencies
 

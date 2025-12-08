@@ -1,4 +1,3 @@
-
 # ⚠️ IMPORTANT : Windows vs Linux/Replit
 
 ## Modules Natifs Windows UNIQUEMENT
@@ -1059,7 +1058,7 @@ npm run train:card-cnn
 
 ### 11.8 Debug Visualizer
 
-Le système inclut un **visualiseur de debug** temps réel :
+Le système intègre un **visualiseur de debug** temps réel :
 
 **Fonctionnalités** :
 - Affichage overlay des régions détectées (cartes, pot, stacks)
@@ -1207,7 +1206,7 @@ const potResult = await ocrEngine.recognizeValue(
 Le système utilise désormais une **validation stricte à 100%** pour garantir la fiabilité des détections OCR :
 
 **Fonctionnement** :
-- Collecte 3 lectures consécutives dans une fenêtre de 500ms
+- Collecte 2-3 lectures consécutives dans une fenêtre de 500ms
 - Exige **100% de cohérence** (3 lectures identiques) pour valider
 - Booste la confiance de 20% pour les détections validées
 - Rejette toute détection incohérente

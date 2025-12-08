@@ -91,6 +91,7 @@ curl -X POST http://localhost:5000/api/platform/connect \
   -d '{
     "platformName": "ggclub",
     "username": "mon_compte",
+    "accountId": "compte1",
     "password": "mon_mot_de_passe",
     "rememberPassword": true
   }'
@@ -103,7 +104,8 @@ curl -X POST http://localhost:5000/api/platform/connect \
   -H "Content-Type: application/json" \
   -d '{
     "platformName": "ggclub",
-    "username": "mon_compte"
+    "username": "mon_compte",
+    "accountId": "compte1"
   }'
 ```
 
@@ -224,13 +226,15 @@ ENCRYPTION_KEY=la_cle_generee
 ```sql
 -- Voir les comptes avec mot de passe stocké
 SELECT 
+  account_id,
   username,
   platform_name,
-  remember_password,
   CASE 
-    WHEN password_encrypted IS NOT NULL THEN '✅ Chiffré'
-    ELSE '❌ Non stocké'
-  END as password_status
+    WHEN settings->>'rememberPassword' = 'true' THEN '✅ Activé'
+    ELSE '❌ Désactivé'
+  END as remember_password_status,
+  connection_status,
+  created_at
 FROM platform_config;
 ```
 
