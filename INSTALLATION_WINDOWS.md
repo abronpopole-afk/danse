@@ -42,11 +42,26 @@ Si vous préférez une version sans installation :
 2. Placez-le où vous voulez
 3. Double-cliquez pour lancer
 
-## Fonctionnalités natives (optionnel)
+## Modules Natifs Inclus
 
-Pour les fonctionnalités avancées comme la capture d'écran DXGI, vous devez compiler les modules natifs :
+L'application Windows inclut automatiquement les modules natifs suivants :
 
-### Prérequis pour les modules natifs
+- **robotjs** : Contrôle automatique de la souris et du clavier
+- **screenshot-desktop** : Capture d'écran rapide
+- **node-window-manager** : Détection et gestion des fenêtres
+- **DXGI Desktop Duplication** : Capture ultra-rapide (6× plus rapide)
+
+### Système de Chargement
+
+Le système utilise un chargeur natif optimisé (`native-loader.ts`) qui :
+- Détecte automatiquement si l'application est empaquetée
+- Charge les modules depuis `app.asar.unpacked` si nécessaire
+- Gère les fallbacks en cas d'échec de chargement
+- Supporte Linux/Replit en mode dégradé
+
+### Compilation DXGI (optionnel)
+
+Pour les fonctionnalités avancées comme la capture d'écran DXGI :
 
 1. **Visual Studio Build Tools 2022**
    - Téléchargez sur [visualstudio.microsoft.com](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
@@ -54,8 +69,6 @@ Pour les fonctionnalités avancées comme la capture d'écran DXGI, vous devez c
 
 2. **Python 3.11**
    - Téléchargez sur [python.org](https://www.python.org/downloads/)
-
-### Compilation des modules natifs
 
 ```powershell
 # Ouvrez PowerShell en administrateur

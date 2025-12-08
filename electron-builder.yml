@@ -23,6 +23,8 @@ files:
   - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
   - "!**/node_modules/.cache/**/*"
 
+# Modules natifs à extraire de l'archive asar
+# Ces modules contiennent des binaires .node qui doivent être accessibles
 asarUnpack:
   - "**/node_modules/robotjs/**/*"
   - "**/node_modules/node-window-manager/**/*"

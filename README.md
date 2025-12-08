@@ -196,6 +196,12 @@ Le bot utilise une architecture modulaire avec séparation des responsabilités 
   - Throttling 6 tables max
   - Health check automatique
 
+- **Native Module Loader** ([`native-loader.ts`](server/bot/native-loader.ts))
+  - Chargement dynamique des modules natifs
+  - Support Electron (empaquetage asar)
+  - Fallback automatique si modules indisponibles
+  - Compatible Windows/Linux/macOS
+
 #### 🎮 Multi-Comptes & Plateformes
 - **Platform Manager** ([`platform-manager.ts`](server/bot/platform-manager.ts))
   - Gestion multi-comptes isolés

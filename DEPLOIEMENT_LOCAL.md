@@ -2214,6 +2214,38 @@ Avant de lancer le bot, vérifier :
 
 ---
 
+## 🔧 Persistance de la Configuration
+
+### Sauvegarde des Paramètres
+
+Le système utilise une fusion récursive (`deepMerge`) pour préserver les données existantes lors des mises à jour de configuration :
+
+```typescript
+// Dans storage.ts
+function deepMerge(target: any, source: any): any {
+  // Fusion intelligente qui préserve les données existantes
+  // Exemple : mise à jour de minDelayMs sans perdre le mot de passe
+}
+```
+
+**Avantages** :
+- Les mots de passe chiffrés sont conservés lors des modifications de paramètres
+- Les configurations imbriquées sont fusionnées intelligemment
+- Pas de perte de données lors des mises à jour partielles
+
+### Modules Natifs Electron
+
+Le système `native-loader.ts` gère le chargement des modules natifs :
+- Détection automatique de l'environnement (empaquetage, OS)
+- Résolution des chemins `app.asar.unpacked`
+- Fallback vers modules standard si empaquetage non détecté
+- Support multi-plateforme (Windows prioritaire)
+
+Le script `after-pack.cjs` copie les modules natifs lors du build :
+- Copie complète des répertoires (pas seulement les .node)
+- Inclusion de toutes les dépendances binaires
+- Gestion des chemins relatifs pour Electron
+
 ## 🆘 Support et Assistance
 
 ### Ressources

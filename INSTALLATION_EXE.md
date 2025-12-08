@@ -57,6 +57,18 @@ Une fois l'initialisation terminée :
 1. **Double-cliquer** sur `GTO-Poker-Bot.exe`
 2. **Accéder** au dashboard dans le navigateur : http://localhost:5000
 
+## Modules Natifs
+
+L'application Windows inclut des modules natifs pour l'automatisation :
+- **robotjs** : Contrôle souris/clavier
+- **screenshot-desktop** : Capture d'écran
+- **node-window-manager** : Gestion des fenêtres
+
+Ces modules sont automatiquement copiés lors de la création de l'installateur via le script `after-pack.cjs` qui :
+- Copie les répertoires complets des modules natifs dans `app.asar.unpacked`
+- Inclut tous les fichiers binaires `.node` nécessaires
+- Utilise un système de chargement natif optimisé avec `native-loader.ts`
+
 ## Informations de Connexion
 
 Après l'initialisation, vous trouverez les informations de connexion à la base de données dans :
