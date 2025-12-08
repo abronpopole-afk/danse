@@ -138,7 +138,7 @@ Le bot utilise une architecture modulaire avec séparation des responsabilités 
   - Range construction multi-street
   - Nash Equilibrium solver
   - Equity calculation avec card removal
-  
+
 - **GTO Engine Standard** ([`gto-engine.ts`](server/bot/gto-engine.ts))
   - GTO Cache chiffré (LRU 10k, TTL 60min) - [`gto-cache.ts`](server/bot/gto-cache.ts)
   - Opponent Profiler adaptatif - [`opponent-profiler.ts`](server/bot/opponent-profiler.ts)
@@ -226,10 +226,9 @@ Le bot utilise une architecture modulaire avec séparation des responsabilités 
   - Replay Viewer - [`replay-viewer.ts`](server/bot/replay-viewer.ts)
 
 - **Tests Automatisés** ([`server/bot/tests/`](server/bot/tests/))
-  - Comprehensive Test Suite - [`comprehensive-test-suite.ts`](server/bot/tests/comprehensive-test-suite.ts)
-  - GGClub Capture Test - [`ggclub-capture-test.ts`](server/bot/tests/ggclub-capture-test.ts)
-  - Multi-Table Performance - [`multi-table-performance.ts`](server/bot/tests/multi-table-performance.ts)
-  - E2E Test - [`e2e-test.ts`](server/bot/tests/e2e-test.ts)
+  - Suite de tests complète (voir `README_TESTS.md`)
+  - Sécurité : Chiffrement des mots de passe, mode sans échec (voir `SECURITY.md`)
+  - Logs Windows : Système de logs structuré et détaillé (voir `docs/LOGGING_WINDOWS.md`)
 
 #### 📱 Frontend (Dashboard)
 - **Pages** ([`client/src/pages/`](client/src/pages/))

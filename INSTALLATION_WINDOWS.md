@@ -105,6 +105,27 @@ L'application utilise le port 5000. Si ce port est déjà utilisé :
 1. Fermez les autres applications utilisant ce port
 2. Ou modifiez le port dans les paramètres
 
+## Logs et débogage
+
+Le bot génère automatiquement des logs détaillés dans le dossier `logs/` :
+
+- `bot-YYYY-MM-DD.log` : Logs généraux quotidiens
+- `session-YYYY-MM-DD.log` : Logs de session de jeu
+
+Pour plus d'informations sur le système de logs, consultez `docs/LOGGING_WINDOWS.md`.
+
+### Consulter les logs en temps réel
+
+```powershell
+# PowerShell
+Get-Content logs/bot-2024-01-08.log -Tail 50 -Wait
+
+# Git Bash
+tail -f logs/bot-2024-01-08.log
+```
+
 ## Support
 
 Pour tout problème, ouvrez une issue sur [GitHub](https://github.com/bobibobini1-cell/gto-poker-bot/issues).
+
+N'oubliez pas de consulter les logs pour diagnostiquer les problèmes !
