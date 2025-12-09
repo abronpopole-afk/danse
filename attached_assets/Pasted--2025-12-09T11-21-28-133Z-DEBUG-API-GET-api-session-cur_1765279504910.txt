@@ -1,0 +1,48 @@
+[2025-12-09T11:21:28.133Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-09T11:21:28.134Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:21:28.146Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-09T11:21:28.147Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:21:28.188Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:21:28.189Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:28.190Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:28.195Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:21:28.197Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","tableCount":0,"tables":[]}
+[2025-12-09T11:21:28.197Z] [INFO] [[API]] Stats session | DATA: {"totalTables":0,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":0,"avgResponseTime":0,"tablesByStatus":{"waiting":0,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-09T11:21:28.200Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:28.201Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-09T11:21:28.203Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-09T11:21:28.204Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-09T11:21:28.205Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-09T11:21:28.210Z] [INFO] [[API]] Récupération de 21 logs d'action.
+[2025-12-09T11:21:28.455Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1765279288454_88vy7l01j","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-09T11:21:28.456Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1765279288454_88vy7l01j"}
+[2025-12-09T11:21:32.413Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-09T11:21:32.419Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggpoker","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-09T11:21:35.744Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1765279295743_vxxbl0992","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-09T11:21:35.745Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1765279295743_vxxbl0992"}
+[2025-12-09T11:21:39.795Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-09T11:21:39.796Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:21:39.797Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-09T11:21:39.798Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:21:39.800Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-09T11:21:39.800Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-09T11:21:39.802Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-09T11:21:39.804Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:21:39.806Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:21:39.809Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:39.810Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:39.813Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:21:39.814Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-09T11:21:39.816Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","tableCount":0,"tables":[]}
+[2025-12-09T11:21:39.817Z] [INFO] [[API]] Stats session | DATA: {"totalTables":0,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":0,"avgResponseTime":0,"tablesByStatus":{"waiting":0,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-09T11:21:39.863Z] [INFO] [[API]] Récupération de 21 logs d'action.
+[2025-12-09T11:21:40.108Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1765279300108_l7ppsz7z1","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-09T11:21:40.109Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1765279300108_l7ppsz7z1"}
+[2025-12-09T11:21:59.167Z] [SESSION] [SessionManager] 🚀 Démarrage session demandé
+[2025-12-09T11:21:59.168Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:21:59.222Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:21:59.223Z] [WARNING] [SessionManager] Session déjà active | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
+[2025-12-09T11:22:02.196Z] [SESSION] [SessionManager] 🚀 Démarrage session demandé
+[2025-12-09T11:22:02.198Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T11:22:02.199Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4","startedAt":"2025-12-08T16:57:49.933Z"}
+[2025-12-09T11:22:02.201Z] [WARNING] [SessionManager] Session déjà active | DATA: {"sessionId":"f3b2602e-2539-4bb3-89f1-f49c863e82a4"}
