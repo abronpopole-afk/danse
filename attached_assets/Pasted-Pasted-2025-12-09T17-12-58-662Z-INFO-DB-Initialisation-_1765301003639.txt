@@ -1,0 +1,42 @@
+Pasted--2025-12-09T17-12-58-662Z-INFO-DB-Initialisation-connex_1765300462103.txt
+[2025-12-09T17:12:58.662Z] [INFO] [[DB]] Initialisation connexion base de données...
+[2025-12-09T17:12:58.663Z] [INFO] [[DB]] DATABASE_URL défini: | DATA: {"isDefined":true}
+[2025-12-09T17:12:58.664Z] [INFO] [[DB]] Connexion à: | DATA: {"url":"postgresql:***@localhost:5432/poker_bot"}
+[2025-12-09T17:12:58.689Z] [INFO] [GGClubAdapter] Chargement modules natifs | DATA: {"platform":"win32","isWindows":true,"isReplit":false,"isPackaged":true}
+[2025-12-09T17:12:58.700Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T17:12:58.743Z] [INFO] [GGClubAdapter] ✓ tesseract.js chargé
+[2025-12-09T17:12:58.772Z] [INFO] [GGClubAdapter] ✓ screenshot-desktop chargé (Windows)
+[2025-12-09T17:12:58.777Z] [INFO] [GGClubAdapter] ✓ robotjs chargé (Windows)
+[2025-12-09T17:12:58.808Z] [INFO] [GGClubAdapter] ✓ node-window-manager chargé (Windows)
+[2025-12-09T17:12:58.900Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2025-12-09T17:12:58.905Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2","startedAt":"2025-12-09T16:46:07.556Z"}
+[2025-12-09T17:12:58.930Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":9,"tables":["action_logs","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","bot_stats","player_profile_state"]}
+[2025-12-09T17:12:59.960Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-09T17:12:59.961Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T17:12:59.963Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-09T17:12:59.964Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-09T17:12:59.966Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2","startedAt":"2025-12-09T16:46:07.556Z"}
+[2025-12-09T17:12:59.967Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2"}
+[2025-12-09T17:12:59.967Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2"}
+[2025-12-09T17:12:59.969Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2","startedAt":"2025-12-09T16:46:07.556Z"}
+[2025-12-09T17:12:59.971Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2","tableCount":0,"tables":[]}
+[2025-12-09T17:12:59.972Z] [INFO] [[API]] Stats session | DATA: {"totalTables":0,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":0,"avgResponseTime":0,"tablesByStatus":{"waiting":0,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-09T17:12:59.974Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"91226e0c-0aac-4901-b893-540468fc1ab2"}
+[2025-12-09T17:12:59.975Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-09T17:12:59.979Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-09T17:12:59.981Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-09T17:12:59.981Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-09T17:12:59.985Z] [INFO] [[API]] Récupération de 30 logs d'action.
+[2025-12-09T17:13:00.270Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1765300380270_712goqyv7","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-09T17:13:00.271Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1765300380270_712goqyv7"}
+[2025-12-09T17:13:04.043Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-09T17:13:04.047Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggpoker","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-09T17:13:07.371Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1765300387371_fcqtkzelk","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-09T17:13:07.372Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1765300387371_fcqtkzelk"}
+[2025-12-09T17:13:07.810Z] [INFO] [[Storage]] Mise à jour config plateforme | DATA: {"platform":"ggpoker","updates":["platformName","username","enabled"]}
+[2025-12-09T17:13:07.811Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-09T17:13:07.814Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggpoker","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-09T17:13:07.820Z] [SESSION] [[Storage]] ✅ Config plateforme mise à jour | DATA: {"id":"6f9274c4-e71a-4521-8d1e-30d222d2847f","platform":"ggpoker","username":"Danny3000"}
+[2025-12-09T17:13:07.828Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-09T17:13:07.830Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggpoker","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-09T17:13:14.166Z] [INFO] [[Storage]] Mise à jour config plateforme | DATA: {"platform":"ggpoker","updates":["platformName","u...
