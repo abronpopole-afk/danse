@@ -281,6 +281,43 @@ export async function registerRoutes(
         message: "Session démarrée",
       });
 
+      // Initialize PlatformManager with saved config
+      const platformConfig = await storage.getPlatformConfig();
+      if (platformConfig && platformConfig.platformName) {
+        const platformManager = getPlatformManager();
+        
+        logger.session("SessionManager", "🔌 Initialisation PlatformManager", { 
+          platform: platformConfig.platformName 
+        });
+
+        // Settings are stored in JSONB field
+        const settings = (platformConfig.settings || {}) as Record<string, any>;
+
+        const pmConfig: PlatformManagerConfig = {
+          platformName: platformConfig.platformName,
+          credentials: {
+            username: platformConfig.username || "",
+            password: settings.password || "",
+          },
+          autoReconnect: settings.autoReconnect ?? true,
+          reconnectDelayMs: settings.reconnectDelayMs ?? 5000,
+          maxReconnectAttempts: settings.maxReconnectAttempts ?? 3,
+          scanIntervalMs: settings.scanIntervalMs ?? 500,
+          actionDelayMs: settings.actionDelayMs ?? 100,
+          enableAutoAction: settings.enableAutoAction ?? true,
+        };
+
+        const initialized = await platformManager.initialize(pmConfig);
+        
+        if (initialized) {
+          logger.session("SessionManager", "✅ PlatformManager initialisé avec succès");
+        } else {
+          logger.warning("SessionManager", "⚠️ PlatformManager non initialisé - vérifiez la configuration");
+        }
+      } else {
+        logger.warning("SessionManager", "⚠️ Pas de configuration de plateforme - détection de tables désactivée");
+      }
+
       broadcastToClients({
         type: "session_started",
         payload: { sessionId: session.id }
@@ -304,6 +341,11 @@ export async function registerRoutes(
     let stopError: Error | null = null;
     
     try {
+      // Stop PlatformManager first
+      const platformManager = getPlatformManager();
+      await platformManager.stop();
+      logger.session("SessionManager", "🔌 PlatformManager arrêté");
+
       await tableManager.stopAll();
       stats = tableManager.getStats();
     } catch (err: any) {
