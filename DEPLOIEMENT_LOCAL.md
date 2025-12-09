@@ -506,7 +506,32 @@ Recommandations :
 3. Le bot devrait détecter la fenêtre GGClub
 4. Cliquer sur "Connecter" pour lier la table au bot
 
-### 6.4 Démarrage de la session
+### 6.4 Gestion des sessions
+
+Le bot dispose d'un système robuste de gestion des sessions :
+
+**Démarrage d'une session** :
+1. Vérifier que les tables GGClub sont ouvertes
+2. Cliquer sur "DÉMARRER SESSION" dans le dashboard
+3. Le bot détecte automatiquement les fenêtres GGClub actives
+4. Les tables détectées apparaissent dans la liste
+
+**Arrêt d'une session** :
+- **Arrêt normal** : Bouton "STOP URGENCE" - arrête proprement toutes les tables
+- **Arrêt forcé** : Bouton "FORCER" - force l'arrêt si la session est bloquée
+- Les sessions sont toujours marquées comme "stopped" même en cas d'erreur
+
+**Nettoyage automatique** :
+- Les sessions obsolètes (>4 heures) sont nettoyées au démarrage du serveur
+- Empêche l'accumulation de sessions fantômes dans la base de données
+
+**Détection des tables GGClub** :
+- Scan automatique des fenêtres Windows contenant "ggclub", "ggpoker", "nl", "plo", etc.
+- Détection basée sur le titre de la fenêtre (insensible à la casse)
+- Filtrage automatique des fenêtres minimisées ou invisibles
+- Logs détaillés pour le débogage
+
+### 6.5 Démarrage de la session
 
 1. Vérifier que la table est bien détectée (indicateur vert)
 2. Cliquer sur "Démarrer Session"
@@ -626,10 +651,23 @@ Dans le dashboard :
 2. Démarrer une session avec des mises minimales
 3. Observer le comportement du bot pendant 10-15 mains
 4. Vérifier :
+   - Détection automatique des fenêtres GGClub
    - Détection correcte des cartes
    - Timing humain des actions
    - Décisions cohérentes
    - Évolution du profil (tilt, fatigue)
+
+**Test de la gestion de session** :
+1. Démarrer une session
+2. Tester l'arrêt normal avec "STOP URGENCE"
+3. Redémarrer et tester l'arrêt forcé avec "FORCER"
+4. Vérifier que les sessions apparaissent correctement dans la base de données
+
+**Test de détection des tables** :
+1. Ouvrir plusieurs tables GGClub
+2. Observer les logs pour voir la détection
+3. Vérifier que toutes les tables actives sont listées
+4. Minimiser une table et vérifier qu'elle n'est pas détectée
 
 ### 7.3 Monitoring en temps réel
 
@@ -637,9 +675,14 @@ Surveiller dans le dashboard :
 - **Stats Grid** : Statistiques de session
 - **Player Profile** : État émotionnel (tilt, fatigue, focus)
 - **Table Visualizer** : État des tables actives
-- **Action Log** : Historique des actions
+- **Action Log** : Historique des actions (incluant arrêts forcés)
 - **Task Scheduler Stats** : Performance du système de tâches
 - **Anti-Detection** : Score de suspicion
+
+**Logs importants** :
+- Rechercher `[GGClubAdapter]` pour la détection de tables
+- Rechercher `[SessionManager]` pour la gestion de sessions
+- Vérifier les erreurs dans `logs/bot-YYYY-MM-DD.log`
 
 ---
 

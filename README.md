@@ -443,6 +443,28 @@ GTO_WIZARD_API_KEY=<api-key>
 
 Générer clés : `npm run generate:key`
 
+## 🎮 Gestion des Sessions
+
+Le système inclut désormais une gestion robuste des sessions avec :
+
+- **Arrêt sécurisé** : Pattern try/finally garantissant que les sessions sont toujours marquées "stopped"
+- **Nettoyage automatique** : Sessions obsolètes (>4 heures) nettoyées au démarrage du serveur
+- **Arrêt forcé** : Bouton "FORCER" dans le dashboard pour forcer l'arrêt des sessions bloquées
+- **Détection réelle GGClub** : Scan automatique des fenêtres GGClub ouvertes sur Windows
+
+### Endpoints de gestion
+
+```bash
+# Arrêt normal
+POST /api/session/stop
+
+# Arrêt forcé (sessions bloquées)
+POST /api/session/force-stop
+
+# Nettoyage sessions obsolètes
+POST /api/session/cleanup-stale
+```
+
 ## 🧪 Tests
 
 ```bash

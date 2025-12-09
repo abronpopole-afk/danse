@@ -1,4 +1,3 @@
-
 # Architecture Technique du Bot GTO Poker
 
 ## 🏗️ Vue d'Ensemble
@@ -306,3 +305,26 @@ await collector.exportForTraining('rank', './output');
 - Debug Visualizer
 - Comprehensive test reports
 - Vision error logger
+
+### 🔧 Architecture
+
+Le bot utilise une architecture modulaire avec séparation des responsabilités :
+
+### Gestion des Sessions
+
+**Robustesse** :
+- Pattern `try/finally` garantissant que les sessions sont toujours fermées proprement
+- Nettoyage automatique des sessions obsolètes (>4 heures) au démarrage
+- Endpoints d'arrêt forcé pour gérer les sessions bloquées
+
+**Endpoints** :
+- `POST /api/session/start` - Démarrer une nouvelle session
+- `POST /api/session/stop` - Arrêt normal avec nettoyage
+- `POST /api/session/force-stop` - Arrêt forcé (sessions bloquées)
+- `POST /api/session/cleanup-stale` - Nettoyage manuel des sessions obsolètes
+
+**Détection GGClub** :
+- Scan automatique des fenêtres Windows via `node-window-manager`
+- Détection basée sur des patterns de titre flexibles
+- Filtrage des fenêtres minimisées/invisibles
+- Logs détaillés pour le débogage

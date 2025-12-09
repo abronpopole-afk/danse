@@ -78,7 +78,60 @@ cd native
 npx node-gyp rebuild
 ```
 
+## Détection automatique des tables
+
+L'application détecte automatiquement les tables GGClub ouvertes sur Windows :
+
+1. **Critères de détection** :
+   - Titre de fenêtre contenant "ggclub", "ggpoker", "nl", "plo", "holdem", etc.
+   - Fenêtres non minimisées et visibles
+   - Détection insensible à la casse
+
+2. **Vérification de la détection** :
+   - Ouvrir une ou plusieurs tables GGClub
+   - Dans le dashboard, cliquer sur "Détecter Tables"
+   - Consulter les logs pour voir les fenêtres détectées
+   - Les tables apparaissent automatiquement dans la liste
+
+3. **Résolution des problèmes** :
+   - Si aucune table n'est détectée, vérifier que GGClub est bien ouvert
+   - S'assurer qu'une table est active (pas minimisée)
+   - Consulter `logs/bot-YYYY-MM-DD.log` pour voir toutes les fenêtres scannées
+
+## Gestion des sessions
+
+**Démarrage et arrêt** :
+- Utilisez le bouton "DÉMARRER SESSION" pour commencer
+- "STOP URGENCE" pour un arrêt propre
+- "FORCER" pour forcer l'arrêt si la session est bloquée
+
+**Nettoyage automatique** :
+- Les sessions de plus de 4 heures sont automatiquement nettoyées au démarrage
+- Empêche l'accumulation de sessions fantômes
+
 ## Dépannage
+
+### Aucune table détectée
+
+Si le bot ne détecte pas vos tables GGClub :
+
+1. **Vérifiez que GGClub est ouvert** avec au moins une table active
+2. **Consultez les logs** dans `logs/bot-YYYY-MM-DD.log`
+3. **Recherchez** les lignes contenant `[GGClubAdapter]`
+4. Vérifiez que `node-window-manager` est bien chargé (ligne `✓ node-window-manager chargé`)
+
+Si vous voyez `❌ node-window-manager ÉCHEC`, réinstallez le module :
+```powershell
+npm install node-window-manager --build-from-source
+```
+
+### Session bloquée
+
+Si une session reste bloquée en "running" :
+
+1. Utilisez le bouton **"FORCER"** dans le dashboard
+2. Ou via API : `POST http://localhost:5000/api/session/force-stop`
+3. Au prochain démarrage, les sessions obsolètes seront nettoyées automatiquement
 
 ### Erreur "spawn node ENOENT"
 
