@@ -14,50 +14,91 @@ Le système de gestion des sessions du GTO Poker Bot assure une gestion robuste 
 ### Cycle de vie d'une session
 
 ```
-┌─────────────┐
-│   Démarrage │
-│   Session   │
-└──────┬──────┘
-       │
-       ▼
 ┌─────────────────┐
-│  Détection      │
-│  Tables GGClub  │
-└──────┬──────────┘
-       │
-       ▼
+│   Démarrage     │
+│   Session       │
+└────────┬────────┘
+         │
+         ▼
+┌──────────────────────┐
+│  Chargement config   │
+│  plateforme (DB)     │
+└────────┬─────────────┘
+         │
+         ▼
+┌──────────────────────┐
+│  Initialisation      │
+│  PlatformManager     │
+└────────┬─────────────┘
+         │
+         ▼
+┌──────────────────────┐
+│  Démarrage polling   │
+│  Détection tables    │
+└────────┬─────────────┘
+         │
+         ▼
 ┌─────────────┐
 │   Jeu en    │
 │   cours     │
 └──────┬──────┘
        │
        ▼
-┌─────────────┐     ┌──────────────┐
-│ Arrêt normal│ ou  │ Arrêt forcé  │
-└──────┬──────┘     └──────┬───────┘
-       │                   │
-       └─────────┬─────────┘
-                 │
-                 ▼
-       ┌──────────────────┐
-       │  Session stopped │
-       │  Statistiques    │
-       │  sauvegardées    │
-       └──────────────────┘
+┌──────────────────┐     ┌──────────────┐
+│ Arrêt normal     │ ou  │ Arrêt forcé  │
+│ 1. Stop Platform │     │              │
+│ 2. Stop Tables   │     │              │
+└──────┬───────────┘     └──────┬───────┘
+       │                        │
+       └──────────┬─────────────┘
+                  │
+                  ▼
+       ┌────────────────────────┐
+       │  Session stopped       │
+       │  Statistiques sauvées  │
+       │  Platform déconnecté   │
+       └────────────────────────┘
 ```
 
 ### Endpoints API
 
 #### POST /api/session/start
 
-Démarre une nouvelle session de jeu.
+Démarre une nouvelle session de jeu avec détection automatique des tables.
 
 **Comportement** :
 1. Vérifie qu'aucune session active n'existe
 2. Crée une nouvelle session en base de données
 3. Initialise les statistiques
-4. Configure le TableManager
-5. Retourne l'ID de session
+4. Configure le TableManager avec l'ID de session
+5. **Charge la configuration de plateforme depuis la base de données**
+6. **Initialise le PlatformManager avec les credentials sauvegardés**
+7. **Démarre automatiquement le polling de détection des tables**
+8. Retourne l'ID de session
+
+**Nouvelle logique d'initialisation** :
+```javascript
+// Récupère la config plateforme sauvegardée
+const platformConfig = await storage.getPlatformConfig();
+if (platformConfig && platformConfig.platformName) {
+  const platformManager = getPlatformManager();
+  
+  // Configure avec les paramètres sauvegardés
+  const pmConfig: PlatformManagerConfig = {
+    platformName: platformConfig.platformName,
+    credentials: {
+      username: platformConfig.username || "",
+      password: settings.password || "",
+    },
+    autoReconnect: settings.autoReconnect ?? true,
+    scanIntervalMs: settings.scanIntervalMs ?? 500,
+    enableAutoAction: settings.enableAutoAction ?? true,
+  };
+
+  // Initialise et démarre la détection
+  await platformManager.initialize(pmConfig);
+}
+```
 
 **Réponse** :
 ```json
@@ -73,17 +114,24 @@ Démarre une nouvelle session de jeu.
 
 #### POST /api/session/stop
 
-Arrête proprement la session en cours.
+Arrête proprement la session en cours avec fermeture ordonnée.
 
 **Comportement (try/finally)** :
 ```javascript
 try {
+  // 1. Arrêter le PlatformManager EN PREMIER
+  const platformManager = getPlatformManager();
+  await platformManager.stop();
+  logger.session("SessionManager", "🔌 PlatformManager arrêté");
+
+  // 2. Ensuite arrêter toutes les tables
   await tableManager.stopAll();
   stats = tableManager.getStats();
 } catch (err) {
-  // Erreur loggée mais ne bloque pas la fermeture
+  stopError = err;
+  logger.error("SessionManager", "Erreur arrêt tables", { error: String(err) });
 } finally {
-  // TOUJOURS exécuté
+  // TOUJOURS exécuté - même en cas d'erreur
   await storage.updateBotSession(session.id, {
     status: "stopped",
     stoppedAt: new Date(),
@@ -92,6 +140,11 @@ try {
   });
 }
 ```
+
+**Ordre critique** :
+1. **PlatformManager.stop()** : Arrête le polling et déconnecte la plateforme
+2. **TableManager.stopAll()** : Ferme toutes les sessions de tables
+3. **Base de données** : Sauvegarde l'état final (toujours exécuté)
 
 #### POST /api/session/force-stop
 
@@ -263,6 +316,64 @@ Points à surveiller :
 - Erreurs dans les logs lors des arrêts
 - Temps de réponse des opérations
 
+## Configuration requise
+
+### Avant de démarrer une session
+
+Pour que la détection automatique des tables fonctionne, vous devez :
+
+1. **Configurer la plateforme dans les Paramètres** :
+   - Aller dans l'onglet "Paramètres"
+   - Section "Configuration Plateforme"
+   - Sélectionner votre plateforme (ex: GGPoker)
+   - Entrer vos identifiants
+   - Sauvegarder la configuration
+
+2. **La configuration est automatiquement chargée au démarrage** :
+   - Au clic sur "DÉMARRER SESSION"
+   - Le système charge `platformConfig` depuis la base de données
+   - Initialise le `PlatformManager` avec vos credentials
+   - Lance le polling de détection des fenêtres
+
+3. **Vérifier que GGClub/GGPoker est ouvert** :
+   - Les fenêtres de table doivent être visibles (non minimisées)
+   - Le polling démarre automatiquement toutes les 5 secondes
+   - Les tables détectées apparaissent dans le dashboard
+
+### Flux complet
+
+```
+┌────────────────────┐
+│  Paramètres        │
+│  Sauvegarder config│
+│  plateforme        │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│  Démarrer Session  │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────────────┐
+│  Auto-chargement config    │
+│  depuis DB                 │
+└─────────┬──────────────────┘
+          │
+          ▼
+┌────────────────────────────┐
+│  Initialisation Platform   │
+│  Manager avec credentials  │
+└─────────┬──────────────────┘
+          │
+          ▼
+┌────────────────────────────┐
+│  Polling actif             │
+│  Détection tables toutes   │
+│  les 5 secondes            │
+└────────────────────────────┘
+```
+
 ## Dépannage
 
 ### Session bloquée en "running"
@@ -282,17 +393,82 @@ Points à surveiller :
 **Symptômes** :
 - Aucune table n'apparaît après détection
 - Logs vides pour `[GGClubAdapter]`
+- Dashboard affiche "0 tables actives"
 
 **Diagnostic** :
-1. Vérifier que GGClub est ouvert
-2. Consulter les logs : `logs/bot-YYYY-MM-DD.log`
-3. Chercher `node-window-manager` dans les logs
-4. Vérifier les fenêtres listées dans les logs
+1. **Vérifier la configuration plateforme** :
+   ```
+   GET /api/platform-config
+   ```
+   - Doit retourner `platformName`, `username`, etc.
+   - Si vide, allez dans Paramètres → Configuration Plateforme
+
+2. **Vérifier l'état du PlatformManager** :
+   ```
+   GET /api/platform/status
+   ```
+   - `status` doit être "running"
+   - `connectionStatus` doit être "connected"
+   - Si "idle" ou "disconnected", la session n'a pas initialisé le PM
+
+3. **Consulter les logs de session** :
+   ```bash
+   logs/session-YYYY-MM-DD.log
+   ```
+   - Chercher "🔌 Initialisation PlatformManager"
+   - Chercher "✅ CONNECTÉ à ggpoker"
+   - Chercher "🔍 Scan des fenêtres de poker"
+
+4. **Vérifier que GGClub est ouvert** :
+   - Fenêtres visibles (non minimisées)
+   - Titre contient "GGClub", "NL", "Table", etc.
 
 **Solutions** :
-1. Réinstaller `node-window-manager` : `npm install node-window-manager --build-from-source`
-2. Vérifier la version de Windows (10/11 requis)
-3. Exécuter en mode administrateur si problème de permissions
+
+1. **Configuration manquante** :
+   - Aller dans Paramètres
+   - Configurer la plateforme
+   - Sauvegarder
+   - Redémarrer la session
+
+2. **PlatformManager non initialisé** :
+   - Vérifier les logs au moment du démarrage
+   - Chercher des erreurs d'initialisation
+   - Vérifier que `platformConfig.enabled = true`
+
+3. **Problème technique** :
+   - Réinstaller `node-window-manager` : `npm install node-window-manager --build-from-source`
+   - Vérifier version Windows (10/11 requis)
+   - Exécuter en mode administrateur si nécessaire
+
+4. **Forcer la reconnexion** :
+   ```
+   POST /api/platform/disconnect
+   POST /api/platform/connect
+   ```
+
+## Logs de démarrage attendus
+
+Lors du démarrage d'une session, vous devriez voir cette séquence dans les logs :
+
+```
+[SessionManager] 🚀 Démarrage session demandé
+[SessionManager] ✅ Session créée | sessionId: uuid-...
+[SessionManager] 🔌 Initialisation PlatformManager | platform: ggpoker
+[PlatformManager] Tentative de connexion | platform: ggpoker, username: xxx
+[PlatformManager] Adaptateur créé | platform: ggpoker
+[PlatformManager] Tentative de connexion à la plateforme...
+[PlatformManager] ✅ CONNECTÉ à ggpoker | username: xxx
+[PlatformManager] 🔍 Scan des fenêtres de poker...
+[GGClubAdapter] 📋 Liste complète des fenêtres ouvertes
+[GGClubAdapter] ✅ Table GGClub détectée: "NL500 Table #123"
+[GGClubAdapter] ✅ 3 table(s) détectée(s)
+```
+
+Si vous ne voyez pas cette séquence :
+- Vérifier que `platformConfig` existe en base
+- Vérifier les logs d'erreur juste après "Démarrage session demandé"
+- Consulter la section Dépannage ci-dessus
 
 ## Tests
 
