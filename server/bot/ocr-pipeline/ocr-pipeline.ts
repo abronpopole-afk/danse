@@ -60,19 +60,31 @@ export class OCRPipeline {
   }
 
   async initialize(): Promise<void> {
-    console.log('[OCRPipeline] Initializing...');
+    console.log('[OCRPipeline] ====== INITIALISATION OCR ======');
+    console.log('[OCRPipeline] Config:', JSON.stringify(this.config, null, 2));
 
-    if (this.config.useMockAdapter) {
-      this.fallbackManager.registerFactory(new MockAdapterFactory());
-    } else {
-      this.fallbackManager.registerFactory(new OnnxAdapterFactory());
-      this.fallbackManager.registerFactory(new TesseractAdapterFactory());
-      this.fallbackManager.registerFactory(new MockAdapterFactory());
+    try {
+      if (this.config.useMockAdapter) {
+        console.log('[OCRPipeline] Mode MOCK activé');
+        this.fallbackManager.registerFactory(new MockAdapterFactory());
+      } else {
+        console.log('[OCRPipeline] Enregistrement des adaptateurs OCR...');
+        console.log('[OCRPipeline] - OnnxAdapterFactory');
+        this.fallbackManager.registerFactory(new OnnxAdapterFactory());
+        console.log('[OCRPipeline] - TesseractAdapterFactory');
+        this.fallbackManager.registerFactory(new TesseractAdapterFactory());
+        console.log('[OCRPipeline] - MockAdapterFactory (fallback)');
+        this.fallbackManager.registerFactory(new MockAdapterFactory());
+      }
+
+      console.log('[OCRPipeline] Initialisation du FallbackManager...');
+      await this.fallbackManager.initialize();
+      this.initialized = true;
+      console.log('[OCRPipeline] ✅ OCR Pipeline initialisé avec succès');
+    } catch (error) {
+      console.error('[OCRPipeline] ❌ ERREUR initialisation:', error);
+      throw error;
     }
-
-    await this.fallbackManager.initialize();
-    this.initialized = true;
-    console.log('[OCRPipeline] Initialized successfully');
   }
 
   async shutdown(): Promise<void> {
@@ -114,29 +126,36 @@ export class OCRPipeline {
     regionId: string
   ): Promise<OCRResult | null> {
     if (!this.initialized) {
+      console.error('[OCRPipeline] ❌ Pipeline non initialisé!');
       throw new Error('OCRPipeline not initialized');
     }
 
     const region = this.regionManager.getRegion(regionId);
     if (!region) {
-      console.warn(`[OCRPipeline] Region ${regionId} not found`);
+      console.warn(`[OCRPipeline] ⚠️ Region ${regionId} non trouvée`);
       return null;
     }
 
     const cacheKey = this.getCacheKey(frame, region);
     const cached = this.getFromCache(cacheKey);
     if (cached) {
+      console.debug(`[OCRPipeline] Cache hit pour region ${regionId}`);
       return cached;
     }
 
     const normalizedFrame = 'normalized' in frame ? frame : this.normalizeFrame(frame);
     
     try {
+      console.debug(`[OCRPipeline] Processing region: ${regionId} (${region.type})`);
+      const startTime = Date.now();
       const result = await this.fallbackManager.processRegion(normalizedFrame, region);
+      const duration = Date.now() - startTime;
+      
+      console.log(`[OCRPipeline] ✅ Region ${regionId}: "${result.text}" (conf: ${(result.confidence * 100).toFixed(1)}%, ${duration}ms)`);
       this.addToCache(cacheKey, result);
       return result;
     } catch (error) {
-      console.error(`[OCRPipeline] Failed to process region ${regionId}:`, error);
+      console.error(`[OCRPipeline] ❌ Échec region ${regionId}:`, error);
       return null;
     }
   }
@@ -173,7 +192,13 @@ export class OCRPipeline {
   }
 
   async extractTableState(frame: Frame): Promise<Partial<PokerTableState>> {
+    console.log('[OCRPipeline] ====== EXTRACTION ÉTAT TABLE ======');
+    console.log(`[OCRPipeline] Frame: ${frame.width}x${frame.height}, id: ${frame.id}`);
+    
+    const startTime = Date.now();
     const results = await this.processRegions(frame);
+    console.log(`[OCRPipeline] ${results.length} régions traitées en ${Date.now() - startTime}ms`);
+    
     const state: Partial<PokerTableState> = {
       timestamp: Date.now(),
     };

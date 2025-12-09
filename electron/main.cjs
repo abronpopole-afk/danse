@@ -284,14 +284,17 @@ function createWindow() {
   }
 
   mainWindow.on('close', (event) => {
+    console.log('[Electron] Window close event, isQuitting:', app.isQuitting);
     if (!app.isQuitting) {
       event.preventDefault();
       mainWindow.hide();
+      console.log('[Electron] Fenêtre cachée (app reste en tray)');
     }
     return false;
   });
 
   mainWindow.on('closed', () => {
+    console.log('[Electron] Window closed event');
     mainWindow = null;
   });
 }
@@ -543,19 +546,31 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  console.log('[Electron] Event: window-all-closed');
   if (process.platform !== 'darwin') {
-    // Ne pas quitter l'app sur Windows
+    console.log('[Electron] Windows: App reste en tray (fermer via icône système)');
   }
 });
 
 app.on('activate', () => {
+  console.log('[Electron] Event: activate');
   if (BrowserWindow.getAllWindows().length === 0) {
+    console.log('[Electron] Recréation de la fenêtre...');
     createWindow();
   }
 });
 
 app.on('before-quit', () => {
+  console.log('[Electron] Event: before-quit - Fermeture de l\'application');
   app.isQuitting = true;
+});
+
+app.on('will-quit', () => {
+  console.log('[Electron] Event: will-quit - Application va se fermer');
+});
+
+app.on('quit', () => {
+  console.log('[Electron] Event: quit - Application fermée');
 });
 
 ipcMain.handle('get-server-status', () => {

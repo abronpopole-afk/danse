@@ -16,16 +16,20 @@ export class TesseractAdapter extends OCRAdapter {
   }
 
   async initialize(): Promise<void> {
+    console.log('[TesseractAdapter] ====== INITIALISATION TESSERACT ======');
     try {
+      console.log('[TesseractAdapter] Import tesseract.js...');
       this.tesseractModule = await import('tesseract.js');
+      console.log('[TesseractAdapter] Création worker OCR (langue: eng)...');
       this.worker = await this.tesseractModule.createWorker('eng');
+      console.log('[TesseractAdapter] Configuration whitelist caractères...');
       await this.worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,$ ',
       });
       this.isInitialized = true;
-      console.log('[TesseractAdapter] Initialized successfully');
+      console.log('[TesseractAdapter] ✅ Tesseract initialisé avec succès');
     } catch (error) {
-      console.warn('[TesseractAdapter] Failed to initialize:', error);
+      console.error('[TesseractAdapter] ❌ ERREUR initialisation:', error);
       this.isInitialized = false;
       throw error;
     }
@@ -54,13 +58,16 @@ export class TesseractAdapter extends OCRAdapter {
     region: Region
   ): Promise<OCRResult> {
     if (!this.isInitialized || !this.worker) {
+      console.error('[TesseractAdapter] ❌ Worker non initialisé!');
       throw new Error('TesseractAdapter not initialized');
     }
 
     const startTime = Date.now();
+    console.debug(`[TesseractAdapter] OCR region: ${region.id} (${region.bounds.width}x${region.bounds.height})`);
     
     try {
       const croppedBuffer = this.cropRegion(frame, region);
+      console.debug(`[TesseractAdapter] Buffer cropped: ${croppedBuffer.length} bytes`);
       
       const result = await this.worker.recognize(croppedBuffer);
       const processingTime = Date.now() - startTime;
@@ -76,10 +83,12 @@ export class TesseractAdapter extends OCRAdapter {
         })),
       };
 
+      console.log(`[TesseractAdapter] ✅ OCR "${ocrResult.text}" (conf: ${(ocrResult.confidence * 100).toFixed(1)}%, ${processingTime}ms)`);
       this.updateStats(true, processingTime, ocrResult.confidence);
       return ocrResult;
     } catch (error) {
       const processingTime = Date.now() - startTime;
+      console.error(`[TesseractAdapter] ❌ OCR ÉCHEC region ${region.id}:`, error);
       this.updateStats(false, processingTime, 0);
       this.recordError(String(error));
       throw error;
