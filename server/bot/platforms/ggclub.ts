@@ -345,21 +345,42 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async connect(config: ConnectionConfig): Promise<boolean> {
+    logger.session("GGClubAdapter", "=== CONNEXION À GGCLUB ===", {
+      platform: this.platformName,
+      hasCredentials: !!config.credentials,
+      autoReconnect: config.autoReconnect,
+      maxReconnectAttempts: config.maxReconnectAttempts,
+    });
+    
     this.updateConnectionStatus("connecting");
 
     try {
+      logger.info("GGClubAdapter", "Étape 1: Authentification...");
       const isAuthenticated = await this.authenticate(config.credentials);
+      
       if (!isAuthenticated) {
+        logger.error("GGClubAdapter", "❌ Authentification ÉCHOUÉE");
         this.updateConnectionStatus("error");
         return false;
       }
+      logger.info("GGClubAdapter", "✓ Authentification réussie");
 
+      logger.info("GGClubAdapter", "Étape 2: Démarrage polling fenêtres...");
       this.startWindowPolling();
+      
+      logger.info("GGClubAdapter", "Étape 3: Démarrage heartbeat...");
       this.startHeartbeat();
+      
+      logger.info("GGClubAdapter", "Étape 4: Démarrage anti-détection...");
       this.antiDetectionMonitor.start();
 
       this.updateConnectionStatus("connected");
       this.reconnectAttempts = 0;
+
+      logger.session("GGClubAdapter", "✅ CONNEXION RÉUSSIE", {
+        status: "connected",
+        platform: this.platformName,
+      });
 
       this.emitPlatformEvent("connection_status", {
         status: "connected",
@@ -369,11 +390,16 @@ export class GGClubAdapter extends PlatformAdapter {
 
       return true;
     } catch (error) {
-      console.error("GGClub connection error:", error);
+      logger.error("GGClubAdapter", "❌ ERREUR CONNEXION CRITIQUE", {
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        reconnectAttempts: this.reconnectAttempts,
+      });
       this.updateConnectionStatus("error");
 
       if (config.autoReconnect && this.reconnectAttempts < config.maxReconnectAttempts) {
         this.reconnectAttempts++;
+        logger.info("GGClubAdapter", `Tentative reconnexion ${this.reconnectAttempts}/${config.maxReconnectAttempts}`);
         await this.addRandomDelay(config.reconnectDelayMs);
         return this.connect(config);
       }
@@ -403,12 +429,21 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async authenticate(credentials: PlatformCredentials): Promise<boolean> {
+    logger.info("GGClubAdapter", "=== AUTHENTIFICATION ===", {
+      hasUsername: !!credentials?.username,
+      usernameLength: credentials?.username?.length || 0,
+    });
+    
     await this.addRandomDelay(500);
 
     try {
+      logger.debug("GGClubAdapter", "Appel performLogin...");
       const loginResult = await this.performLogin(credentials);
 
       if (!loginResult.success) {
+        logger.error("GGClubAdapter", "❌ Login échoué", {
+          reason: loginResult.reason,
+        });
         if (loginResult.reason === "banned") {
           this.updateConnectionStatus("banned");
         }
@@ -417,12 +452,19 @@ export class GGClubAdapter extends PlatformAdapter {
 
       this.sessionToken = loginResult.sessionToken ?? null;
       this.updateConnectionStatus("authenticated");
+      
+      logger.info("GGClubAdapter", "✓ Login réussi", {
+        hasSessionToken: !!this.sessionToken,
+      });
 
       await this.addRandomDelay(1000);
 
       return true;
     } catch (error) {
-      console.error("GGClub authentication error:", error);
+      logger.error("GGClubAdapter", "❌ Erreur authentification", {
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return false;
     }
   }
@@ -432,11 +474,18 @@ export class GGClubAdapter extends PlatformAdapter {
     sessionToken?: string; 
     reason?: string 
   }> {
+    logger.debug("GGClubAdapter", "performLogin - début", {
+      hasCredentials: !!credentials,
+    });
+    
     await this.addRandomDelay(800);
 
     this.trackAction();
 
-    // Simulate successful login
+    // Note: C'est une simulation - le vrai login se fait via l'application GGClub native
+    // Ce bot ne fait que détecter les fenêtres déjà ouvertes
+    logger.info("GGClubAdapter", "✓ Session simulée créée (le bot utilise les fenêtres GGClub existantes)");
+    
     return {
       success: true,
       sessionToken: `ggclub_session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -444,27 +493,41 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private startWindowPolling(): void {
+    logger.info("GGClubAdapter", "🔄 Démarrage du polling fenêtres (interval: 2s)");
+    
     this.windowPollingInterval = setInterval(async () => {
       try {
-        const windows = await this.detectTableWindows(); // Use the updated detectTableWindows
+        const windows = await this.detectTableWindows();
+        
+        logger.debug("GGClubAdapter", `Polling: ${windows.length} fenêtre(s) détectée(s), ${this.activeWindows.size} active(s)`);
 
-        // Existing window management logic
+        // Gestion des fenêtres fermées
         for (const [windowId, existingWindow] of this.activeWindows) {
           const stillExists = windows.some(w => w.windowId === windowId);
           if (!stillExists) {
+            logger.info("GGClubAdapter", "🚪 Table fermée", { windowId, handle: existingWindow.handle });
             this.activeWindows.delete(windowId);
             this.emitPlatformEvent("table_closed", { windowId, handle: existingWindow.handle });
           }
         }
 
+        // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
+            logger.session("GGClubAdapter", "🎰 Nouvelle table détectée!", {
+              windowId: window.windowId,
+              title: window.title,
+              dimensions: `${window.width}x${window.height}`,
+            });
             this.activeWindows.set(window.windowId, window);
             this.emitPlatformEvent("table_detected", { window });
           }
         }
       } catch (error) {
-        console.error("Window polling error:", error);
+        logger.error("GGClubAdapter", "❌ Erreur polling fenêtres", {
+          error: String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
       }
     }, 2000);
   }
