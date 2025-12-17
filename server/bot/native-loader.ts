@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { createRequire } from 'module';
+import { logger } from '../logger';
 
 // Compatible CommonJS et ESM
 // @ts-ignore - __dirname peut être défini par esbuild en mode CJS
@@ -28,21 +29,62 @@ try {
 const IS_ELECTRON = !!(process as any).resourcesPath || !!process.env.ELECTRON_RUN_AS_NODE;
 const IS_PACKAGED = IS_ELECTRON && !process.argv[0]?.includes('node_modules');
 
+// Log complet de l'environnement au démarrage
+logger.info("NativeLoader", "=== ENVIRONNEMENT NATIVE LOADER ===", {
+  IS_ELECTRON,
+  IS_PACKAGED,
+  platform: process.platform,
+  arch: process.arch,
+  nodeVersion: process.version,
+  resourcesPath: (process as any).resourcesPath || "N/A",
+  cwd: process.cwd(),
+  currentDir,
+  argv0: process.argv[0],
+  ELECTRON_RUN_AS_NODE: process.env.ELECTRON_RUN_AS_NODE || "N/A",
+  execPath: process.execPath,
+});
+
 function getResourcesPath(): string {
-  if ((process as any).resourcesPath) {
-    return (process as any).resourcesPath;
-  }
-  return '';
+  const resourcesPath = (process as any).resourcesPath;
+  logger.debug("NativeLoader", "getResourcesPath()", { resourcesPath: resourcesPath || "N/A" });
+  return resourcesPath || '';
 }
 
 function getUnpackedModulePath(moduleName: string): string | null {
   const resourcesPath = getResourcesPath();
-  if (!resourcesPath) return null;
+  if (!resourcesPath) {
+    logger.debug("NativeLoader", `getUnpackedModulePath(${moduleName}) - pas de resourcesPath`);
+    return null;
+  }
   
   const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked', 'node_modules', moduleName);
+  const exists = fs.existsSync(unpackedPath);
   
-  if (!fs.existsSync(unpackedPath)) {
-    console.log(`[native-loader] Unpacked path does not exist: ${unpackedPath}`);
+  logger.info("NativeLoader", `Recherche module unpacked: ${moduleName}`, {
+    unpackedPath,
+    exists,
+    resourcesPath
+  });
+  
+  if (!exists) {
+    // Lister le contenu du dossier app.asar.unpacked pour debug
+    const unpackedRoot = path.join(resourcesPath, 'app.asar.unpacked');
+    try {
+      if (fs.existsSync(unpackedRoot)) {
+        const contents = fs.readdirSync(unpackedRoot);
+        logger.debug("NativeLoader", "Contenu app.asar.unpacked", { contents });
+        
+        const nodeModulesPath = path.join(unpackedRoot, 'node_modules');
+        if (fs.existsSync(nodeModulesPath)) {
+          const modules = fs.readdirSync(nodeModulesPath).slice(0, 20);
+          logger.debug("NativeLoader", "Modules dans app.asar.unpacked/node_modules", { modules });
+        }
+      } else {
+        logger.warning("NativeLoader", "app.asar.unpacked n'existe PAS!", { unpackedRoot });
+      }
+    } catch (e) {
+      logger.error("NativeLoader", "Erreur listage unpacked", { error: String(e) });
+    }
     return null;
   }
   
@@ -59,56 +101,97 @@ function extractDefaultExport(moduleExport: any): any {
   return moduleExport;
 }
 
+function logModuleStructure(moduleName: string, mod: any): void {
+  try {
+    const keys = mod ? Object.keys(mod) : [];
+    const typeInfo: Record<string, string> = {};
+    for (const key of keys.slice(0, 10)) {
+      typeInfo[key] = typeof mod[key];
+    }
+    logger.info("NativeLoader", `Structure module ${moduleName}`, {
+      keys,
+      typeInfo,
+      hasDefault: !!mod?.default,
+      hasWindowManager: !!mod?.windowManager,
+      defaultKeys: mod?.default ? Object.keys(mod.default) : [],
+      windowManagerKeys: mod?.windowManager ? Object.keys(mod.windowManager) : [],
+    });
+  } catch (e) {
+    logger.debug("NativeLoader", `Impossible de logger structure de ${moduleName}`, { error: String(e) });
+  }
+}
+
 export async function loadNativeModule<T>(moduleName: string): Promise<T | null> {
-  console.log(`[native-loader] Loading ${moduleName}... (isElectron: ${IS_ELECTRON}, isPackaged: ${IS_PACKAGED})`);
+  logger.info("NativeLoader", `=== CHARGEMENT MODULE: ${moduleName} ===`, {
+    IS_ELECTRON,
+    IS_PACKAGED,
+    platform: process.platform,
+  });
   
   if (IS_PACKAGED) {
+    logger.info("NativeLoader", `Mode PACKAGED - recherche dans app.asar.unpacked`);
     const unpackedPath = getUnpackedModulePath(moduleName);
     if (unpackedPath) {
       try {
+        logger.debug("NativeLoader", `Tentative resolve depuis unpacked`, { unpackedPath });
         const resolvedPath = esmRequire.resolve(moduleName, { paths: [unpackedPath] });
-        console.log(`[native-loader] Resolved ${moduleName} to: ${resolvedPath}`);
+        logger.info("NativeLoader", `Resolved ${moduleName} to: ${resolvedPath}`);
         const mod = esmRequire(resolvedPath);
+        logModuleStructure(moduleName, mod);
         const result = extractDefaultExport(mod);
-        console.log(`[native-loader] ✓ Loaded ${moduleName} from unpacked`);
+        logger.session("NativeLoader", `✓ SUCCÈS: ${moduleName} chargé depuis unpacked`);
         return result as T;
       } catch (e: any) {
-        console.error(`[native-loader] Failed to load ${moduleName} from unpacked:`, e.message);
+        logger.error("NativeLoader", `Échec chargement ${moduleName} depuis unpacked`, { 
+          error: e.message,
+          stack: e.stack?.split('\n').slice(0, 5).join('\n')
+        });
         
         try {
-          console.log(`[native-loader] Fallback: direct require of ${unpackedPath}`);
+          logger.debug("NativeLoader", `Fallback: require direct de ${unpackedPath}`);
           const mod = esmRequire(unpackedPath);
+          logModuleStructure(moduleName, mod);
           const result = extractDefaultExport(mod);
-          console.log(`[native-loader] ✓ Loaded ${moduleName} via fallback`);
+          logger.session("NativeLoader", `✓ SUCCÈS: ${moduleName} chargé via fallback`);
           return result as T;
         } catch (e2: any) {
-          console.error(`[native-loader] Fallback also failed:`, e2.message);
+          logger.error("NativeLoader", `Fallback aussi échoué`, { error: e2.message });
         }
       }
+    } else {
+      logger.warning("NativeLoader", `Module ${moduleName} NON TROUVÉ dans app.asar.unpacked!`);
     }
   }
   
+  // Mode non-packagé ou fallback
   try {
-    console.log(`[native-loader] Trying createRequire for ${moduleName}`);
+    logger.debug("NativeLoader", `Tentative createRequire pour ${moduleName}`);
     const mod = esmRequire(moduleName);
+    logModuleStructure(moduleName, mod);
     const result = extractDefaultExport(mod);
-    console.log(`[native-loader] ✓ Loaded ${moduleName} via createRequire`);
+    logger.session("NativeLoader", `✓ SUCCÈS: ${moduleName} chargé via createRequire`);
     return result as T;
   } catch (e: any) {
-    console.error(`[native-loader] Failed to load ${moduleName} via createRequire:`, e.message);
+    logger.debug("NativeLoader", `createRequire échoué pour ${moduleName}`, { error: e.message });
   }
   
   try {
-    console.log(`[native-loader] Trying dynamic import for ${moduleName}`);
+    logger.debug("NativeLoader", `Tentative dynamic import pour ${moduleName}`);
     const mod = await import(moduleName);
+    logModuleStructure(moduleName, mod);
     const result = extractDefaultExport(mod);
-    console.log(`[native-loader] ✓ Loaded ${moduleName} via dynamic import`);
+    logger.session("NativeLoader", `✓ SUCCÈS: ${moduleName} chargé via dynamic import`);
     return result as T;
   } catch (e: any) {
-    console.error(`[native-loader] Failed to load ${moduleName} via import:`, e.message);
+    logger.error("NativeLoader", `Dynamic import échoué pour ${moduleName}`, { error: e.message });
   }
   
-  console.error(`[native-loader] ❌ All attempts failed for ${moduleName}`);
+  logger.error("NativeLoader", `❌ ÉCHEC TOTAL: Impossible de charger ${moduleName}`, {
+    IS_ELECTRON,
+    IS_PACKAGED,
+    platform: process.platform,
+    suggestion: "Vérifiez que le module est dans asarUnpack de electron-builder.yml"
+  });
   return null;
 }
 
