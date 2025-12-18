@@ -122,6 +122,7 @@ asarUnpack:
   - "**/node_modules/wrappy/**/*"
   - "**/node_modules/brace-expansion/**/*"
   - "**/node_modules/balanced-match/**/*"
+  - "**/node_modules/concat-map/**/*"         # Dépendance de brace-expansion
 ```
 
 **Chaîne de dépendances** :

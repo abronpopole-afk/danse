@@ -711,10 +711,21 @@ export class GGClubAdapter extends PlatformAdapter {
           }
           
           // Vérification par processus (plus fiable que le titre)
+          // ClubGG utilise "ClubGG.exe" comme exécutable
           const isGGPokerProcess = 
             processPath.includes("ggpoker") ||
             processPath.includes("ggclub") ||
-            processPath.includes("gg poker");
+            processPath.includes("clubgg") ||  // ClubGG.exe
+            processPath.includes("gg poker") ||
+            processPath.includes("poker") ||   // Fallback générique
+            processPath.includes("gg");        // Fallback pour variantes GG
+          
+          // Log détaillé pour CHAQUE fenêtre (debug)
+          logger.debug("GGClubAdapter", "🔎 Fenêtre analysée", {
+            title,
+            processPath: processPath || "(non disponible)",
+            matchProcess: isGGPokerProcess
+          });
 
           // Critères de détection pour GGClub/GGPoker
           // La fenêtre doit avoir un titre typique de table de poker GGClub
@@ -743,6 +754,16 @@ export class GGClubAdapter extends PlatformAdapter {
           
           // La fenêtre est valide si le processus correspond OU si le titre correspond
           const isGGPokerWindow = isGGPokerProcess || isGGPokerTitle;
+          
+          // Log si potentiellement valide
+          if (isGGPokerProcess || isGGPokerTitle) {
+            logger.info("GGClubAdapter", "🎯 Fenêtre GG candidate trouvée!", {
+              title,
+              processPath: processPath || "(non disponible)",
+              matchedByProcess: isGGPokerProcess,
+              matchedByTitle: isGGPokerTitle
+            });
+          }
 
           if (isGGPokerWindow) {
             const bounds = win.getBounds();
@@ -755,13 +776,22 @@ export class GGClubAdapter extends PlatformAdapter {
             
             // Validation des dimensions typiques d'une table de poker
             // Les tables de poker ont généralement des proportions de 4:3 à 16:9
-            // et une taille minimale raisonnable (au moins 400x300)
+            // et une taille minimale raisonnable (au moins 300x200 - relaxé pour petites tables)
             const aspectRatio = bounds.width / bounds.height;
-            const isReasonableSize = bounds.width >= 400 && bounds.height >= 300;
-            const isReasonableAspect = aspectRatio >= 1.0 && aspectRatio <= 2.5;
+            const isReasonableSize = bounds.width >= 300 && bounds.height >= 200;
+            const isReasonableAspect = aspectRatio >= 0.8 && aspectRatio <= 3.0;
             
-            // Si le processus n'est pas confirmé ET que les dimensions sont suspectes, ignorer
-            if (!isGGPokerProcess && (!isReasonableSize || !isReasonableAspect)) {
+            // Si le processus correspond, on accepte TOUJOURS (même avec dimensions bizarres)
+            // Car c'est le critère le plus fiable
+            if (isGGPokerProcess) {
+              // Accepter directement si le processus match
+              logger.info("GGClubAdapter", "✅ Fenêtre acceptée via processus", { 
+                title, 
+                processPath,
+                dimensions: `${bounds.width}x${bounds.height}`
+              });
+            } else if (!isReasonableSize || !isReasonableAspect) {
+              // Seulement vérifier dimensions si on n'a PAS de match processus
               logger.debug("GGClubAdapter", "⏭️ Fenêtre ignorée (dimensions atypiques pour table)", { 
                 title, 
                 width: bounds.width, 
