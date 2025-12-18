@@ -1,0 +1,345 @@
+[2025-12-18T15:50:42.690Z] [INFO] [[DB]] Initialisation connexion base de données...
+[2025-12-18T15:50:42.691Z] [INFO] [[DB]] DATABASE_URL défini: | DATA: {"isDefined":true}
+[2025-12-18T15:50:42.691Z] [INFO] [[DB]] Connexion à: | DATA: {"url":"postgresql:***@localhost:5432/poker_bot"}
+[2025-12-18T15:50:42.717Z] [INFO] [NativeLoader] === ENVIRONNEMENT NATIVE LOADER === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32","arch":"x64","nodeVersion":"v22.21.1","resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources","cwd":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot","currentDir":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist","argv0":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\GTO Poker Bot.exe","ELECTRON_RUN_AS_NODE":"N/A","execPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\GTO Poker Bot.exe"}
+[2025-12-18T15:50:42.719Z] [INFO] [GGClubAdapter] Chargement modules natifs | DATA: {"platform":"win32","isWindows":true,"isReplit":false,"isPackaged":true}
+[2025-12-18T15:50:42.730Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:42.776Z] [INFO] [GGClubAdapter] ✓ tesseract.js chargé
+[2025-12-18T15:50:42.777Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: screenshot-desktop === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-18T15:50:42.778Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-18T15:50:42.778Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.779Z] [INFO] [NativeLoader] Recherche module unpacked: screenshot-desktop | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.780Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop"}
+[2025-12-18T15:50:42.782Z] [INFO] [NativeLoader] Resolved screenshot-desktop to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\index.js
+[2025-12-18T15:50:42.799Z] [ERROR] [NativeLoader] Échec chargement screenshot-desktop depuis unpacked | DATA: {"error":"Cannot find module 'concat-map'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\brace-expansion\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\minimatch\\minimatch.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\glob\\glob.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\rimraf\\rimraf.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\temp\\lib\\temp.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\lib\\win32\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist\\index.cjs\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\electron\\main.cjs\n- ","stack":"Error: Cannot find module 'concat-map'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\brace-expansion\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\minimatch\\minimatch.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\glob\\glob.js"}
+[2025-12-18T15:50:42.800Z] [DEBUG] [NativeLoader] Fallback: require direct de C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop
+[2025-12-18T15:50:42.805Z] [ERROR] [NativeLoader] Fallback aussi échoué | DATA: {"error":"Cannot find module 'concat-map'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\brace-expansion\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\minimatch\\minimatch.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\glob\\glob.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\rimraf\\rimraf.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\temp\\lib\\temp.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\lib\\win32\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist\\index.cjs\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\electron\\main.cjs\n- "}
+[2025-12-18T15:50:42.805Z] [DEBUG] [NativeLoader] Tentative createRequire pour screenshot-desktop
+[2025-12-18T15:50:42.825Z] [INFO] [NativeLoader] Structure module screenshot-desktop | DATA: {"keys":["listDisplays","availableDisplays","parseDisplaysOutput","EXAMPLE_DISPLAYS_OUTPUT","all"],"typeInfo":{"listDisplays":"function","availableDisplays":"function","parseDisplaysOutput":"function","EXAMPLE_DISPLAYS_OUTPUT":"string","all":"function"},"hasDefault":false,"hasWindowManager":false,"defaultKeys":[],"windowManagerKeys":[]}
+[2025-12-18T15:50:42.825Z] [SESSION] [NativeLoader] ✓ SUCCÈS: screenshot-desktop chargé via createRequire
+[2025-12-18T15:50:42.826Z] [INFO] [GGClubAdapter] ✓ screenshot-desktop chargé (Windows)
+[2025-12-18T15:50:42.827Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: robotjs === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-18T15:50:42.827Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-18T15:50:42.828Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.828Z] [INFO] [NativeLoader] Recherche module unpacked: robotjs | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\robotjs","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.829Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\robotjs"}
+[2025-12-18T15:50:42.830Z] [INFO] [NativeLoader] Resolved robotjs to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\robotjs\index.js
+[2025-12-18T15:50:42.833Z] [INFO] [NativeLoader] Structure module robotjs | DATA: {"keys":["dragMouse","updateScreenMetrics","moveMouse","moveMouseSmooth","getMousePos","mouseClick","mouseToggle","scrollMouse","setMouseDelay","keyTap","keyToggle","typeString","typeStringDelayed","setKeyboardDelay","getPixelColor","getScreenSize","captureScreen","getColor","getXDisplayName","setXDisplayName","screen"],"typeInfo":{"dragMouse":"function","updateScreenMetrics":"function","moveMouse":"function","moveMouseSmooth":"function","getMousePos":"function","mouseClick":"function","mouseToggle":"function","scrollMouse":"function","setMouseDelay":"function","keyTap":"function"},"hasDefault":false,"hasWindowManager":false,"defaultKeys":[],"windowManagerKeys":[]}
+[2025-12-18T15:50:42.834Z] [SESSION] [NativeLoader] ✓ SUCCÈS: robotjs chargé depuis unpacked
+[2025-12-18T15:50:42.835Z] [INFO] [GGClubAdapter] ✓ robotjs chargé (Windows)
+[2025-12-18T15:50:42.836Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: node-window-manager === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-18T15:50:42.836Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-18T15:50:42.837Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.838Z] [INFO] [NativeLoader] Recherche module unpacked: node-window-manager | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\node-window-manager","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-18T15:50:42.838Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\node-window-manager"}
+[2025-12-18T15:50:42.840Z] [INFO] [NativeLoader] Resolved node-window-manager to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager\dist\index.js
+[2025-12-18T15:50:42.857Z] [INFO] [NativeLoader] Structure module node-window-manager | DATA: {"keys":["Window","addon","windowManager"],"typeInfo":{"Window":"function","addon":"object","windowManager":"object"},"hasDefault":false,"hasWindowManager":true,"defaultKeys":[],"windowManagerKeys":["_events","_eventsCount","_maxListeners","requestAccessibility","getActiveWindow","getWindows","getMonitors","getPrimaryMonitor","createProcess"]}
+[2025-12-18T15:50:42.858Z] [SESSION] [NativeLoader] ✓ SUCCÈS: node-window-manager chargé depuis unpacked
+[2025-12-18T15:50:42.860Z] [INFO] [GGClubAdapter] ✓ node-window-manager chargé (Windows) | DATA: {"hasGetWindows":true,"hasGetActiveWindow":true}
+[2025-12-18T15:50:42.936Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2025-12-18T15:50:42.942Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:42.992Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":9,"tables":["action_logs","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","bot_stats","player_profile_state"]}
+[2025-12-18T15:50:43.997Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-18T15:50:43.998Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:44.000Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-18T15:50:44.000Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:44.002Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:44.003Z] [INFO] [[API]] Aucune session active
+[2025-12-18T15:50:44.005Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:44.006Z] [INFO] [[API]] Aucune session active pour récupérer les stats DB.
+[2025-12-18T15:50:44.006Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-18T15:50:44.009Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-18T15:50:44.011Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-18T15:50:44.012Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-18T15:50:44.015Z] [INFO] [[API]] Récupération de 50 logs d'action.
+[2025-12-18T15:50:44.311Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1766073044311_reixnday1","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-18T15:50:44.312Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1766073044311_reixnday1"}
+[2025-12-18T15:50:49.412Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-18T15:50:49.421Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-18T15:50:52.747Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1766073052747_15n6ald4w","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-18T15:50:52.748Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1766073052747_15n6ald4w"}
+[2025-12-18T15:50:55.184Z] [INFO] [[API]] Platform name mapped: ggclub -> ggclub
+[2025-12-18T15:50:55.185Z] [INFO] [[Storage]] Mise à jour config plateforme | DATA: {"platform":"ggclub","updates":["platformName","username","enabled"]}
+[2025-12-18T15:50:55.185Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-18T15:50:55.188Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-18T15:50:55.194Z] [SESSION] [[Storage]] ✅ Config plateforme mise à jour | DATA: {"id":"6f9274c4-e71a-4521-8d1e-30d222d2847f","platform":"ggclub","username":"Danny3000"}
+[2025-12-18T15:50:55.195Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:55.197Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:55.203Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-18T15:50:55.209Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-18T15:50:56.866Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-18T15:50:56.867Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:56.868Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-18T15:50:56.868Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:50:56.870Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-18T15:50:56.870Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-18T15:50:56.873Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:56.874Z] [INFO] [[API]] Aucune session active pour récupérer les stats DB.
+[2025-12-18T15:50:56.875Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-18T15:50:56.876Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:50:56.877Z] [INFO] [[API]] Aucune session active
+[2025-12-18T15:50:56.879Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-18T15:50:56.882Z] [INFO] [[API]] Récupération de 50 logs d'action.
+[2025-12-18T15:50:57.174Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1766073057174_lgx2ntck4","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-18T15:50:57.175Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1766073057174_lgx2ntck4"}
+[2025-12-18T15:51:00.824Z] [SESSION] [SessionManager] 🚀 Démarrage session demandé
+[2025-12-18T15:51:00.825Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:00.827Z] [INFO] [[Storage]] ℹ️ Aucune session active
+[2025-12-18T15:51:00.828Z] [INFO] [[Storage]] Création nouvelle session bot | DATA: {}
+[2025-12-18T15:51:00.832Z] [SESSION] [[Storage]] ✅ Session bot créée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","status":"running"}
+[2025-12-18T15:51:00.834Z] [SESSION] [SessionManager] ✅ Session créée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:00.841Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-18T15:51:00.843Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-18T15:51:00.844Z] [SESSION] [SessionManager] 🔌 Initialisation PlatformManager | DATA: {"platform":"ggclub"}
+[2025-12-18T15:51:00.845Z] [SESSION] [PlatformManager] Tentative de connexion | DATA: {"platform":"ggclub","username":"Danny3000"}
+[2025-12-18T15:51:00.845Z] [DEBUG] [[PlatformManager]] Changement de statut | DATA: {"status":"connecting"}
+[2025-12-18T15:51:00.857Z] [INFO] [PlatformManager] Adaptateur créé | DATA: {"platform":"ggclub"}
+[2025-12-18T15:51:00.858Z] [DEBUG] [PlatformManager] Tentative de connexion à la plateforme...
+[2025-12-18T15:51:00.858Z] [SESSION] [GGClubAdapter] === CONNEXION À GGCLUB === | DATA: {"platform":"GGClub","hasCredentials":true,"autoReconnect":true,"maxReconnectAttempts":3}
+[2025-12-18T15:51:00.859Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"previous":"disconnected","current":"connecting"},"timestamp":"2025-12-18T15:51:00.859Z"}
+[2025-12-18T15:51:00.860Z] [INFO] [GGClubAdapter] Étape 1: Authentification...
+[2025-12-18T15:51:00.861Z] [INFO] [GGClubAdapter] === AUTHENTIFICATION === | DATA: {"hasUsername":true,"usernameLength":9}
+[2025-12-18T15:51:00.862Z] [DEBUG] [GGClubAdapter] Appel performLogin...
+[2025-12-18T15:51:00.863Z] [DEBUG] [GGClubAdapter] performLogin - début | DATA: {"hasCredentials":true}
+[2025-12-18T15:51:00.863Z] [INFO] [GGClubAdapter] ✓ Session simulée créée (le bot utilise les fenêtres GGClub existantes)
+[2025-12-18T15:51:00.864Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"previous":"connecting","current":"authenticated"},"timestamp":"2025-12-18T15:51:00.864Z"}
+[2025-12-18T15:51:00.865Z] [INFO] [GGClubAdapter] ✓ Login réussi | DATA: {"hasSessionToken":true}
+[2025-12-18T15:51:00.866Z] [INFO] [GGClubAdapter] ✓ Authentification réussie
+[2025-12-18T15:51:00.866Z] [INFO] [GGClubAdapter] Étape 2: Démarrage polling fenêtres...
+[2025-12-18T15:51:00.867Z] [INFO] [GGClubAdapter] 🔄 Démarrage du polling fenêtres (interval: 2s)
+[2025-12-18T15:51:00.867Z] [INFO] [GGClubAdapter] Étape 3: Démarrage heartbeat...
+[2025-12-18T15:51:00.868Z] [INFO] [GGClubAdapter] Étape 4: Démarrage anti-détection...
+[2025-12-18T15:51:00.869Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"previous":"authenticated","current":"connected"},"timestamp":"2025-12-18T15:51:00.869Z"}
+[2025-12-18T15:51:00.869Z] [SESSION] [GGClubAdapter] ✅ CONNEXION RÉUSSIE | DATA: {"status":"connected","platform":"GGClub"}
+[2025-12-18T15:51:00.870Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"status":"connected","platform":"GGClub","timestamp":"2025-12-18T15:51:00.870Z"},"timestamp":"2025-12-18T15:51:00.870Z"}
+[2025-12-18T15:51:00.871Z] [SESSION] [PlatformManager] ✅ CONNECTÉ à ggclub | DATA: {"username":"Danny3000"}
+[2025-12-18T15:51:00.873Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-18T15:51:00.874Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:00.888Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:00.890Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel","logs : Explorateur de fichiers"]}
+[2025-12-18T15:51:00.893Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:00.894Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:00.895Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:00.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:00.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:00.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:00.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:00.898Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:00.898Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:00.899Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:00.900Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:00.901Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:00.902Z] [DEBUG] [[PlatformManager]] Changement de statut | DATA: {"status":"running"}
+[2025-12-18T15:51:00.907Z] [SESSION] [SessionManager] ✅ PlatformManager initialisé avec succès
+[2025-12-18T15:51:00.915Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-18T15:51:00.916Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:00.917Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-18T15:51:00.919Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-18T15:51:00.920Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:00.922Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","startedAt":"2025-12-18T15:51:00.828Z"}
+[2025-12-18T15:51:00.928Z] [INFO] [[API]] Récupération de 50 logs d'action.
+[2025-12-18T15:51:00.932Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:00.933Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-18T15:51:00.936Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-18T15:51:00.939Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-18T15:51:00.940Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:00.943Z] [INFO] [[API]] Récupération de 50 logs d'action.
+[2025-12-18T15:51:00.950Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","startedAt":"2025-12-18T15:51:00.828Z"}
+[2025-12-18T15:51:00.958Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:00.959Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-18T15:51:00.988Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","startedAt":"2025-12-18T15:51:00.828Z"}
+[2025-12-18T15:51:00.990Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:00.991Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:01.000Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","tableCount":0,"tables":[]}
+[2025-12-18T15:51:01.001Z] [INFO] [[API]] Stats session | DATA: {"totalTables":0,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":0,"avgResponseTime":0,"tablesByStatus":{"waiting":0,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-18T15:51:01.007Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-18T15:51:01.009Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:01.011Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","startedAt":"2025-12-18T15:51:00.828Z"}
+[2025-12-18T15:51:01.012Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:01.013Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
+[2025-12-18T15:51:01.015Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","tableCount":0,"tables":[]}
+[2025-12-18T15:51:01.016Z] [INFO] [[API]] Stats session | DATA: {"totalTables":0,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":0,"avgResponseTime":0,"tablesByStatus":{"waiting":0,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-18T15:51:02.882Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:02.893Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:02.895Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel","logs : Explorateur de fichiers"]}
+[2025-12-18T15:51:02.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:02.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:02.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:02.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:02.898Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:02.898Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:02.899Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:02.899Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:02.900Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:02.900Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:02.901Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:02.902Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:02.902Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:04.893Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:04.908Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:04.909Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel","logs : Explorateur de fichiers"]}
+[2025-12-18T15:51:04.910Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:04.911Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:04.912Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:04.912Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:04.913Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:04.913Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:04.914Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:04.915Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:04.916Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:04.917Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:04.918Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:04.918Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:04.919Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:05.876Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-18T15:51:05.877Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:05.891Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:05.894Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","racio","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:05.894Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:05.895Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:05.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:05.896Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:05.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:05.897Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:05.898Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:05.899Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:05.899Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:05.900Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:05.900Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:05.902Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:06.905Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:06.918Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:06.920Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","racio","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:06.921Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:06.922Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:06.922Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:06.923Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:06.924Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:06.924Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:06.925Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:06.926Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:06.926Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:06.927Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:06.927Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:06.929Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:06.929Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:08.919Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:08.934Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:08.936Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","racio","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:08.936Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:08.937Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:08.938Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:08.939Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:08.940Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:08.940Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:08.941Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:08.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:08.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:08.943Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:08.944Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:08.945Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:08.946Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:10.887Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-18T15:51:10.888Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:10.903Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:10.904Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","racio","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:10.905Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:10.906Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:10.906Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:10.907Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:10.907Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:10.908Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:10.909Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:10.909Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:10.910Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:10.910Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:10.911Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:10.912Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:10.919Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:10.932Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:10.934Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","racio","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:10.935Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:10.936Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:10.937Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:10.938Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:10.938Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:10.939Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:10.939Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:10.940Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:10.941Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:10.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:10.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:10.943Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:10.944Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:12.927Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:12.937Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:12.937Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","racio","rest-express","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:12.938Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:12.938Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:12.939Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:12.939Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:12.940Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:12.940Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:12.941Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:12.941Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:12.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:12.942Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:12.943Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:12.944Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:12.944Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:14.934Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:14.945Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:14.946Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","racio","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:14.947Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:14.947Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:14.948Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:14.948Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:14.949Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:14.949Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:14.950Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:14.951Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:14.951Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:14.952Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:14.952Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:14.953Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:14.954Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:15.900Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-18T15:51:15.902Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:15.911Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:15.912Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","racio","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:15.913Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:15.914Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:15.915Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:15.915Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:15.916Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:15.916Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:15.917Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:15.917Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:15.918Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:15.918Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:15.919Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:15.920Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:16.944Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-18T15:51:16.954Z] [INFO] [GGClubAdapter] 🔍 Scan de 352 fenêtres Windows...
+[2025-12-18T15:51:16.956Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":209,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Hôte contextuel","Jauge de batterie","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","racio","ClubGG","PokerWizardBot - Replit — Mozilla Firefox","Hôte contextuel"]}
+[2025-12-18T15:51:16.956Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-18T15:51:16.957Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-18T15:51:16.958Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-18T15:51:16.958Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:16.959Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-18T15:51:16.959Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-18T15:51:16.960Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-18T15:51:16.960Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-18T15:51:16.961Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-18T15:51:16.961Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:16.962Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-18T15:51:16.963Z] [WARNING] [GGClubAdapter] ❌ Aucune table GGClub détectée | DATA: {"windowManagerAvailable":true,"platform":"win32","suggestion":"1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées"}
+[2025-12-18T15:51:16.963Z] [DEBUG] [GGClubAdapter] Polling: 0 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-18T15:51:17.195Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-18T15:51:17.248Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983","startedAt":"2025-12-18T15:51:00.828Z"}
+[2025-12-18T15:51:17.250Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"previous":"connected","current":"disconnected"},"timestamp":"2025-12-18T15:51:17.250Z"}
+[2025-12-18T15:51:17.251Z] [DEBUG] [[PlatformManager]] Changement de statut | DATA: {"status":"disconnected"}
+[2025-12-18T15:51:17.251Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"connection_status","data":{"status":"disconnected","platform":"GGClub","timestamp":"2025-12-18T15:51:17.251Z"},"timestamp":"2025-12-18T15:51:17.251Z"}
+[2025-12-18T15:51:17.253Z] [DEBUG] [[PlatformManager]] Changement de statut | DATA: {"status":"idle"}
+[2025-12-18T15:51:17.254Z] [SESSION] [SessionManager] 🔌 PlatformManager arrêté
+[2025-12-18T15:51:17.267Z] [SESSION] [SessionManager] ✅ Session arrêtée | DATA: {"sessionId":"c58c911f-b132-476a-b15e-811903561983"}
