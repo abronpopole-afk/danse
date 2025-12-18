@@ -94,23 +94,39 @@ for (const moduleName of nativeModules) {
 
 ### Dépendances Transitives Requises
 
-L'archive ASAR doit inclure les dépendances transitives des modules natifs. En cas d'erreur `Cannot find module 'glob'` au lancement :
+L'archive ASAR doit inclure TOUTES les dépendances transitives des modules natifs. Erreurs courantes et solutions :
+
+**Erreur 1** : `Cannot find module 'glob'` → Ajouter `glob` et ses dépendances
+**Erreur 2** : `Cannot find module 'fs.realpath'` → Ajouter `fs.realpath` et toute la chaîne
 
 ```yaml
-# electron-builder.yml - asarUnpack
+# electron-builder.yml - Configuration COMPLÈTE et FONCTIONNELLE
 asarUnpack:
+  # Modules natifs principaux
   - "**/node_modules/robotjs/**/*"
   - "**/node_modules/node-window-manager/**/*"
   - "**/node_modules/screenshot-desktop/**/*"
-  # ✅ Dépendances transitives REQUISES
+  
+  # Dépendances directes
   - "**/node_modules/temp/**/*"
   - "**/node_modules/rimraf/**/*"
-  - "**/node_modules/glob/**/*"        # CRITIQUE pour screenshot-desktop
+  - "**/node_modules/glob/**/*"
+  - "**/node_modules/os-tmpdir/**/*"
+  
+  # ✅ COMPLÈTE chaîne transitives (CRITIQUE)
   - "**/node_modules/inflight/**/*"
   - "**/node_modules/minimatch/**/*"
+  - "**/node_modules/fs.realpath/**/*"        # Polyfill fs
+  - "**/node_modules/once/**/*"
+  - "**/node_modules/path-is-absolute/**/*"
+  - "**/node_modules/wrappy/**/*"
+  - "**/node_modules/brace-expansion/**/*"
+  - "**/node_modules/balanced-match/**/*"
 ```
 
-Ces modules sont requis par `screenshot-desktop` → `temp` → `rimraf` → `glob`.
+**Chaîne de dépendances** :
+- `screenshot-desktop` → `temp` → `rimraf` → `glob` → `minimatch` → `brace-expansion`
+- `glob` aussi utilise : `fs.realpath`, `inflight`, `once`, `path-is-absolute`, `wrappy`
 
 ### Linux/macOS
 - ✅ **tesseract.js** : OCR (JavaScript pur)
