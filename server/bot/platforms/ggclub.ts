@@ -716,7 +716,7 @@ export class GGClubAdapter extends PlatformAdapter {
             processPath.includes("ggclub") ||
             processPath.includes("gg poker");
 
-          // Critères de détection stricts pour GGClub/GGPoker
+          // Critères de détection pour GGClub/GGPoker
           // La fenêtre doit avoir un titre typique de table de poker GGClub
           const isGGPokerTitle = 
             // Patterns de titres GGClub/GGPoker réels
@@ -724,14 +724,22 @@ export class GGClubAdapter extends PlatformAdapter {
             titleLower.includes("ggpoker") || 
             titleLower.includes("gg poker") ||
             // Tables cash avec format typique (ex: "NL 100 - Table 1")
-            (titleLower.match(/nl\s*\d+/i) && titleLower.includes("table")) ||
-            (titleLower.match(/plo\s*\d+/i) && titleLower.includes("table")) ||
+            (titleLower.match(/nl\s*\d+/i)) ||
+            (titleLower.match(/plo\s*\d+/i)) ||
+            (titleLower.match(/holdem\s*\d+/i)) ||
+            (titleLower.match(/omaha\s*\d+/i)) ||
             // Tournois avec format typique
-            titleLower.match(/hold'?em.*table/i) ||
-            titleLower.match(/omaha.*table/i) ||
+            titleLower.match(/hold'?em/i) ||
+            titleLower.match(/omaha/i) ||
             // Format table numérotée standard des rooms de poker
-            titleLower.match(/table\s*#?\d+.*bb/i) ||
-            titleLower.match(/\d+\/\d+.*table/i);
+            titleLower.match(/table\s*#?\d+/i) ||
+            titleLower.match(/\d+\/\d+/) ||
+            // Formats simples contenant "table" sans restrictions
+            (titleLower.includes("table") && titleLower.match(/\d+/)) ||
+            // BB/SB format
+            titleLower.match(/bb.*table/i) ||
+            // Position-based (BTN, SB, BB, UTG, etc.)
+            (titleLower.match(/\b(btn|sb|bb|utg|mp|co|d)\b/i) && titleLower.match(/\d+/));
           
           // La fenêtre est valide si le processus correspond OU si le titre correspond
           const isGGPokerWindow = isGGPokerProcess || isGGPokerTitle;
