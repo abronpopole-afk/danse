@@ -719,13 +719,12 @@ export class GGClubAdapter extends PlatformAdapter {
           }
 
           // Critères de détection pour GGClub/GGPoker
-          // STRICT: Patterns qui identifient réellement des tables poker
+          // ULTRA-STRICT: Détecter UNIQUEMENT les vraies fenêtres de table poker
           
-          // Exclure les jeux/applis clairement non-poker
-          const isNotPoker = 
-            titleLower.includes("nhl") ||     // Hockey
-            titleLower.includes("nba") ||     // Basketball
-            titleLower.includes("fifa") ||    // Football
+          // Exclure les non-poker ET les fenêtres système/app génériques
+          const isNotAPokerTable = 
+            title === "ClubGG" ||               // Window titre générique (pas une table spécifique)
+            title.startsWith("\\") ||           // Handles système (\\BaseNamedObjects\\...)
             titleLower.includes("explorer") || // File explorer
             titleLower.includes("firefox") ||  // Browser
             titleLower.includes("chrome") ||   // Browser
@@ -733,20 +732,20 @@ export class GGClubAdapter extends PlatformAdapter {
             titleLower.includes("command") ||  // Terminal
             titleLower.includes("powershell"); // Terminal
           
-          const isGGPokerTitle = !isNotPoker && (
-            // Patterns de titres GGClub/GGPoker SPÉCIFIQUES
-            titleLower.includes("ggclub") || 
-            titleLower.includes("ggpoker") || 
-            titleLower.includes("gg poker") ||
-            // Tables cash avec format STRICT (ex: "NL 100" ou "PL 50")
-            (titleLower.match(/\bnl\s*\d+/i) && !titleLower.includes("nhl")) ||  // NL poker, NOT NHL
-            (titleLower.match(/\bplo\s*\d+/i)) ||
-            (titleLower.match(/\bpl\s*\d+/i)) ||  // Pot Limit
-            // Tournois poker (Hold'em, Omaha)
-            (titleLower.match(/hold.?em|omaha|tournament|tourney|spinn?/i) && 
-             titleLower.match(/\d+/)) ||
-            // Format blinds spécifique (ex: "1/2" pour 1-2 poker)
-            (titleLower.match(/\b\d+\/\d+\b/) && !titleLower.includes("explorer"))
+          // Une fenêtre est une TABLE POKER si elle a:
+          // - Un processus GGClub OU
+          // - Un titre spécifique avec blinds/limites/format poker
+          const isGGPokerTitle = !isNotAPokerTable && (
+            // Tables avec format blinds (ex: "1/2", "5/10", "100/200")
+            titleLower.match(/\b\d+\/\d+\b/) ||
+            // Tables avec limites de jeu spécifiques (ex: "NL 100", "PL 50")
+            (titleLower.match(/\b(nl|nlh|pot|pl|plo)\s*\d+/i)) ||
+            // Tables nommées: NHL 408 = No Limit Hold'em table 408
+            (titleLower.match(/\b(nlh|nhl)\s*\d+/i)) ||
+            // Tables nommées avec variantes de poker (Hold'em, Omaha) 
+            (titleLower.match(/\d+.*holdem|omaha|tournament|tourney|spin/i)) ||
+            // Titres explicites comme "Poker Table", "Cash Game", etc
+            titleLower.match(/poker\s+table|cash\s+game|sit.?n.?go/i)
           );
           
           // La fenêtre est valide si le processus correspond OU si le titre correspond
