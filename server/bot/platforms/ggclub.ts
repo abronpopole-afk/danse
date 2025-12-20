@@ -2043,8 +2043,13 @@ export class GGClubAdapter extends PlatformAdapter {
     if (this.pokerOCREngine && screenBuffer.length > 0) {
       try {
         const startTime = Date.now();
-        // Using PokerOCREngine for recognized numbers
-        const result = await this.pokerOCREngine.recognizeValue(screenBuffer, screenBuffer.length / 4, 1, 'pot');
+        // Extract region buffer for OCR
+        const regionBuffer = this.extractRegionBuffer(screenBuffer, imageWidth || 1920, imageHeight || 1080, region);
+        if (regionBuffer.length === 0) {
+          return { text: "", confidence: 0, bounds: region };
+        }
+        // Using PokerOCREngine for recognized numbers with correct region dimensions
+        const result = await this.pokerOCREngine.recognizeValue(regionBuffer, region.width, region.height, 'pot');
         
         if (result) {
           const text = String(result.value);
