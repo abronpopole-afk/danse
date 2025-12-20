@@ -712,20 +712,22 @@ export class GGClubAdapter extends PlatformAdapter {
           
           // Vérification par processus (plus fiable que le titre)
           // ClubGG utilise "ClubGG.exe" comme exécutable
+          // ATTENTION: Exclure le processus du bot lui-même
           const isGGPokerProcess = 
-            processPath.includes("ggpoker") ||
+            (processPath.includes("ggpoker") ||
             processPath.includes("ggclub") ||
-            processPath.includes("clubgg") ||  // ClubGG.exe
-            processPath.includes("gg poker") ||
-            processPath.includes("poker") ||   // Fallback générique
-            processPath.includes("gg");        // Fallback pour variantes GG
+            processPath.includes("clubgg")) &&  // ClubGG.exe - patterns STRICTS
+            !processPath.includes("rest-express") &&  // Exclure le bot
+            !processPath.includes("gto-poker") &&     // Exclure le bot
+            !processPath.includes("electron");        // Exclure Electron lui-même
           
-          // Log détaillé pour CHAQUE fenêtre (debug)
-          logger.debug("GGClubAdapter", "🔎 Fenêtre analysée", {
-            title,
-            processPath: processPath || "(non disponible)",
-            matchProcess: isGGPokerProcess
-          });
+          // Log seulement si match
+          if (isGGPokerProcess || titleLower.includes("clubgg")) {
+            logger.debug("GGClubAdapter", "🔎 Candidat GGClub", {
+              title,
+              processPath: processPath || "(non disponible)"
+            });
+          }
 
           // Critères de détection pour GGClub/GGPoker
           // La fenêtre doit avoir un titre typique de table de poker GGClub

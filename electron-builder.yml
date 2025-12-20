@@ -48,6 +48,8 @@ asarUnpack:
   - "**/node_modules/brace-expansion/**/*"
   - "**/node_modules/balanced-match/**/*"
   - "**/node_modules/concat-map/**/*"
+  - "**/node_modules/inherits/**/*"           # Dépendance de util/rimraf
+  - "**/node_modules/util/**/*"               # Node.js util polyfill
 
 extraResources:
   - from: native/build/Release/

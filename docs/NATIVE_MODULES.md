@@ -123,6 +123,7 @@ asarUnpack:
   - "**/node_modules/brace-expansion/**/*"
   - "**/node_modules/balanced-match/**/*"
   - "**/node_modules/concat-map/**/*"         # Dépendance de brace-expansion
+  - "**/node_modules/inherits/**/*"           # Dépendance de util/rimraf
 ```
 
 **Chaîne de dépendances** :
