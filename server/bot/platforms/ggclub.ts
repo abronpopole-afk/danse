@@ -2051,60 +2051,50 @@ export class GGClubAdapter extends PlatformAdapter {
           const confidence = result.confidence;
           const processingTime = Date.now() - startTime;
 
-        // Log low confidence OCR
-        if (confidence < 0.6) {
-          const windowHandle = Array.from(this.activeWindows.keys())[0];
-          if (windowHandle) {
-            visionErrorLogger.logOCRError(
-              parseInt(windowHandle.split('_')[1]),
-              region,
-              result.data.text,
-              text,
-              confidence,
-              this.debugMode ? screenBuffer : undefined
-            );
+          // Log low confidence OCR
+          if (confidence < 0.6) {
+            const windowHandle = Array.from(this.activeWindows.keys())[0];
+            if (windowHandle) {
+              visionErrorLogger.logOCRError(
+                parseInt(windowHandle.split('_')[1]),
+                region,
+                text,
+                text,
+                confidence,
+                this.debugMode ? screenBuffer : undefined
+              );
+            }
           }
-        }
 
-        // Log slow OCR
-        if (processingTime > 200) {
-          const windowHandle = Array.from(this.activeWindows.keys())[0];
-          if (windowHandle) {
-            visionErrorLogger.logPerformanceIssue(
-              parseInt(windowHandle.split('_')[1]),
-              processingTime,
-              this.activeWindows.size
-            );
+          // Log slow OCR
+          if (processingTime > 200) {
+            const windowHandle = Array.from(this.activeWindows.keys())[0];
+            if (windowHandle) {
+              visionErrorLogger.logPerformanceIssue(
+                parseInt(windowHandle.split('_')[1]),
+                processingTime,
+                this.activeWindows.size
+              );
+            }
           }
-        }
 
-        // Cache result if confidence is reasonable
-        if (confidence > 0.1) {
-          this.ocrCache.set(screenBuffer, region, text, confidence);
-        }
+          // Cache result if confidence is reasonable
+          if (confidence > 0.1) {
+            this.ocrCache.set(screenBuffer, region, text, confidence);
+          }
 
-        return {
-          text,
-          confidence,
-          bounds: region,
-        };
+          return {
+            text,
+            confidence,
+            bounds: region,
+          };
+        }
       } catch (error: any) {
         const errorMessage = String(error?.message || error);
         
-        logger.error("GGClubAdapter", "Erreur OCR - terminaison worker pour réinitialisation", { 
+        logger.error("GGClubAdapter", "Erreur OCR ML Engine", { 
           error: errorMessage 
         });
-        
-        // Terminer et nullifier le worker sur TOUTE erreur pour garantir la réinitialisation
-        // Cela évite d'avoir un worker dans un état corrompu ou bloqué
-        try {
-          if (this.tesseractWorker?.terminate) {
-            await this.tesseractWorker.terminate();
-          }
-        } catch (e) {
-          // Ignorer erreur de terminaison
-        }
-        this.tesseractWorker = null;
 
         // Log OCR failure
         const windowHandle = Array.from(this.activeWindows.keys())[0];
@@ -2121,7 +2111,7 @@ export class GGClubAdapter extends PlatformAdapter {
       }
     }
 
-    // Return empty result if Tesseract is unavailable or buffer is empty
+    // Return empty result if ML OCR not available or failed
     return {
       text: "",
       confidence: 0,

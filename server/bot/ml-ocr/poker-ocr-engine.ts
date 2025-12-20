@@ -218,7 +218,7 @@ export class PokerOCREngine {
 
     const mlResult = this.recognizeDigitsML(imageBuffer, width, height);
     const text = mlResult.text;
-    const confidence = mlResult.confidence;
+    let confidence = mlResult.confidence;
     this.stats.mlCalls++;
 
     const correctionResult = ocrErrorCorrector.correctPotValue(text);
@@ -248,7 +248,7 @@ export class PokerOCREngine {
         finalText,
         type,
         confidence,
-        `${method}-recognition`
+        'ml-recognition'
       );
     }
 
