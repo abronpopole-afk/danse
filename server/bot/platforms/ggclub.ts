@@ -719,11 +719,12 @@ export class GGClubAdapter extends PlatformAdapter {
           }
 
           // Critères de détection pour GGClub/GGPoker
-          // ULTRA-STRICT: Détecter UNIQUEMENT les vraies fenêtres de table poker
+          // PRIORITÉ PROCESSUS: Si c'est ClubGG.exe = c'est une table poker (peu importe le titre)
+          // Titre uniquement comme critère SECONDAIRE/fallback
           
-          // Exclure les non-poker ET les fenêtres système/app génériques
-          const isNotAPokerTable = 
-            title === "ClubGG" ||               // Window titre générique (pas une table spécifique)
+          // Si le processus est ClubGG = ON ACCEPTE (peu importe le titre, même "pipi")
+          // Sinon = on accepte UNIQUEMENT si c'est clairement une fenêtre système à exclure
+          const isSystemWindow = 
             title.startsWith("\\") ||           // Handles système (\\BaseNamedObjects\\...)
             titleLower.includes("explorer") || // File explorer
             titleLower.includes("firefox") ||  // Browser
@@ -732,32 +733,15 @@ export class GGClubAdapter extends PlatformAdapter {
             titleLower.includes("command") ||  // Terminal
             titleLower.includes("powershell"); // Terminal
           
-          // Une fenêtre est une TABLE POKER si elle a:
-          // - Un processus GGClub OU
-          // - Un titre spécifique avec blinds/limites/format poker
-          const isGGPokerTitle = !isNotAPokerTable && (
-            // Tables avec format blinds (ex: "1/2", "5/10", "100/200")
-            titleLower.match(/\b\d+\/\d+\b/) ||
-            // Tables avec limites de jeu spécifiques (ex: "NL 100", "PL 50")
-            (titleLower.match(/\b(nl|nlh|pot|pl|plo)\s*\d+/i)) ||
-            // Tables nommées: NHL 408 = No Limit Hold'em table 408
-            (titleLower.match(/\b(nlh|nhl)\s*\d+/i)) ||
-            // Tables nommées avec variantes de poker (Hold'em, Omaha) 
-            (titleLower.match(/\d+.*holdem|omaha|tournament|tourney|spin/i)) ||
-            // Titres explicites comme "Poker Table", "Cash Game", etc
-            titleLower.match(/poker\s+table|cash\s+game|sit.?n.?go/i)
-          );
+          // Décision finale: si processus ClubGG = ACCEPTER (c'est une vraie table)
+          // Sinon = refuser (sauf si titre contient des patterns poker explicites)
+          const isGGPokerWindow = isGGPokerProcess && !isSystemWindow;
           
-          // La fenêtre est valide si le processus correspond OU si le titre correspond
-          const isGGPokerWindow = isGGPokerProcess || isGGPokerTitle;
-          
-          // Log si potentiellement valide
-          if (isGGPokerProcess || isGGPokerTitle) {
-            logger.info("GGClubAdapter", "🎯 Fenêtre GG candidate trouvée!", {
+          // Log si fenêtre ClubGG détectée
+          if (isGGPokerProcess) {
+            logger.info("GGClubAdapter", "🎯 Table détectée (processus ClubGG)", {
               title,
-              processPath: processPath || "(non disponible)",
-              matchedByProcess: isGGPokerProcess,
-              matchedByTitle: isGGPokerTitle
+              processPath: processPath || "(non disponible)"
             });
           }
 
