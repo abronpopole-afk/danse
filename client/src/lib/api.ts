@@ -162,11 +162,13 @@ export const api = {
     },
 
     async getStats(): Promise<{ accounts: any[] }> {
-      return fetchJson(`${API_BASE}/platform-config`).then(res => ({ accounts: res.config ? [res.config] : [] }));
+      const res = await fetchJson<{ config: PlatformConfig | null }>(`${API_BASE}/platform-config`);
+      return { accounts: res.config ? [res.config] : [] };
     },
 
     async getActive(): Promise<{ configs: any[] }> {
-      return fetchJson(`${API_BASE}/platform-config`).then(res => ({ configs: res.config ? [res.config] : [] }));
+      const res = await fetchJson<{ config: PlatformConfig | null }>(`${API_BASE}/platform-config`);
+      return { configs: res.config ? [res.config] : [] };
     },
 
     async connect(config: any): Promise<{ success: boolean; accountId?: string }> {
@@ -189,9 +191,8 @@ export const api = {
     },
 
     async delete(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform-config`, {
-        method: "DELETE",
-      });
+      // Delete is same as disconnect since server doesn't have separate delete endpoint
+      return this.disconnect(accountId);
     },
   },
 
