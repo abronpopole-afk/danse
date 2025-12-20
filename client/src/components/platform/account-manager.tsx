@@ -68,8 +68,9 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
       // Si le compte a un mot de passe stocké, on peut se connecter sans le fournir
       // Sinon, demander le mot de passe
       let passwordToSend: string | undefined = password;
+      const rememberPassword = (config.settings as any)?.rememberPassword ?? false;
       
-      if (!passwordToSend && !config.rememberPassword) {
+      if (!passwordToSend && !rememberPassword) {
         const enteredPassword = prompt(`Entrez le mot de passe pour ${username}:`);
         if (!enteredPassword) {
           setIsConnecting(null);
@@ -82,7 +83,7 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         platformName: config.platformName,
         username,
         password: passwordToSend,
-        rememberPassword: rememberPassword ?? config.rememberPassword ?? false,
+        rememberPassword: rememberPassword,
         autoReconnect: true,
         enableAutoAction: true,
       });
@@ -310,7 +311,7 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
                         <CardTitle className="text-base">{account.username}</CardTitle>
                         <CardDescription>
                           {account.platformName} • {account.managedTables || 0} table(s)
-                          {account.rememberPassword && (
+                          {((account.settings as any)?.rememberPassword) && (
                             <span className="ml-2 text-xs text-green-500">🔒 Mot de passe sauvegardé</span>
                           )}
                         </CardDescription>
@@ -359,7 +360,8 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
                         size="sm"
                         onClick={() => {
                           // Si le compte a un mot de passe stocké, essayer de se connecter directement
-                          if (account.rememberPassword) {
+                          const rememberPassword = (account.settings as any)?.rememberPassword ?? false;
+                          if (rememberPassword) {
                             handleConnect(account.accountId!, account.username || "");
                           } else {
                             // Sinon, demander le mot de passe
@@ -377,7 +379,7 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
                         ) : (
                           <>
                             <Power className="w-4 h-4 mr-2" />
-                            {account.rememberPassword ? "Reconnecter" : "Connecter"}
+                            {((account.settings as any)?.rememberPassword) ? "Reconnecter" : "Connecter"}
                           </>
                         )}
                       </Button>

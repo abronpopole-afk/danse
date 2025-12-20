@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { GtoConfig, PlatformConfig } from "@shared/schema";
+import { AccountManager } from "@/components/platform/account-manager";
 
 export default function SettingsPage() {
   const [gtoConfig, setGtoConfig] = useState<GtoConfig | null>(null);
@@ -292,87 +293,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="platform" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wifi className="w-5 h-5 text-primary" />
-                  Configuration Plateforme Poker
-                </CardTitle>
-                <CardDescription>
-                  Configurez la connexion à votre plateforme de poker en ligne.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <div className="flex items-center gap-2 text-yellow-500">
-                    <AlertCircle className="w-5 h-5" />
-                    <p className="font-medium">Configuration en attente</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    L'intégration avec la plateforme de poker sera configurée une fois que vous aurez choisi votre plateforme.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="platformName">Plateforme</Label>
-                    <Select
-                      value={platformForm.platformName}
-                      onValueChange={(value) => setPlatformForm(prev => ({ ...prev, platformName: value }))}
-                    >
-                      <SelectTrigger data-testid="select-platform">
-                        <SelectValue placeholder="Sélectionner une plateforme" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ggclub">GG Club / GGPoker</SelectItem>
-                        <SelectItem value="pokerstars">PokerStars (bientôt)</SelectItem>
-                        <SelectItem value="partypoker">PartyPoker (bientôt)</SelectItem>
-                        <SelectItem value="888poker">888Poker (bientôt)</SelectItem>
-                        <SelectItem value="winamax">Winamax (bientôt)</SelectItem>
-                        <SelectItem value="other">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="platformUsername">Nom d'utilisateur</Label>
-                    <Input
-                      id="platformUsername"
-                      placeholder="Votre pseudo sur la plateforme"
-                      value={platformForm.username}
-                      onChange={(e) => setPlatformForm(prev => ({ ...prev, username: e.target.value }))}
-                      data-testid="input-platform-username"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Activer la connexion</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Le bot se connectera automatiquement à la plateforme
-                      </p>
-                    </div>
-                    <Switch
-                      checked={platformForm.enabled}
-                      onCheckedChange={(checked) => setPlatformForm(prev => ({ ...prev, enabled: checked }))}
-                      disabled={!platformForm.platformName}
-                      data-testid="switch-platform-enabled"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button 
-                    onClick={savePlatformConfig}
-                    disabled={isSaving || !platformForm.platformName}
-                    data-testid="button-save-platform"
-                  >
-                    {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Sauvegarder
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AccountManager />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
