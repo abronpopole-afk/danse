@@ -1,0 +1,38 @@
+[2025-12-20T14:41:30.645Z] [SESSION] [NativeLoader] ✓ SUCCÈS: screenshot-desktop chargé via createRequire
+[2025-12-20T14:41:30.665Z] [SESSION] [NativeLoader] ✓ SUCCÈS: robotjs chargé depuis unpacked
+[2025-12-20T14:41:30.692Z] [SESSION] [NativeLoader] ✓ SUCCÈS: node-window-manager chargé depuis unpacked
+[2025-12-20T14:41:30.784Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2025-12-20T14:41:30.788Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:30.812Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":9,"tables":["action_logs","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","bot_stats","player_profile_state"]}
+[2025-12-20T14:41:30.818Z] [SESSION] [PlatformManager] Tentative de connexion | DATA: {"platform":"ggclub","username":"Danny3000"}
+[2025-12-20T14:41:30.832Z] [SESSION] [GGClubAdapter] === CONNEXION À GGCLUB === | DATA: {"platform":"GGClub","hasCredentials":true,"autoReconnect":true,"maxReconnectAttempts":3}
+[2025-12-20T14:41:30.843Z] [SESSION] [GGClubAdapter] ✅ CONNEXION RÉUSSIE | DATA: {"status":"connected","platform":"GGClub"}
+[2025-12-20T14:41:30.844Z] [SESSION] [PlatformManager] ✅ CONNECTÉ à ggclub | DATA: {"username":"Danny3000"}
+[2025-12-20T14:41:30.895Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:30.898Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:32.237Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:32.243Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:56.497Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:56.501Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:56.549Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:56.552Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:56.553Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_527486","title":"NHL 408","dimensions":"566x420"}
+[2025-12-20T14:41:56.556Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_1115832","title":"ClubGG","dimensions":"360x660"}
+[2025-12-20T14:41:58.804Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:58.806Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:11.030Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:11.033Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:11.084Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:11.087Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:13.303Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:13.306Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:15.547Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:15.550Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:16.020Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:16.035Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:24.274Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:24.277Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:24.320Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:24.323Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:28.159Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:28.161Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}

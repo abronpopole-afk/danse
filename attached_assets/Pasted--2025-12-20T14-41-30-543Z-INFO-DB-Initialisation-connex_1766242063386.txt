@@ -1,0 +1,653 @@
+[2025-12-20T14:41:30.543Z] [INFO] [[DB]] Initialisation connexion base de données...
+[2025-12-20T14:41:30.544Z] [INFO] [[DB]] DATABASE_URL défini: | DATA: {"isDefined":true}
+[2025-12-20T14:41:30.545Z] [INFO] [[DB]] Connexion à: | DATA: {"url":"postgresql:***@localhost:5432/poker_bot"}
+[2025-12-20T14:41:30.574Z] [INFO] [NativeLoader] === ENVIRONNEMENT NATIVE LOADER === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32","arch":"x64","nodeVersion":"v22.21.1","resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources","cwd":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot","currentDir":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist","argv0":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\GTO Poker Bot.exe","ELECTRON_RUN_AS_NODE":"N/A","execPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\GTO Poker Bot.exe"}
+[2025-12-20T14:41:30.577Z] [INFO] [GGClubAdapter] Chargement modules natifs | DATA: {"platform":"win32","isWindows":true,"isReplit":false,"isPackaged":true}
+[2025-12-20T14:41:30.579Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: screenshot-desktop === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-20T14:41:30.579Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-20T14:41:30.580Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.581Z] [INFO] [NativeLoader] Recherche module unpacked: screenshot-desktop | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.581Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop"}
+[2025-12-20T14:41:30.583Z] [INFO] [NativeLoader] Resolved screenshot-desktop to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\index.js
+[2025-12-20T14:41:30.616Z] [ERROR] [NativeLoader] Échec chargement screenshot-desktop depuis unpacked | DATA: {"error":"Cannot find module 'mkdirp'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\temp\\lib\\temp.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\lib\\win32\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist\\index.cjs\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\electron\\main.cjs\n- ","stack":"Error: Cannot find module 'mkdirp'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\temp\\lib\\temp.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\lib\\win32\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\index.js"}
+[2025-12-20T14:41:30.617Z] [DEBUG] [NativeLoader] Fallback: require direct de C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop
+[2025-12-20T14:41:30.621Z] [ERROR] [NativeLoader] Fallback aussi échoué | DATA: {"error":"Cannot find module 'mkdirp'\nRequire stack:\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\temp\\lib\\temp.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\lib\\win32\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\screenshot-desktop\\index.js\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\dist\\index.cjs\n- C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar\\electron\\main.cjs\n- "}
+[2025-12-20T14:41:30.622Z] [DEBUG] [NativeLoader] Tentative createRequire pour screenshot-desktop
+[2025-12-20T14:41:30.644Z] [INFO] [NativeLoader] Structure module screenshot-desktop | DATA: {"keys":["listDisplays","availableDisplays","parseDisplaysOutput","EXAMPLE_DISPLAYS_OUTPUT","all"],"typeInfo":{"listDisplays":"function","availableDisplays":"function","parseDisplaysOutput":"function","EXAMPLE_DISPLAYS_OUTPUT":"string","all":"function"},"hasDefault":false,"hasWindowManager":false,"defaultKeys":[],"windowManagerKeys":[]}
+[2025-12-20T14:41:30.645Z] [SESSION] [NativeLoader] ✓ SUCCÈS: screenshot-desktop chargé via createRequire
+[2025-12-20T14:41:30.650Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-20T14:41:30.655Z] [INFO] [GGClubAdapter] ✓ screenshot-desktop chargé (Windows)
+[2025-12-20T14:41:30.656Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: robotjs === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-20T14:41:30.656Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-20T14:41:30.657Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.658Z] [INFO] [NativeLoader] Recherche module unpacked: robotjs | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\robotjs","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.658Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\robotjs"}
+[2025-12-20T14:41:30.660Z] [INFO] [NativeLoader] Resolved robotjs to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\robotjs\index.js
+[2025-12-20T14:41:30.664Z] [INFO] [NativeLoader] Structure module robotjs | DATA: {"keys":["dragMouse","updateScreenMetrics","moveMouse","moveMouseSmooth","getMousePos","mouseClick","mouseToggle","scrollMouse","setMouseDelay","keyTap","keyToggle","typeString","typeStringDelayed","setKeyboardDelay","getPixelColor","getScreenSize","captureScreen","getColor","getXDisplayName","setXDisplayName","screen"],"typeInfo":{"dragMouse":"function","updateScreenMetrics":"function","moveMouse":"function","moveMouseSmooth":"function","getMousePos":"function","mouseClick":"function","mouseToggle":"function","scrollMouse":"function","setMouseDelay":"function","keyTap":"function"},"hasDefault":false,"hasWindowManager":false,"defaultKeys":[],"windowManagerKeys":[]}
+[2025-12-20T14:41:30.665Z] [SESSION] [NativeLoader] ✓ SUCCÈS: robotjs chargé depuis unpacked
+[2025-12-20T14:41:30.668Z] [INFO] [GGClubAdapter] ✓ robotjs chargé (Windows)
+[2025-12-20T14:41:30.669Z] [INFO] [NativeLoader] === CHARGEMENT MODULE: node-window-manager === | DATA: {"IS_ELECTRON":true,"IS_PACKAGED":true,"platform":"win32"}
+[2025-12-20T14:41:30.669Z] [INFO] [NativeLoader] Mode PACKAGED - recherche dans app.asar.unpacked
+[2025-12-20T14:41:30.670Z] [DEBUG] [NativeLoader] getResourcesPath() | DATA: {"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.670Z] [INFO] [NativeLoader] Recherche module unpacked: node-window-manager | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\node-window-manager","exists":true,"resourcesPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources"}
+[2025-12-20T14:41:30.671Z] [DEBUG] [NativeLoader] Tentative resolve depuis unpacked | DATA: {"unpackedPath":"C:\\Users\\Admin\\AppData\\Local\\Programs\\GTO Poker Bot\\resources\\app.asar.unpacked\\node_modules\\node-window-manager"}
+[2025-12-20T14:41:30.673Z] [INFO] [NativeLoader] Resolved node-window-manager to: C:\Users\Admin\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager\dist\index.js
+[2025-12-20T14:41:30.691Z] [INFO] [NativeLoader] Structure module node-window-manager | DATA: {"keys":["Window","addon","windowManager"],"typeInfo":{"Window":"function","addon":"object","windowManager":"object"},"hasDefault":false,"hasWindowManager":true,"defaultKeys":[],"windowManagerKeys":["_events","_eventsCount","_maxListeners","requestAccessibility","getActiveWindow","getWindows","getMonitors","getPrimaryMonitor","createProcess"]}
+[2025-12-20T14:41:30.692Z] [SESSION] [NativeLoader] ✓ SUCCÈS: node-window-manager chargé depuis unpacked
+[2025-12-20T14:41:30.693Z] [INFO] [GGClubAdapter] ✓ node-window-manager chargé (Windows) | DATA: {"hasGetWindows":true,"hasGetActiveWindow":true}
+[2025-12-20T14:41:30.784Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2025-12-20T14:41:30.788Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:30.809Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-20T14:41:30.812Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":9,"tables":["action_logs","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","bot_stats","player_profile_state"]}
+[2025-12-20T14:41:30.816Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-20T14:41:30.818Z] [SESSION] [PlatformManager] Tentative de connexion | DATA: {"platform":"ggclub","username":"Danny3000"}
+[2025-12-20T14:41:30.830Z] [INFO] [PlatformManager] Adaptateur créé | DATA: {"platform":"ggclub"}
+[2025-12-20T14:41:30.831Z] [DEBUG] [PlatformManager] Tentative de connexion à la plateforme...
+[2025-12-20T14:41:30.832Z] [SESSION] [GGClubAdapter] === CONNEXION À GGCLUB === | DATA: {"platform":"GGClub","hasCredentials":true,"autoReconnect":true,"maxReconnectAttempts":3}
+[2025-12-20T14:41:30.833Z] [INFO] [GGClubAdapter] Étape 1: Authentification...
+[2025-12-20T14:41:30.833Z] [INFO] [GGClubAdapter] === AUTHENTIFICATION === | DATA: {"hasUsername":true,"usernameLength":9}
+[2025-12-20T14:41:30.836Z] [DEBUG] [GGClubAdapter] Appel performLogin...
+[2025-12-20T14:41:30.837Z] [DEBUG] [GGClubAdapter] performLogin - début | DATA: {"hasCredentials":true}
+[2025-12-20T14:41:30.838Z] [INFO] [GGClubAdapter] ✓ Session simulée créée (le bot utilise les fenêtres GGClub existantes)
+[2025-12-20T14:41:30.839Z] [INFO] [GGClubAdapter] ✓ Login réussi | DATA: {"hasSessionToken":true}
+[2025-12-20T14:41:30.839Z] [INFO] [GGClubAdapter] ✓ Authentification réussie
+[2025-12-20T14:41:30.840Z] [INFO] [GGClubAdapter] Étape 2: Démarrage polling fenêtres...
+[2025-12-20T14:41:30.841Z] [INFO] [GGClubAdapter] 🔄 Démarrage du polling fenêtres (interval: 2s)
+[2025-12-20T14:41:30.841Z] [INFO] [GGClubAdapter] Étape 3: Démarrage heartbeat...
+[2025-12-20T14:41:30.842Z] [INFO] [GGClubAdapter] Étape 4: Démarrage anti-détection...
+[2025-12-20T14:41:30.843Z] [SESSION] [GGClubAdapter] ✅ CONNEXION RÉUSSIE | DATA: {"status":"connected","platform":"GGClub"}
+[2025-12-20T14:41:30.844Z] [SESSION] [PlatformManager] ✅ CONNECTÉ à ggclub | DATA: {"username":"Danny3000"}
+[2025-12-20T14:41:30.846Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-20T14:41:30.846Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:41:30.860Z] [INFO] [GGClubAdapter] 🔍 Scan de 397 fenêtres Windows...
+[2025-12-20T14:41:30.862Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":234,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Installation de GTO Poker Bot ","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers"]}
+[2025-12-20T14:41:30.863Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:41:30.864Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:41:30.864Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Installation de GTO Poker Bot "}
+[2025-12-20T14:41:30.865Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:30.865Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:30.866Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:41:30.867Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:41:30.867Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.868Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.869Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:41:30.870Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:41:30.870Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:30.871Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:41:30.872Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:30.872Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.873Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.874Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:41:30.874Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:41:30.875Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.876Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.876Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:41:30.877Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:41:30.878Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:41:30.879Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:30.880Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:30.881Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.881Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.882Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:30.883Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.886Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.887Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:30.888Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.890Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.890Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:30.891Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.892Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.892Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:30.893Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.894Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:30.894Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:30.895Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:30.898Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:30.946Z] [DEBUG] [[PlatformManager]] Table ajoutée | DATA: {"windowHandle":527486,"tableId":"1e2e0d69-f3d3-47d5-a45e-df03e2f17400"}
+[2025-12-20T14:41:30.998Z] [DEBUG] [[PlatformManager]] Table ajoutée | DATA: {"windowHandle":1115832,"tableId":"9166a5ed-f553-4922-bead-115221301ee3"}
+[2025-12-20T14:41:32.216Z] [DEBUG] [[API]] GET /api/session/current
+[2025-12-20T14:41:32.218Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-20T14:41:32.220Z] [DEBUG] [[API]] GET /api/stats
+[2025-12-20T14:41:32.221Z] [DEBUG] [[Storage]] Recherche session active...
+[2025-12-20T14:41:32.224Z] [DEBUG] [[API]] GET /api/logs
+[2025-12-20T14:41:32.237Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:32.239Z] [DEBUG] [[API]] Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2"}
+[2025-12-20T14:41:32.240Z] [DEBUG] [[Storage]] Récupération tables pour session | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2"}
+[2025-12-20T14:41:32.243Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T14:41:32.250Z] [INFO] [[API]] Récupération de 50 logs d'action.
+[2025-12-20T14:41:32.259Z] [INFO] [[Storage]] ✅ Tables récupérées | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","tableCount":6,"tables":[{"id":"9166a5ed-f553-4922-bead-115221301ee3","name":"ClubGG","status":"waiting"},{"id":"1e2e0d69-f3d3-47d5-a45e-df03e2f17400","name":"NHL 408","status":"waiting"},{"id":"d0c9e9e3-c9f1-4f91-9849-66dee2afce28","name":"ClubGG","status":"waiting"},{"id":"2ebab129-ce97-4ca5-a2de-7beb3f259097","name":"NHL 408","status":"waiting"},{"id":"1d0b6ef9-5248-4656-be30-12d7b4e3730e","name":"ClubGG","status":"waiting"},{"id":"ecd216d9-bcdb-4b9d-8240-d79136160d89","name":"NHL 408","status":"waiting"}]}
+[2025-12-20T14:41:32.261Z] [INFO] [[API]] Stats session | DATA: {"totalTables":6,"activeTables":0,"totalHandsPlayed":0,"totalProfit":0,"healthyTables":6,"avgResponseTime":0,"tablesByStatus":{"waiting":6,"playing":0,"paused":0,"error":0,"disconnected":0}}
+[2025-12-20T14:41:32.266Z] [DEBUG] [[API]] Stats DB récupérées pour la session active | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2"}
+[2025-12-20T14:41:32.267Z] [INFO] [[API]] Statistiques globales renvoyées.
+[2025-12-20T14:41:32.273Z] [DEBUG] [[API]] GET /api/player-profile
+[2025-12-20T14:41:32.275Z] [INFO] [[API]] Profil joueur renvoyé.
+[2025-12-20T14:41:32.512Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1766241692512_qltnn2gno","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-20T14:41:32.514Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1766241692512_qltnn2gno"}
+[2025-12-20T14:41:56.447Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-20T14:41:56.448Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:41:56.466Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:41:56.468Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:41:56.469Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:41:56.470Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:41:56.471Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:56.472Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:56.472Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:41:56.473Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:41:56.474Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.474Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.475Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:41:56.476Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:41:56.477Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:56.477Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:41:56.478Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:56.478Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.479Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.480Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:41:56.480Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:41:56.481Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.481Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.482Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:41:56.483Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:41:56.483Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:41:56.484Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:56.485Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:56.486Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.487Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.488Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:56.488Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.489Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.490Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.491Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.491Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.492Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:56.493Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.493Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.494Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.495Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.495Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.496Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.497Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:56.498Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.498Z"}
+[2025-12-20T14:41:56.499Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.499Z"}
+[2025-12-20T14:41:56.501Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:56.502Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:41:56.520Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:41:56.522Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:41:56.522Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:41:56.523Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:41:56.524Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:56.525Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:56.525Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:41:56.526Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:41:56.526Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.527Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.528Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:41:56.528Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:41:56.529Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:56.530Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:41:56.530Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:56.531Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.532Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.532Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:41:56.533Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:41:56.534Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.534Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.535Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:41:56.536Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:41:56.537Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:41:56.537Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:56.538Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:56.539Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.539Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.540Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:56.541Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.542Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.543Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.543Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.544Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.545Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:56.545Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.546Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.547Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.547Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.548Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:56.548Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:56.549Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:56.550Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.550Z"}
+[2025-12-20T14:41:56.551Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.551Z"}
+[2025-12-20T14:41:56.552Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:56.553Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 0 active(s)
+[2025-12-20T14:41:56.553Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_527486","title":"NHL 408","dimensions":"566x420"}
+[2025-12-20T14:41:56.555Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.555Z"}
+[2025-12-20T14:41:56.556Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_1115832","title":"ClubGG","dimensions":"360x660"}
+[2025-12-20T14:41:56.557Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:56.557Z"}
+[2025-12-20T14:41:58.768Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:41:58.781Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:41:58.783Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:41:58.784Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:41:58.785Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:41:58.785Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:58.786Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:58.786Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:41:58.786Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:41:58.787Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.787Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.788Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:41:58.789Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:41:58.789Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:41:58.790Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:41:58.791Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:41:58.791Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.791Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.792Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:41:58.792Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:41:58.793Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.793Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.794Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:41:58.795Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:41:58.795Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:41:58.796Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:58.796Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:41:58.797Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.797Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.798Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:58.798Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.799Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.799Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:58.800Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.800Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.801Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:41:58.801Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.802Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.802Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:58.802Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.803Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:41:58.803Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:41:58.804Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:41:58.805Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:58.805Z"}
+[2025-12-20T14:41:58.805Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:41:58.805Z"}
+[2025-12-20T14:41:58.806Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:41:58.807Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
+[2025-12-20T14:42:10.974Z] [DEBUG] [[Storage]] Récupération configuration plateforme...
+[2025-12-20T14:42:10.977Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-20T14:42:10.978Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:10.994Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:10.995Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:10.996Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:10.997Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:10.998Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:10.998Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:10.999Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:11.000Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:11.002Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.003Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.004Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:11.005Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:11.005Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:11.006Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:11.007Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:11.008Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.009Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.010Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:11.011Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:11.012Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.013Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.014Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:11.015Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:11.015Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:11.016Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:11.017Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:11.018Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.019Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.020Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:11.020Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.022Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.023Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.023Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.024Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.025Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:11.025Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.026Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.027Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.028Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.029Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.029Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.030Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:11.031Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:11.031Z"}
+[2025-12-20T14:42:11.032Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:11.032Z"}
+[2025-12-20T14:42:11.033Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:11.035Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:11.053Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:11.055Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:11.056Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:11.056Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:11.057Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:11.058Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:11.059Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:11.060Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:11.061Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.062Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.063Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:11.063Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:11.064Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:11.064Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:11.065Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:11.065Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.066Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.067Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:11.067Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:11.068Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.068Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.069Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:11.070Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:11.070Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:11.071Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:11.072Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:11.073Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.073Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.074Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:11.075Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.076Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.076Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.077Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.078Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.078Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:11.079Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.080Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.081Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.082Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.082Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:11.083Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:11.084Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:11.085Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:11.085Z"}
+[2025-12-20T14:42:11.086Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:11.086Z"}
+[2025-12-20T14:42:11.087Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:11.088Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
+[2025-12-20T14:42:12.960Z] [INFO] [WebSocket] Nouvelle connexion entrante | DATA: {"tempDeviceId":"device_1766241732960_v27qj32ic","remoteAddress":"127.0.0.1","url":"/ws?token=poker-bot-secure-token-2024"}
+[2025-12-20T14:42:12.961Z] [INFO] [WebSocket] Client authentifié avec succès | DATA: {"tempDeviceId":"device_1766241732960_v27qj32ic"}
+[2025-12-20T14:42:13.256Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:13.273Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:13.275Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:13.275Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:13.276Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:13.278Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:13.279Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:13.280Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:13.281Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:13.282Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.282Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.283Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:13.283Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:13.284Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:13.284Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:13.285Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:13.286Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.286Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.287Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:13.288Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:13.288Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.289Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.289Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:13.290Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:13.291Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:13.292Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:13.293Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:13.294Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.294Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.295Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:13.296Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.297Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.297Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:13.298Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.299Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.299Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:13.300Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.300Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.301Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:13.301Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.301Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:13.302Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:13.303Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:13.304Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:13.304Z"}
+[2025-12-20T14:42:13.305Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:13.305Z"}
+[2025-12-20T14:42:13.306Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:13.307Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
+[2025-12-20T14:42:13.986Z] [INFO] [[Storage]] ✅ Config plateforme trouvée | DATA: {"platform":"ggclub","enabled":true,"connectionStatus":"disconnected"}
+[2025-12-20T14:42:15.497Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"game_state","data":{"gameState":{"tableId":"ggclub_1115832","windowHandle":1115832,"heroCards":[],"communityCards":[],"potSize":0,"heroStack":0,"heroPosition":0,"players":[{"position":0,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":380,"y":60,"width":120,"height":80}},{"position":1,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":605,"y":107,"width":120,"height":80}},{"position":2,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":725,"y":225,"width":120,"height":80}},{"position":3,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":683,"y":360,"width":120,"height":80}},{"position":4,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":500,"y":448,"width":120,"height":80}},{"position":5,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":260,"y":448,"width":120,"height":80}},{"position":6,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":77,"y":360,"width":120,"height":80}},{"position":7,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":35,"y":225,"width":120,"height":80}},{"position":8,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":155,"y":107,"width":120,"height":80}}],"isHeroTurn":false,"currentStreet":"preflop","facingBet":0,"blindLevel":{"smallBlind":0.25,"bigBlind":0.5},"availableActions":[],"betSliderRegion":{"x":500,"y":480,"width":300,"height":30},"timestamp":1766241735497}},"timestamp":"2025-12-20T14:42:15.497Z"}
+[2025-12-20T14:42:15.501Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:15.516Z] [INFO] [GGClubAdapter] 🔍 Scan de 395 fenêtres Windows...
+[2025-12-20T14:42:15.518Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":231,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","GDI+ Window (screenCapture_1.3.2.exe)","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers"]}
+[2025-12-20T14:42:15.518Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:15.524Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:15.525Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:15.525Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:15.526Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:15.527Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:15.527Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.528Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.529Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:15.529Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:15.530Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:15.530Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:15.531Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:15.532Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.532Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.533Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:15.534Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:15.534Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.535Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.536Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:15.536Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:15.537Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:15.538Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:15.538Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:15.539Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.540Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.540Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:15.541Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.542Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.542Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:15.543Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.543Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.544Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:15.544Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.545Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.545Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:15.546Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.546Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:15.547Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:15.547Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:15.548Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:15.548Z"}
+[2025-12-20T14:42:15.549Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:15.549Z"}
+[2025-12-20T14:42:15.550Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:15.551Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
+[2025-12-20T14:42:15.983Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"game_state","data":{"gameState":{"tableId":"ggclub_527486","windowHandle":527486,"heroCards":[],"communityCards":[],"potSize":0,"heroStack":0,"heroPosition":0,"players":[{"position":0,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":380,"y":60,"width":120,"height":80}},{"position":1,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":605,"y":107,"width":120,"height":80}},{"position":2,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":725,"y":225,"width":120,"height":80}},{"position":3,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":683,"y":360,"width":120,"height":80}},{"position":4,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":500,"y":448,"width":120,"height":80}},{"position":5,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":260,"y":448,"width":120,"height":80}},{"position":6,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":77,"y":360,"width":120,"height":80}},{"position":7,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":35,"y":225,"width":120,"height":80}},{"position":8,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":155,"y":107,"width":120,"height":80}}],"isHeroTurn":false,"currentStreet":"preflop","facingBet":0,"blindLevel":{"smallBlind":0.25,"bigBlind":0.5},"availableActions":[],"betSliderRegion":{"x":500,"y":480,"width":300,"height":30},"timestamp":1766241735983}},"timestamp":"2025-12-20T14:42:15.983Z"}
+[2025-12-20T14:42:15.986Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-20T14:42:15.986Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:15.998Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:15.999Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:16.000Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:16.000Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:16.001Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:16.001Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:16.002Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:16.002Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:16.003Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.003Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.004Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:16.004Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:16.005Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:16.005Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:16.006Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:16.006Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.007Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.007Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:16.008Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:16.008Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.009Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.009Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:16.010Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:16.011Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:16.011Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:16.011Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:16.012Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.013Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.013Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:16.014Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.014Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.015Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:16.015Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.016Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.016Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:16.016Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.017Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.018Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:16.018Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.019Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:16.019Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:16.020Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:16.033Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:16.033Z"}
+[2025-12-20T14:42:16.034Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:16.034Z"}
+[2025-12-20T14:42:16.035Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:24.227Z] [DEBUG] [PlatformManager] 🔍 Scan des fenêtres de poker...
+[2025-12-20T14:42:24.227Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:24.246Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:24.248Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:24.249Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:24.250Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:24.251Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:24.251Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:24.252Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:24.252Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:24.253Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.254Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.255Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:24.255Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:24.256Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:24.256Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:24.257Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:24.257Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.258Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.259Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:24.260Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:24.260Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.261Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.262Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:24.262Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:24.263Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:24.264Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:24.264Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:24.265Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.265Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.266Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:24.266Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.267Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.268Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.268Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.269Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.270Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:24.270Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.271Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.272Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.272Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.273Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.273Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.274Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:24.275Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:24.275Z"}
+[2025-12-20T14:42:24.276Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:24.276Z"}
+[2025-12-20T14:42:24.277Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:24.278Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:24.294Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:24.295Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:24.296Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:24.296Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:24.297Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:24.297Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:24.298Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:24.298Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:24.299Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.299Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.300Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:24.301Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:24.301Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:24.302Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:24.303Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:24.303Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.304Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.305Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:24.305Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:24.306Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.306Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.307Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:24.308Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:24.308Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:24.309Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:24.310Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:24.310Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.311Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.312Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:24.312Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.313Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.313Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.314Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.314Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.315Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:24.315Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.316Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.317Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.317Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.318Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:24.319Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:24.320Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:24.321Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:24.321Z"}
+[2025-12-20T14:42:24.322Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:24.322Z"}
+[2025-12-20T14:42:24.323Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:24.323Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
+[2025-12-20T14:42:24.632Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"game_state","data":{"gameState":{"tableId":"ggclub_1115832","windowHandle":1115832,"heroCards":[],"communityCards":[],"potSize":0,"heroStack":0,"heroPosition":0,"players":[{"position":0,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":380,"y":60,"width":120,"height":80}},{"position":1,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":605,"y":107,"width":120,"height":80}},{"position":2,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":725,"y":225,"width":120,"height":80}},{"position":3,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":683,"y":360,"width":120,"height":80}},{"position":4,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":500,"y":448,"width":120,"height":80}},{"position":5,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":260,"y":448,"width":120,"height":80}},{"position":6,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":77,"y":360,"width":120,"height":80}},{"position":7,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":35,"y":225,"width":120,"height":80}},{"position":8,"name":"0","stack":0,"currentBet":0,"isActive":false,"isFolded":false,"isDealer":false,"isSmallBlind":false,"isBigBlind":false,"seatRegion":{"x":155,"y":107,"width":120,"height":80}}],"isHeroTurn":false,"currentStreet":"preflop","facingBet":0,"blindLevel":{"smallBlind":0.25,"bigBlind":0.5},"availableActions":[],"betSliderRegion":{"x":500,"y":480,"width":300,"height":30},"timestamp":1766241744632}},"timestamp":"2025-12-20T14:42:24.632Z"}
+[2025-12-20T14:42:28.123Z] [DEBUG] [GGClubAdapter] Détection des fenêtres GGClub...
+[2025-12-20T14:42:28.136Z] [INFO] [GGClubAdapter] 🔍 Scan de 393 fenêtres Windows...
+[2025-12-20T14:42:28.137Z] [INFO] [GGClubAdapter] 📋 Liste complète des fenêtres ouvertes | DATA: {"count":229,"titles":["Expérience d’entrée Windows","Expérience d’entrée Windows","Expérience d’entrée Windows","Changement de tâche","Quick Settings","Nouvelle notification","Rechercher","Liste de raccourcis pour GTO Poker Bot","Démarrer","Hôte de l’expérience Windows Shell","Recherche","Jauge de batterie","Hôte contextuel","Processeur d'arrière-plan d'Intel® Graphics Software","rest-express","Hôte contextuel","GTO Poker Bot : Explorateur de fichiers","Hôte contextuel","Téléchargements : Explorateur de fichiers","Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"]}
+[2025-12-20T14:42:28.138Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Quick Settings"}
+[2025-12-20T14:42:28.138Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Liste de raccourcis pour GTO Poker Bot"}
+[2025-12-20T14:42:28.139Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:28.140Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:28.140Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Releases · LESPETITSAGNEAUX/dansedanse - Google Chrome"}
+[2025-12-20T14:42:28.141Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"PokerWizardBot - Replit — Mozilla Firefox"}
+[2025-12-20T14:42:28.142Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.142Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.143Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"NHL 408","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"566x420"}
+[2025-12-20T14:42:28.143Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":527486,"title":"NHL 408","dimensions":"566x420","position":"(570, 245)"}
+[2025-12-20T14:42:28.144Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Téléchargements : Explorateur de fichiers"}
+[2025-12-20T14:42:28.144Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"logs : Explorateur de fichiers"}
+[2025-12-20T14:42:28.145Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GTO Poker Bot : Explorateur de fichiers"}
+[2025-12-20T14:42:28.145Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.146Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.146Z] [INFO] [GGClubAdapter] ✅ Fenêtre acceptée via processus | DATA: {"title":"ClubGG","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe","dimensions":"360x660"}
+[2025-12-20T14:42:28.147Z] [INFO] [GGClubAdapter] ✅ Table GGClub détectée | DATA: {"handle":1115832,"title":"ClubGG","dimensions":"360x660","position":"(673, 125)"}
+[2025-12-20T14:42:28.147Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.148Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"\\BaseNamedObjects\\4_ClubGG1","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.148Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"GDI+ Window (Explorer.EXE)"}
+[2025-12-20T14:42:28.149Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"BAProxySettingsForm"}
+[2025-12-20T14:42:28.149Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"SettingsForm"}
+[2025-12-20T14:42:28.150Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:28.151Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre système/app ignorée | DATA: {"title":"Paramètres"}
+[2025-12-20T14:42:28.151Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.152Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.152Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:28.153Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.153Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.154Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:28.154Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.155Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"MSCTFIME UI","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.155Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"MSCTFIME UI"}
+[2025-12-20T14:42:28.156Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.156Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.157Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:28.157Z] [DEBUG] [GGClubAdapter] 🔎 Candidat GGClub | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.158Z] [INFO] [GGClubAdapter] 🎯 Table détectée (processus ClubGG) | DATA: {"title":"Default IME","processPath":"c:\\program files (x86)\\clubgg\\clubgg.exe"}
+[2025-12-20T14:42:28.158Z] [DEBUG] [GGClubAdapter] ⏭️ Fenêtre ignorée (minimisée) | DATA: {"title":"Default IME"}
+[2025-12-20T14:42:28.159Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T14:42:28.160Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_527486","handle":527486,"title":"NHL 408","x":570,"y":245,"width":566,"height":420,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:28.160Z"}
+[2025-12-20T14:42:28.161Z] [DEBUG] [[PlatformManager]] Événement plateforme | DATA: {"type":"table_detected","data":{"window":{"windowId":"ggclub_1115832","handle":1115832,"title":"ClubGG","x":673,"y":125,"width":360,"height":660,"isActive":false,"isMinimized":false}},"timestamp":"2025-12-20T14:42:28.161Z"}
+[2025-12-20T14:42:28.161Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T14:42:28.162Z] [DEBUG] [GGClubAdapter] Polling: 2 fenêtre(s) détectée(s), 2 active(s)
