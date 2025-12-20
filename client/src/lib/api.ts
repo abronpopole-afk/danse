@@ -162,34 +162,34 @@ export const api = {
     },
 
     async getStats(): Promise<{ accounts: any[] }> {
-      return fetchJson(`${API_BASE}/platform-config/stats`);
+      return fetchJson(`${API_BASE}/platform-config`).then(res => ({ accounts: res.config ? [res.config] : [] }));
     },
 
     async getActive(): Promise<{ configs: any[] }> {
-      return fetchJson(`${API_BASE}/platform-config/active`);
+      return fetchJson(`${API_BASE}/platform-config`).then(res => ({ configs: res.config ? [res.config] : [] }));
     },
 
     async connect(config: any): Promise<{ success: boolean; accountId?: string }> {
-      return fetchJson(`${API_BASE}/platform-config/connect`, {
+      return fetchJson(`${API_BASE}/platform/connect`, {
         method: "POST",
         body: JSON.stringify(config),
       });
     },
 
     async disconnect(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform-config/disconnect/${accountId}`, {
+      return fetchJson(`${API_BASE}/platform/disconnect`, {
         method: "POST",
       });
     },
 
     async pause(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform-config/pause/${accountId}`, {
+      return fetchJson(`${API_BASE}/platform/pause`, {
         method: "POST",
       });
     },
 
     async delete(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform-config/${accountId}`, {
+      return fetchJson(`${API_BASE}/platform-config`, {
         method: "DELETE",
       });
     },

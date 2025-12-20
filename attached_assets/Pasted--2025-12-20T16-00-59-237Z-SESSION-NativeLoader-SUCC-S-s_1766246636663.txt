@@ -1,0 +1,120 @@
+[2025-12-20T16:00:59.237Z] [SESSION] [NativeLoader] ✓ SUCCÈS: screenshot-desktop chargé via createRequire
+[2025-12-20T16:00:59.253Z] [SESSION] [NativeLoader] ✓ SUCCÈS: robotjs chargé depuis unpacked
+[2025-12-20T16:00:59.277Z] [SESSION] [NativeLoader] ✓ SUCCÈS: node-window-manager chargé depuis unpacked
+[2025-12-20T16:00:59.340Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2025-12-20T16:00:59.359Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T16:00:59.391Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":9,"tables":["action_logs","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","bot_stats","player_profile_state"]}
+[2025-12-20T16:00:59.430Z] [SESSION] [PlatformManager] Tentative de connexion | DATA: {"platform":"ggclub","username":"Danny3000"}
+[2025-12-20T16:00:59.440Z] [SESSION] [GGClubAdapter] === CONNEXION À GGCLUB === | DATA: {"platform":"GGClub","hasCredentials":true,"autoReconnect":true,"maxReconnectAttempts":3}
+[2025-12-20T16:00:59.450Z] [SESSION] [GGClubAdapter] ✅ CONNEXION RÉUSSIE | DATA: {"status":"connected","platform":"GGClub"}
+[2025-12-20T16:00:59.450Z] [SESSION] [PlatformManager] ✅ CONNECTÉ à ggclub | DATA: {"username":"Danny3000"}
+[2025-12-20T16:00:59.488Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:00:59.490Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:00.863Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T16:01:00.866Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"50195f21-b470-421f-85b0-bb0f47dbf5f2","startedAt":"2025-12-20T14:15:38.943Z"}
+[2025-12-20T16:01:01.856Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:01.858Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:02.077Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_527486","title":"NHL 408","dimensions":"566x420"}
+[2025-12-20T16:01:02.343Z] [SESSION] [GGClubAdapter] 🎰 Nouvelle table détectée! | DATA: {"windowId":"ggclub_1115832","title":"ClubGG","dimensions":"360x660"}
+[2025-12-20T16:01:03.995Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:03.998Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:04.985Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:04.987Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:07.088Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:07.090Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:09.374Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:09.377Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:10.133Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:10.136Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:12.369Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:12.372Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:14.384Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:14.386Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:15.131Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:15.134Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:16.450Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:16.453Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:18.490Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:18.493Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:20.135Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:20.137Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:20.461Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:20.463Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:22.479Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:22.482Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:24.496Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:24.498Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:25.141Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:25.145Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:26.515Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:26.517Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:28.536Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:28.538Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:30.154Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:30.157Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:30.543Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:30.545Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:32.919Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:32.922Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:34.929Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:34.932Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:35.165Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:35.169Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:36.948Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:36.952Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:39.237Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:39.240Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:40.172Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:40.176Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:41.628Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:41.630Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:43.628Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:43.631Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:45.186Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:45.206Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:45.631Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:45.633Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:47.656Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:47.660Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:49.666Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:49.670Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:50.191Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:50.195Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:51.666Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:51.669Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:53.666Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:53.668Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:55.199Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:55.201Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:55.679Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:55.682Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:57.697Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:57.699Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:01:59.707Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:01:59.710Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:00.205Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:00.208Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:01.729Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:01.733Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:03.927Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:03.931Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:05.210Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:05.212Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:05.931Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:05.933Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:07.930Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:07.933Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:10.149Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:10.151Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:10.684Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:10.686Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:12.498Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:12.502Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:14.503Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:14.507Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:15.701Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:15.703Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:16.498Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:16.500Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
+[2025-12-20T16:02:18.556Z] [SESSION] [GGClubAdapter] ✅ 2 table(s) détectée(s)
+[2025-12-20T16:02:18.559Z] [SESSION] [GGClubAdapter] 🎰 2 table(s) détectée(s) | DATA: {"tables":[{"title":"NHL 408","handle":527486},{"title":"ClubGG","handle":1115832}]}
