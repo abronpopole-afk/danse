@@ -3,7 +3,6 @@ import { FrameNormalizer, type NormalizationConfig } from './normalization';
 import { RegionManager } from './regions';
 import { FallbackManager, type FallbackConfig } from './fallback-manager';
 import { 
-  TesseractAdapterFactory, 
   OnnxAdapterFactory, 
   MockAdapterFactory 
 } from './adapters';
@@ -71,8 +70,6 @@ export class OCRPipeline {
         console.log('[OCRPipeline] Enregistrement des adaptateurs OCR...');
         console.log('[OCRPipeline] - OnnxAdapterFactory');
         this.fallbackManager.registerFactory(new OnnxAdapterFactory());
-        console.log('[OCRPipeline] - TesseractAdapterFactory');
-        this.fallbackManager.registerFactory(new TesseractAdapterFactory());
         console.log('[OCRPipeline] - MockAdapterFactory (fallback)');
         this.fallbackManager.registerFactory(new MockAdapterFactory());
       }

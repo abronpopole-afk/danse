@@ -13,7 +13,6 @@ import { getMultiFrameValidator } from '../multi-frame-validator';
 
 export interface OCRConfig {
   useMLPrimary: boolean;
-  useTesseractFallback: boolean;
   confidenceThreshold: number;
   collectTrainingData: boolean;
   maxRetries: number;
@@ -22,7 +21,7 @@ export interface OCRConfig {
 export interface OCRResult {
   text: string;
   confidence: number;
-  method: 'ml' | 'tesseract' | 'hybrid' | 'cache';
+  method: 'ml' | 'cache';
   latencyMs: number;
   corrected: boolean;
 }
@@ -34,7 +33,7 @@ export interface CardOCRResult {
     combined: string;
     confidence: number;
   }>;
-  method: 'ml' | 'tesseract' | 'hybrid';
+  method: 'ml';
   latencyMs: number;
 }
 
@@ -42,13 +41,12 @@ export interface ValueOCRResult {
   value: number;
   rawText: string;
   confidence: number;
-  method: 'ml' | 'tesseract' | 'hybrid';
+  method: 'ml';
   latencyMs: number;
 }
 
 const DEFAULT_CONFIG: OCRConfig = {
   useMLPrimary: true,
-  useTesseractFallback: true,
   confidenceThreshold: 0.75,
   collectTrainingData: true,
   maxRetries: 2
@@ -58,14 +56,11 @@ export class PokerOCREngine {
   private config: OCRConfig;
   private cardClassifier: CardClassifier;
   private dataCollector: DataCollector | null = null;
-  private tesseractWorker: any = null;
   private initialized: boolean = false;
   private stats = {
     mlCalls: 0,
-    tesseractCalls: 0,
     cacheHits: 0,
-    avgMlLatency: 0,
-    avgTesseractLatency: 0
+    avgMlLatency: 0
   };
 
   constructor(config: Partial<OCRConfig> = {}) {
@@ -91,21 +86,8 @@ export class PokerOCREngine {
       }
     }
 
-    if (this.config.useTesseractFallback) {
-      try {
-        const Tesseract = await import('tesseract.js');
-        if (Tesseract.createWorker) {
-          this.tesseractWorker = await Tesseract.createWorker('eng');
-          console.log('[PokerOCREngine] Tesseract fallback initialized');
-        }
-      } catch (e) {
-        console.warn('[PokerOCREngine] Tesseract not available (OK, ML primary active):', (e as Error).message);
-        this.config.useTesseractFallback = false;
-      }
-    }
-
     this.initialized = true;
-    console.log('[PokerOCREngine] Initialized with ML primary, Tesseract fallback');
+    console.log('[PokerOCREngine] Initialized with ML primary');
   }
 
   async recognizeCards(
@@ -201,27 +183,11 @@ export class PokerOCREngine {
           continue;
         }
       }
-
-      if (this.config.useTesseractFallback && this.tesseractWorker) {
-        const tesseractResult = await this.recognizeWithTesseract(cardBuffer);
-        const parsed = this.parseCardFromText(tesseractResult.text);
-
-        if (parsed) {
-          cards.push({
-            rank: parsed.rank,
-            suit: parsed.suit,
-            combined: parsed.rank + parsed.suit,
-            confidence: tesseractResult.confidence * 0.8
-          });
-        }
-
-        this.stats.tesseractCalls++;
-      }
     }
 
     return {
       cards,
-      method: this.config.useMLPrimary ? 'ml' : 'tesseract',
+      method: 'ml',
       latencyMs: Date.now() - startTime
     };
   }
@@ -245,40 +211,15 @@ export class PokerOCREngine {
         value: this.parseNumericValue(cached.text),
         rawText: cached.text,
         confidence: cached.confidence,
-        method: 'hybrid',
+        method: 'ml',
         latencyMs: Date.now() - startTime
       };
     }
 
-    let text = '';
-    let confidence = 0;
-    let method: 'ml' | 'tesseract' | 'hybrid' = 'ml';
-
-    if (this.config.useMLPrimary) {
-      const mlResult = this.recognizeDigitsML(imageBuffer, width, height);
-      text = mlResult.text;
-      confidence = mlResult.confidence;
-      this.stats.mlCalls++;
-
-      if (confidence < this.config.confidenceThreshold && this.tesseractWorker) {
-        const tesseractResult = await this.recognizeWithTesseract(imageBuffer);
-
-        if (tesseractResult.confidence > confidence) {
-          text = tesseractResult.text;
-          confidence = tesseractResult.confidence;
-          method = 'tesseract';
-        } else {
-          method = 'hybrid';
-        }
-        this.stats.tesseractCalls++;
-      }
-    } else if (this.tesseractWorker) {
-      const tesseractResult = await this.recognizeWithTesseract(imageBuffer);
-      text = tesseractResult.text;
-      confidence = tesseractResult.confidence;
-      method = 'tesseract';
-      this.stats.tesseractCalls++;
-    }
+    const mlResult = this.recognizeDigitsML(imageBuffer, width, height);
+    const text = mlResult.text;
+    const confidence = mlResult.confidence;
+    this.stats.mlCalls++;
 
     const correctionResult = ocrErrorCorrector.correctPotValue(text);
     const finalText = correctionResult.corrected;
@@ -315,7 +256,7 @@ export class PokerOCREngine {
       value: finalValue,
       rawText: finalText,
       confidence,
-      method,
+      method: 'ml',
       latencyMs: Date.now() - startTime
     };
   }
@@ -356,25 +297,6 @@ export class PokerOCREngine {
       text,
       confidence: validChars > 0 ? totalConfidence / validChars : 0
     };
-  }
-
-  private async recognizeWithTesseract(
-    imageBuffer: Buffer
-  ): Promise<{ text: string; confidence: number }> {
-    if (!this.tesseractWorker) {
-      return { text: '', confidence: 0 };
-    }
-
-    try {
-      const result = await this.tesseractWorker.recognize(imageBuffer);
-      return {
-        text: result.data.text.trim(),
-        confidence: result.data.confidence / 100
-      };
-    } catch (e) {
-      console.error('[PokerOCREngine] Tesseract error:', e);
-      return { text: '', confidence: 0 };
-    }
   }
 
   private extractRegion(
@@ -461,9 +383,6 @@ export class PokerOCREngine {
   }
 
   async shutdown(): Promise<void> {
-    if (this.tesseractWorker) {
-      await this.tesseractWorker.terminate();
-    }
     if (this.dataCollector) {
       await this.dataCollector.saveIndex();
     }

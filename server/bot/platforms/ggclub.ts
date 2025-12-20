@@ -43,7 +43,6 @@ import { toGrayscale } from "../image-processing";
 import { ActionPattern } from "../anti-detection-monitor";
 
 
-let Tesseract: any = null;
 let screenshotDesktop: any = null;
 let robot: any = null;
 let windowManager: any = null;
@@ -58,14 +57,6 @@ async function loadNativeModules(): Promise<void> {
     isReplit: IS_REPLIT,
     isPackaged: IS_PACKAGED,
   });
-
-  // Tesseract.js - compatible tous OS
-  try {
-    Tesseract = await import("tesseract.js");
-    logger.info("GGClubAdapter", "✓ tesseract.js chargé");
-  } catch (e) {
-    logger.warning("GGClubAdapter", "⚠ tesseract.js non disponible", { error: String(e) });
-  }
 
   // Modules natifs Windows uniquement
   if (IS_WINDOWS && !IS_REPLIT) {
@@ -259,7 +250,6 @@ export class GGClubAdapter extends PlatformAdapter {
     this.diffDetector = diffDetector;
     this.ocrCache = ocrCache;
     this.autoCalibration = getAutoCalibrationManager();
-    this.initializeTesseract();
     ocrPool.initialize();
     this.mlInitPromise = this.initializeCardClassifier();
   }
@@ -269,7 +259,6 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         this.pokerOCREngine = await getPokerOCREngine({
           useMLPrimary: true,
-          useTesseractFallback: true,
           confidenceThreshold: 0.75,
           collectTrainingData: true,
         });
@@ -300,28 +289,6 @@ export class GGClubAdapter extends PlatformAdapter {
     return debugVisualizer;
   }
 
-  private async initializeTesseract(): Promise<void> {
-    // Tesseract.js is DISABLED due to repeated crashes with "Error attempting to read image"
-    // Using ML OCR Engine (PokerOCREngine) instead which is more stable
-    logger.info("GGClubAdapter", "Tesseract.js disabled - using ML OCR Engine");
-    this.tesseractWorker = null;
-  }
-  
-  private async reinitializeTesseractIfNeeded(): Promise<void> {
-    if (!this.tesseractWorker && Tesseract && Tesseract.createWorker) {
-      try {
-        logger.info("GGClubAdapter", "Réinitialisation du worker Tesseract...");
-        this.tesseractWorker = await Tesseract.createWorker('eng', 1, {
-          errorHandler: (err: any) => {
-            logger.error("GGClubAdapter", "Tesseract worker error", { error: String(err) });
-          },
-        });
-        logger.info("GGClubAdapter", "✓ Worker Tesseract réinitialisé");
-      } catch (error) {
-        logger.error("GGClubAdapter", "Échec réinitialisation Tesseract", { error: String(error) });
-      }
-    }
-  }
   
   private validateImageBuffer(buffer: Buffer): boolean {
     if (!buffer || buffer.length === 0) {
@@ -2061,7 +2028,7 @@ export class GGClubAdapter extends PlatformAdapter {
       };
     }
 
-    // Valider le buffer avant de l'envoyer à Tesseract pour éviter les crashes mémoire
+    // Using ML OCR Engine instead of Tesseract
     if (!this.validateImageBuffer(screenBuffer)) {
       logger.debug("GGClubAdapter", "Buffer invalide pour OCR, retour vide", {
         bufferSize: screenBuffer?.length || 0,
@@ -2072,44 +2039,17 @@ export class GGClubAdapter extends PlatformAdapter {
 
     await this.addRandomDelay(20);
     
-    // Réinitialiser le worker si nécessaire
-    await this.reinitializeTesseractIfNeeded();
-
-    if (this.tesseractWorker && screenBuffer.length > 0) {
+    // Try ML OCR Engine first
+    if (this.pokerOCREngine && screenBuffer.length > 0) {
       try {
         const startTime = Date.now();
-        // Ensure Tesseract rectangle coordinates are valid
-        const rect = {
-          left: Math.max(0, region.x),
-          top: Math.max(0, region.y),
-          width: Math.min(region.width, imageWidth ? imageWidth - region.x : Infinity),
-          height: Math.min(region.height, imageHeight ? imageHeight - region.y : Infinity),
-        };
+        // Using PokerOCREngine for recognized numbers
+        const result = await this.pokerOCREngine.recognizeValue(screenBuffer, screenBuffer.length / 4, 1, 'pot');
         
-        // Vérifier que la région est valide
-        if (rect.width <= 0 || rect.height <= 0) {
-          logger.debug("GGClubAdapter", "Région OCR invalide", { rect });
-          return { text: "", confidence: 0, bounds: region };
-        }
-
-        // Timeout pour éviter les blocages - 5 secondes max
-        const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error('OCR timeout')), 5000)
-        );
-        
-        const recognizePromise = this.tesseractWorker.recognize(screenBuffer, {
-          rectangle: rect,
-        });
-
-        const result = await Promise.race([recognizePromise, timeoutPromise]) as any;
-        
-        if (!result || !result.data) {
-          throw new Error('OCR returned invalid result');
-        }
-
-        const text = result.data.text.trim();
-        const confidence = result.data.confidence / 100; // Normalize confidence to 0-1
-        const processingTime = Date.now() - startTime;
+        if (result) {
+          const text = String(result.value);
+          const confidence = result.confidence;
+          const processingTime = Date.now() - startTime;
 
         // Log low confidence OCR
         if (confidence < 0.6) {
