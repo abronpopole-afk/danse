@@ -362,7 +362,7 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
                           // Si le compte a un mot de passe stocké, essayer de se connecter directement
                           const rememberPassword = (account.settings as any)?.rememberPassword ?? false;
                           if (rememberPassword) {
-                            handleConnect(account.accountId!, account.username || "");
+                            handleConnect(account.accountId!, account.username || "", (account.settings as any)?.password);
                           } else {
                             // Sinon, demander le mot de passe
                             const password = prompt("Entrez le mot de passe pour ce compte:");

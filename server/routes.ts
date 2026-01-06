@@ -884,13 +884,25 @@ export async function registerRoutes(
 
       if (connected) {
         logger.info('[API]', `Connexion à ${platformName} réussie.`);
-        await storage.updatePlatformConfig({
+        
+        // Mettre à jour la configuration de la plateforme avec les identifiants si demandés
+        const platformConfigUpdates: any = {
           platformName,
           username,
           enabled: true,
           connectionStatus: "connected",
           lastConnectionAt: new Date(),
-        });
+        };
+
+        if (req.body.rememberPassword) {
+          platformConfigUpdates.settings = {
+            ...(req.body.settings || {}),
+            password: password,
+            rememberPassword: true
+          };
+        }
+
+        await storage.updatePlatformConfig(platformConfigUpdates);
 
         broadcastToClients({
           type: "platform_connected",
