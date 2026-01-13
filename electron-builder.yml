@@ -88,6 +88,7 @@ publish:
   owner: bobibobini1-cell
   repo: gto-poker-bot
   releaseType: draft
+  publishAutoRelease: true
 
 asar: true
 compression: maximum
