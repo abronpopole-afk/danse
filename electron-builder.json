@@ -1,0 +1,28 @@
+{
+  "appId": "com.replit.gtopokerbot",
+  "productName": "GTO Poker Bot",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "node_modules/**/*",
+    "electron/**/*"
+  ],
+  "asar": true,
+  "asarUnpack": [
+    "node_modules/robotjs",
+    "node_modules/screenshot-desktop",
+    "node_modules/node-window-manager",
+    "node_modules/tesseract.js",
+    "node_modules/node-gyp-build"
+  ],
+  "win": {
+    "target": "portable",
+    "icon": "electron/assets/icon.ico"
+  },
+  "extraMetadata": {
+    "main": "electron/main.cjs"
+  }
+}
