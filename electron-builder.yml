@@ -84,11 +84,10 @@ portable:
   artifactName: "${productName}-${version}-portable.exe"
 
 publish:
-  provider: github
-  owner: bobibobini1-cell
-  repo: gto-poker-bot
-  releaseType: draft
-  publishAutoRelease: true
+  - provider: github
+    owner: bobibobini1-cell
+    repo: gto-poker-bot
+    releaseType: draft
 
 asar: true
 compression: maximum
