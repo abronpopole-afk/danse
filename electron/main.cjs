@@ -201,7 +201,7 @@ function loadEnvFile() {
 const envLoaded = loadEnvFile();
 
 const isDev = !app.isPackaged;
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 function createWindow() {
   mainWindow = new BrowserWindow({

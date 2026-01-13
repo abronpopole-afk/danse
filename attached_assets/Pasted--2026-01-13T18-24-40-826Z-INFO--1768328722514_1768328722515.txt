@@ -1,0 +1,158 @@
+[2026-01-13T18:24:40.826Z] [INFO] ================================================================================
+[2026-01-13T18:24:40.826Z] [INFO] APPLICATION STARTING
+[2026-01-13T18:24:40.827Z] [INFO] Date: 2026-01-13T18:24:40.827Z
+[2026-01-13T18:24:40.827Z] [INFO] Platform: win32
+[2026-01-13T18:24:40.827Z] [INFO] Node version: v22.21.1
+[2026-01-13T18:24:40.827Z] [INFO] Log directory: C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs
+[2026-01-13T18:24:40.827Z] [INFO] ================================================================================
+[2026-01-13T18:24:40.830Z] [INFO] [Electron] 📁 Logs enregistrés dans: C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs
+[2026-01-13T18:24:40.832Z] [INFO] [Electron] ====== RECHERCHE .ENV ======
+[2026-01-13T18:24:40.832Z] [INFO] [Electron] PORTABLE_EXECUTABLE_DIR: (non défini)
+[2026-01-13T18:24:40.832Z] [INFO] [Electron] APPDATA dir: C:\Users\adria\AppData\Roaming\GTO Poker Bot
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] process.execPath: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\GTO Poker Bot.exe
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] process.resourcesPath: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] process.cwd(): C:\Users\adria\AppData\Local\Programs\GTO Poker Bot
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] __dirname: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\electron
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] Vérification: C:\Users\adria\AppData\Roaming\GTO Poker Bot\.env
+[2026-01-13T18:24:40.833Z] [INFO] [Electron] ✅ Fichier .env trouvé: C:\Users\adria\AppData\Roaming\GTO Poker Bot\.env
+[2026-01-13T18:24:40.834Z] [INFO] [Electron] Lecture du fichier .env: C:\Users\adria\AppData\Roaming\GTO Poker Bot\.env
+[2026-01-13T18:24:40.834Z] [INFO] [Electron] DATABASE_URL = ***
+[2026-01-13T18:24:40.834Z] [INFO] [Electron] PORT = 5000
+[2026-01-13T18:24:40.834Z] [INFO] [Electron] NODE_ENV = production
+[2026-01-13T18:24:40.834Z] [INFO] [Electron] ENCRYPTION_KEY = ***
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] DB_ENCRYPTION_KEY = ***
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] SESSION_SECRET = ***
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] DXGI_ENABLED = true
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] DXGI_FALLBACK = screenshot-desktop
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] DEBUG_MODE = false
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] LOG_LEVEL = info
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] 10 variables chargées depuis .env
+[2026-01-13T18:24:40.835Z] [INFO] [Electron] ✅ DATABASE_URL configuré
+[2026-01-13T18:24:40.947Z] [INFO] [Electron] Démarrage du serveur...
+[2026-01-13T18:24:40.948Z] [INFO] [Electron] DATABASE_URL: ***configuré***
+[2026-01-13T18:24:40.948Z] [INFO] [Server] Loading server from: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\index.cjs
+[2026-01-13T18:24:40.948Z] [INFO] [Server] Working directory: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar
+[2026-01-13T18:24:40.948Z] [INFO] [Server] Running from asar archive, skipping chdir
+[2026-01-13T18:24:40.948Z] [INFO] [Server] Checking if server file exists...
+[2026-01-13T18:24:40.949Z] [INFO] [Server] Loading server module...
+[2026-01-13T18:24:41.002Z] [INFO] [Logger] Logs directory: C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs
+[2026-01-13T18:24:41.003Z] [INFO] [2026-01-13T18:24:41.003Z] [INFO] [[DB]] Initialisation connexion base de données...
+[2026-01-13T18:24:41.003Z] [INFO] [2026-01-13T18:24:41.003Z] [INFO] [[DB]] DATABASE_URL défini: | DATA: {"isDefined":true}
+[2026-01-13T18:24:41.003Z] [INFO] [2026-01-13T18:24:41.003Z] [INFO] [[DB]] Connexion à: | DATA: {"url":"postgresql:***@localhost:5432/poker_bot"}
+[2026-01-13T18:24:41.015Z] [INFO] [2026-01-13T18:24:41.015Z] [INFO] [GGClubAdapter] Chargement modules natifs | DATA: {"platform":"win32","isWindows":true,"isReplit":false,"isPackaged":true}
+[2026-01-13T18:24:41.019Z] [INFO] [2026-01-13T18:24:41.019Z] [DEBUG] [[Storage]] Recherche session active...
+[2026-01-13T18:24:41.020Z] [INFO] [Server] Started successfully
+[2026-01-13T18:24:41.020Z] [INFO] [Electron] Vérification serveur (tentative 1/30)...
+[2026-01-13T18:24:41.036Z] [INFO] [2026-01-13T18:24:41.036Z] [INFO] [GGClubAdapter] ✓ tesseract.js chargé
+[2026-01-13T18:24:41.037Z] [INFO] [native-loader] Loading screenshot-desktop... (isElectron: true, isPackaged: true)
+[2026-01-13T18:24:41.038Z] [INFO] [native-loader] Resolved screenshot-desktop to: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\index.js
+[2026-01-13T18:24:41.039Z] [ERROR] [native-loader] Failed to load screenshot-desktop from unpacked: Cannot find module 'temp'
+Require stack:
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\lib\win32\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\index.cjs
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\electron\main.cjs
+- 
+[2026-01-13T18:24:41.039Z] [INFO] [native-loader] Fallback: direct require of C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop
+[2026-01-13T18:24:41.040Z] [ERROR] [native-loader] Fallback also failed: Cannot find module 'temp'
+Require stack:
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\lib\win32\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\screenshot-desktop\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\index.cjs
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\electron\main.cjs
+- 
+[2026-01-13T18:24:41.040Z] [INFO] [native-loader] Trying createRequire for screenshot-desktop
+[2026-01-13T18:24:41.047Z] [INFO] [native-loader] ✓ Loaded screenshot-desktop via createRequire
+[2026-01-13T18:24:41.047Z] [INFO] [2026-01-13T18:24:41.047Z] [INFO] [GGClubAdapter] ✓ screenshot-desktop chargé (Windows)
+[2026-01-13T18:24:41.048Z] [INFO] [native-loader] Loading robotjs... (isElectron: true, isPackaged: true)
+[2026-01-13T18:24:41.048Z] [INFO] [native-loader] Resolved robotjs to: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\robotjs\index.js
+[2026-01-13T18:24:41.049Z] [INFO] [native-loader] ✓ Loaded robotjs from unpacked
+[2026-01-13T18:24:41.050Z] [INFO] [2026-01-13T18:24:41.050Z] [INFO] [GGClubAdapter] ✓ robotjs chargé (Windows)
+[2026-01-13T18:24:41.051Z] [INFO] [native-loader] Loading node-window-manager... (isElectron: true, isPackaged: true)
+[2026-01-13T18:24:41.051Z] [INFO] [native-loader] Resolved node-window-manager to: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager\dist\index.js
+[2026-01-13T18:24:41.055Z] [ERROR] [native-loader] Failed to load node-window-manager from unpacked: Cannot find module 'node-gyp-build'
+Require stack:
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager\dist\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\index.cjs
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\electron\main.cjs
+- 
+[2026-01-13T18:24:41.055Z] [INFO] [native-loader] Fallback: direct require of C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager
+[2026-01-13T18:24:41.056Z] [ERROR] [native-loader] Fallback also failed: Cannot find module 'node-gyp-build'
+Require stack:
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar.unpacked\node_modules\node-window-manager\dist\index.js
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\index.cjs
+- C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\electron\main.cjs
+- 
+[2026-01-13T18:24:41.056Z] [INFO] [native-loader] Trying createRequire for node-window-manager
+[2026-01-13T18:24:41.061Z] [INFO] [native-loader] ✓ Loaded node-window-manager via createRequire
+[2026-01-13T18:24:41.061Z] [INFO] [2026-01-13T18:24:41.061Z] [INFO] [GGClubAdapter] ✓ node-window-manager chargé (Windows)
+[2026-01-13T18:24:41.086Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:41.086Z] [INFO] [Electron] Chargement de l'interface...
+[2026-01-13T18:24:41.111Z] [INFO] [2026-01-13T18:24:41.111Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2026-01-13T18:24:41.112Z] [INFO] [2026-01-13T18:24:41.112Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"3c87e205-456e-46c0-8f68-2838d8a7463b","startedAt":"2026-01-13T18:23:49.806Z"}
+[2026-01-13T18:24:41.120Z] [INFO] 7:24:41 PM [express] ℹ️ Session existante trouvée: 3c87e205-456e-46c0-8f68-2838d8a7463b (âge: 1min)
+[2026-01-13T18:24:41.123Z] [INFO] [2026-01-13T18:24:41.123Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":10,"tables":["users","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","action_logs","bot_stats","player_profile_state"]}
+[2026-01-13T18:24:41.124Z] [INFO] 7:24:41 PM [express] Player profile initialized from database
+[2026-01-13T18:24:41.124Z] [INFO] [EventBus] Mode dégradé activé (sans Redis)
+[2026-01-13T18:24:41.124Z] [INFO] [EventBus] Initialisé en mode local
+[2026-01-13T18:24:41.124Z] [INFO] [EventHandlers] All event handlers registered
+[2026-01-13T18:24:41.124Z] [INFO] [EventBus] Mode local - pas de consumer Redis
+[2026-01-13T18:24:41.125Z] [INFO] 7:24:41 PM [express] Event bus initialized and consuming events
+[2026-01-13T18:24:41.125Z] [INFO] [GtoCache] Warming up cache with 144 common situations...
+[2026-01-13T18:24:41.126Z] [INFO] [STARTUP] Mode production, chargement des fichiers statiques...
+[2026-01-13T18:24:41.127Z] [INFO] [static.ts] Mode standard, distPath: C:\Users\adria\AppData\Local\Programs\GTO Poker Bot\resources\app.asar\dist\public
+[2026-01-13T18:24:41.130Z] [INFO] [GtoCache] Warmup complete. Cache size: 72
+[2026-01-13T18:24:41.131Z] [FATAL] FATAL UNCAUGHT EXCEPTION:
+Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2026-01-13T18:24:42.599Z] [INFO] [Electron] Vérification serveur (tentative 2/30)...
+[2026-01-13T18:24:42.601Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:44.130Z] [INFO] [Electron] Vérification serveur (tentative 3/30)...
+[2026-01-13T18:24:44.132Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:45.646Z] [INFO] [Electron] Vérification serveur (tentative 4/30)...
+[2026-01-13T18:24:45.648Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:47.166Z] [INFO] [Electron] Vérification serveur (tentative 5/30)...
+[2026-01-13T18:24:47.168Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:48.686Z] [INFO] [Electron] Vérification serveur (tentative 6/30)...
+[2026-01-13T18:24:48.688Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:50.208Z] [INFO] [Electron] Vérification serveur (tentative 7/30)...
+[2026-01-13T18:24:50.211Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:51.726Z] [INFO] [Electron] Vérification serveur (tentative 8/30)...
+[2026-01-13T18:24:51.728Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:53.244Z] [INFO] [Electron] Vérification serveur (tentative 9/30)...
+[2026-01-13T18:24:53.247Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:54.759Z] [INFO] [Electron] Vérification serveur (tentative 10/30)...
+[2026-01-13T18:24:54.761Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:56.282Z] [INFO] [Electron] Vérification serveur (tentative 11/30)...
+[2026-01-13T18:24:56.286Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:57.804Z] [INFO] [Electron] Vérification serveur (tentative 12/30)...
+[2026-01-13T18:24:57.807Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:24:59.322Z] [INFO] [Electron] Vérification serveur (tentative 13/30)...
+[2026-01-13T18:24:59.324Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:00.853Z] [INFO] [Electron] Vérification serveur (tentative 14/30)...
+[2026-01-13T18:25:00.855Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:02.369Z] [INFO] [Electron] Vérification serveur (tentative 15/30)...
+[2026-01-13T18:25:02.371Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:03.896Z] [INFO] [Electron] Vérification serveur (tentative 16/30)...
+[2026-01-13T18:25:03.900Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:05.414Z] [INFO] [Electron] Vérification serveur (tentative 17/30)...
+[2026-01-13T18:25:05.417Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:06.931Z] [INFO] [Electron] Vérification serveur (tentative 18/30)...
+[2026-01-13T18:25:06.934Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:08.441Z] [INFO] [Electron] Vérification serveur (tentative 19/30)...
+[2026-01-13T18:25:08.444Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:09.948Z] [INFO] [Electron] Vérification serveur (tentative 20/30)...
+[2026-01-13T18:25:09.950Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:11.474Z] [INFO] [Electron] Vérification serveur (tentative 21/30)...
+[2026-01-13T18:25:11.476Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:12.991Z] [INFO] [Electron] Vérification serveur (tentative 22/30)...
+[2026-01-13T18:25:12.993Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:14.521Z] [INFO] [Electron] Vérification serveur (tentative 23/30)...
+[2026-01-13T18:25:14.523Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:16.050Z] [INFO] [Electron] Vérification serveur (tentative 24/30)...
+[2026-01-13T18:25:16.052Z] [INFO] [Electron] ✅ Serveur répond avec status 200
+[2026-01-13T18:25:17.569Z] [INFO] [Electron] Vérification serveur (tentative 25/30)...
+[2026-01-13T18:25:17.573Z] [INFO] [Electron] ✅ Serveur répond avec status 200
