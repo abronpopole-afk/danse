@@ -568,7 +568,7 @@ export class GGClubAdapter extends PlatformAdapter {
       await loadNativeModules();
     }
 
-    const ggclubWindows = await this.scanForGGClubWindows();
+        const ggclubWindows = await this.scanForGGClubWindows();
     
     const results: TableWindow[] = ggclubWindows.map(win => ({
       windowId: `ggclub_${win.handle}`,
@@ -626,7 +626,8 @@ export class GGClubAdapter extends PlatformAdapter {
           
           logger.debug("GGClubAdapter", `Analyse fenêtre: "${title}"`);
 
-          // Pattern plus large pour GGClub / GGPoker
+          // Pattern très large pour GGClub / GGPoker ou toute table de poker
+          // L'utilisateur veut pouvoir détecter n'importe quelle table même avec un titre personnalisé.
           const isPokerTable = 
             title.includes("Table") || 
             title.includes("Club") || 
@@ -634,9 +635,8 @@ export class GGClubAdapter extends PlatformAdapter {
             title.includes("Poker") ||
             title.includes("$") ||
             title.includes("NL") ||
-            title.includes("PL");
-
-          if (!isPokerTable) continue;
+            title.includes("PL") ||
+            title.includes("ton nez"); // Exemple spécifique demandé par l'utilisateur
 
           // Exclure les fenêtres de l'application elle-même et fenêtres système
           const titleLower = title.toLowerCase();
@@ -721,10 +721,10 @@ export class GGClubAdapter extends PlatformAdapter {
           
           // Décision finale: si processus ClubGG = ACCEPTER (c'est une vraie table)
           // Sinon = refuser (sauf si titre contient des patterns poker explicites)
-          const isGGPokerWindow = isGGPokerProcess && !isSystemWindow;
+          const isGGPokerWindow = (isGGPokerProcess || isPokerTable) && !isSystemWindow;
           
           // Log si fenêtre ClubGG détectée
-          if (isGGPokerProcess) {
+          if (isGGPokerProcess || isPokerTable) {
             logger.info("GGClubAdapter", "🎯 Table détectée (processus ClubGG)", {
               title,
               processPath: processPath || "(non disponible)"
