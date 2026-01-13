@@ -1,0 +1,283 @@
+Run npx electron-builder --win --x64
+  • electron-builder  version=26.4.0 os=10.0.26100
+  • artifacts will be published  reason=tag is defined tag=v1.0.2
+  • loaded configuration  file=D:\a\danse\danse\electron-builder.yml
+  • executing @electron/rebuild  electronVersion=39.2.7 arch=x64 buildFromSource=false workspaceRoot=D:\a\danse\danse projectDir=./ appDir=./
+  • installing native dependencies  arch=x64
+  • preparing       moduleName=bufferutil arch=x64
+  • finished        moduleName=bufferutil arch=x64
+  • preparing       moduleName=extract-file-icon arch=x64
+  • finished        moduleName=extract-file-icon arch=x64
+  • preparing       moduleName=node-window-manager arch=x64
+  • finished        moduleName=node-window-manager arch=x64
+  • preparing       moduleName=robotjs arch=x64
+  • finished        moduleName=robotjs arch=x64
+  • completed installing native dependencies
+  • packaging       platform=win32 arch=x64 electron=39.2.7 appOutDir=dist-electron\win-unpacked
+  • downloading     url=https://github.com/electron/electron/releases/download/v39.2.7/electron-v39.2.7-win32-x64.zip size=137 MB parts=8
+  • downloaded      url=https://github.com/electron/electron/releases/download/v39.2.7/electron-v39.2.7-win32-x64.zip duration=405ms
+  • file source doesn't exist  from=D:\a\danse\danse\native\build\Release
+  • updating asar integrity executable resource  executablePath=dist-electron\win-unpacked\GTO Poker Bot.exe
+  • file source doesn't exist  from=D:\a\danse\danse\native\build\Release
+After pack hook running...
+Windows build detected, copying native modules...
+Copying robotjs...
+✓ robotjs copied successfully
+  Native binaries: robotjs.node
+Copying node-window-manager...
+✓ node-window-manager copied successfully
+  Native binaries: addon.node
+Copying screenshot-desktop...
+✓ screenshot-desktop copied successfully
+Copying extract-file-icon...
+✓ extract-file-icon copied successfully
+  Native binaries: addon.node
+⚠ ref-napi not found in node_modules (optional)
+⚠ ffi-napi not found in node_modules (optional)
+⚠ DXGI module not found (optional)
+After pack hook completed
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=185ms
+  • signing with signtool.exe  path=dist-electron\win-unpacked\GTO Poker Bot.exe
+  • building        target=nsis file=dist-electron\GTO Poker Bot Setup 1.0.0.exe archs=x64 oneClick=false perMachine=false
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z size=1.3 MB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z duration=281ms
+  • signing with signtool.exe  path=dist-electron\win-unpacked\resources\elevate.exe
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z size=731 kB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z duration=328ms
+  • signing with signtool.exe  path=dist-electron\GTO Poker Bot Setup 1.0.0.__uninstaller.exe
+  • signing with signtool.exe  path=dist-electron\GTO Poker Bot Setup 1.0.0.exe
+  • building block map  blockMapFile=dist-electron\GTO Poker Bot Setup 1.0.0.exe.blockmap
+  • publishing      publisher=Github (owner: bobibobini1-cell, project: gto-poker-bot, version: 1.0.0)
+  • building        target=portable file=dist-electron\GTO Poker Bot-1.0.0-portable.exe archs=x64
+  • uploading       file=GTO-Poker-Bot-Setup-1.0.0.exe.blockmap provider=github
+  • uploading       file=GTO-Poker-Bot-Setup-1.0.0.exe provider=github
+  • signing with signtool.exe  path=dist-electron\GTO Poker Bot-1.0.0-portable.exe
+  • uploading       file=GTO-Poker-Bot-1.0.0-portable.exe provider=github
+  ⨯ Cannot cleanup: 
+
+Error #1 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+
+Error #2 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+
+Error #3 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)  failedTask=build stackTrace=Error: Cannot cleanup: 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Error #1 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Error #2 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Error #3 --------------------------------------------------------------------------------
+HttpError: 404 Not Found
+"method: GET url: https://api.github.com/repos/bobibobini1-cell/gto-poker-bot/releases\n\nPlease double check that your authentication token is correct. Due to security reasons, actual status maybe not reported, but 404.\n"
+Headers: {
+  "date": "Tue, 13 Jan 2026 17:57:07 GMT",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "89",
+  "x-github-media-type": "github.v3; format=json",
+  "x-github-api-version-selected": "2022-11-28",
+  "x-ratelimit-limit": "5000",
+  "x-ratelimit-remaining": "4985",
+  "x-ratelimit-reset": "1768329898",
+  "x-ratelimit-used": "15",
+  "x-ratelimit-resource": "core",
+  "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset",
+  "access-control-allow-origin": "*",
+  "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+  "x-frame-options": "deny",
+  "x-content-type-options": "nosniff",
+  "x-xss-protection": "0",
+  "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+  "content-security-policy": "default-src 'none'",
+  "vary": "Accept-Encoding, Accept, X-Requested-With",
+  "server": "github.com",
+  "x-github-request-id": "3C00:1F67CA:1CB9D54:1D4AB6A:69668773"
+}
+    at createHttpError (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:31:10)
+    at NodeHttpExecutor.handleResponse (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:163:9)
+    at ClientRequest.<anonymous> (D:\a\danse\danse\node_modules\builder-util-runtime\src\httpExecutor.ts:118:16)
+    at Object.onceWrapper (node:events:639:26)
+    at ClientRequest.emit (node:events:524:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at throwError (D:\a\danse\danse\node_modules\builder-util\src\asyncTaskManager.ts:88:11)
+    at checkErrors (D:\a\danse\danse\node_modules\builder-util\src\asyncTaskManager.ts:53:9)
+    at AsyncTaskManager.awaitTasks (D:\a\danse\danse\node_modules\builder-util\src\asyncTaskManager.ts:58:5)
+    at PublishManager.awaitTasks (D:\a\danse\danse\node_modules\app-builder-lib\src\publish\PublishManager.ts:246:28)
+    at D:\a\danse\danse\node_modules\app-builder-lib\src\index.ts:132:32
+    at executeFinally (D:\a\danse\danse\node_modules\builder-util\src\promise.ts:23:9)
+Error: Process completed with exit code 1.
