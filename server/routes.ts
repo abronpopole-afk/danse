@@ -258,8 +258,17 @@ export async function registerRoutes(
 
       const existingSession = await storage.getActiveBotSession();
       if (existingSession) {
-        logger.warning("SessionManager", "Session déjà active", { sessionId: existingSession.id });
-        return res.status(400).json({ error: "Une session est déjà active" });
+        logger.warning("SessionManager", "Session déjà active - Tentative de nettoyage automatique", { sessionId: existingSession.id });
+        
+        // Auto-cleanup if session is clearly stale or on re-start attempt
+        await storage.updateBotSession(existingSession.id, {
+          status: "stopped",
+          stoppedAt: new Date(),
+        });
+        
+        const platformManager = getPlatformManager();
+        await platformManager.stop();
+        await tableManager.stopAll();
       }
 
       const session = await storage.createBotSession({
