@@ -563,6 +563,11 @@ export class GGClubAdapter extends PlatformAdapter {
       return [];
     }
 
+    // S'assurer que les modules sont chargés
+    if (!robot || !screenshotDesktop) {
+      await loadNativeModules();
+    }
+
     const ggclubWindows = await this.scanForGGClubWindows();
     
     const results: TableWindow[] = ggclubWindows.map(win => ({
@@ -618,6 +623,20 @@ export class GGClubAdapter extends PlatformAdapter {
           const title = win.getTitle();
 
           if (!title) continue;
+          
+          logger.debug("GGClubAdapter", `Analyse fenêtre: "${title}"`);
+
+          // Pattern plus large pour GGClub / GGPoker
+          const isPokerTable = 
+            title.includes("Table") || 
+            title.includes("Club") || 
+            title.includes("GG") ||
+            title.includes("Poker") ||
+            title.includes("$") ||
+            title.includes("NL") ||
+            title.includes("PL");
+
+          if (!isPokerTable) continue;
 
           // Exclure les fenêtres de l'application elle-même et fenêtres système
           const titleLower = title.toLowerCase();
