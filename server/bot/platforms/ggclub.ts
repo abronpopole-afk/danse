@@ -605,26 +605,39 @@ export class GGClubAdapter extends PlatformAdapter {
 
         logger.info("GGClubAdapter", `🔍 Scan de ${windows.length} fenêtres Windows...`);
 
-        // Log TOUTES les fenêtres pour debug
-        const allTitles: string[] = [];
+        // Log TOUTES les fenêtres pour debug avec plus de détails
+        const allTitles: any[] = [];
         for (const win of windows) {
           const title = win.getTitle();
+          const bounds = win.getBounds();
+          let processPath = "";
+          try {
+            if (typeof win.path === 'string') {
+              processPath = win.path.toLowerCase();
+            } else if (typeof win.getProcessPath === 'function') {
+              processPath = (win.getProcessPath() || "").toLowerCase();
+            } else if (win.process && typeof win.process.path === 'string') {
+              processPath = win.process.path.toLowerCase();
+            }
+          } catch (e) {}
+
           if (title) {
-            allTitles.push(title);
+            allTitles.push({ title, bounds, processPath });
           }
         }
 
-        logger.info("GGClubAdapter", "📋 Liste complète des fenêtres ouvertes", { 
+        logger.info("GGClubAdapter", "📋 Liste détaillée des fenêtres ouvertes", { 
           count: allTitles.length,
-          titles: allTitles.slice(0, 20) // Limite à 20 pour éviter spam
+          windows: allTitles.slice(0, 30) // Augmenté pour voir plus de candidats
         });
 
         for (const win of windows) {
           const title = win.getTitle();
+          const bounds = win.getBounds();
 
           if (!title) continue;
           
-          logger.debug("GGClubAdapter", `Analyse fenêtre: "${title}"`);
+          logger.debug("GGClubAdapter", `Analyse fenêtre: "${title}"`, { bounds });
 
           // Pattern très large pour GGClub / GGPoker ou toute table de poker
           // L'utilisateur veut pouvoir détecter n'importe quelle table même avec un titre personnalisé.
@@ -636,7 +649,8 @@ export class GGClubAdapter extends PlatformAdapter {
             title.includes("$") ||
             title.includes("NL") ||
             title.includes("PL") ||
-            title.includes("ton nez"); // Exemple spécifique demandé par l'utilisateur
+            title.toLowerCase().includes("ton nez") ||
+            (bounds.width > 700 && bounds.width < 1200 && bounds.height > 500 && bounds.height < 900); // Détection par taille typique
 
           // Exclure les fenêtres de l'application elle-même et fenêtres système
           const titleLower = title.toLowerCase();

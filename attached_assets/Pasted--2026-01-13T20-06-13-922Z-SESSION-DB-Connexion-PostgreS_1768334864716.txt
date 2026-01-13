@@ -1,0 +1,14 @@
+[2026-01-13T20:06:13.922Z] [SESSION] [[DB]] ✅ Connexion PostgreSQL réussie
+[2026-01-13T20:06:13.925Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:13.938Z] [SESSION] [[DB]] ✅ Tables disponibles: | DATA: {"count":10,"tables":["users","bot_sessions","poker_tables","hand_histories","humanizer_config","gto_config","platform_config","action_logs","bot_stats","player_profile_state"]}
+[2026-01-13T20:06:14.799Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:14.804Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:17.933Z] [SESSION] [SessionManager] 🚀 Démarrage session demandé
+[2026-01-13T20:06:17.935Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:25.420Z] [SESSION] [[Storage]] ✅ Config plateforme mise à jour | DATA: {"id":"49dd6ffa-c4f0-46e9-8305-88c40c5742fa","platform":"ggpoker","username":"Danny3000"}
+[2026-01-13T20:06:28.593Z] [SESSION] [[Storage]] ✅ Config plateforme mise à jour | DATA: {"id":"49dd6ffa-c4f0-46e9-8305-88c40c5742fa","platform":"ggpoker","username":"Danny3000"}
+[2026-01-13T20:06:29.836Z] [SESSION] [[Storage]] ✅ Config plateforme mise à jour | DATA: {"id":"49dd6ffa-c4f0-46e9-8305-88c40c5742fa","platform":"ggpoker","username":"Danny3000"}
+[2026-01-13T20:06:30.983Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:30.984Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
+[2026-01-13T20:06:35.273Z] [SESSION] [SessionManager] 🚀 Démarrage session demandé
+[2026-01-13T20:06:35.275Z] [SESSION] [[Storage]] ✅ Session active trouvée | DATA: {"sessionId":"63900760-bb1e-4e0d-99b6-ec61f022338c","startedAt":"2026-01-13T19:59:04.606Z"}
