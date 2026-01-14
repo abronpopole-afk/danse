@@ -586,11 +586,13 @@ export class GGClubAdapter extends PlatformAdapter {
       this.emitPlatformEvent("table_detected", { window: table });
     }
 
+    /*
     if (results.length > 0) {
       logger.session("GGClubAdapter", `🎰 ${results.length} table(s) détectée(s)`, {
         tables: results.map(t => ({ title: t.title, handle: t.handle }))
       });
     }
+    */
 
     return results;
   }
@@ -634,10 +636,12 @@ export class GGClubAdapter extends PlatformAdapter {
           }
         }
 
+        /* 
         logger.info("GGClubAdapter", "📋 Liste détaillée des fenêtres ouvertes", { 
           count: allTitles.length,
           windows: allTitles.slice(0, 30)
         });
+        */
 
         for (const win of windows) {
           const title = win.getTitle() || "";
@@ -721,6 +725,12 @@ export class GGClubAdapter extends PlatformAdapter {
               isMinimized: false
             });
           }
+        }
+
+        if (results.length > 0) {
+          logger.session("GGClubAdapter", `🎰 ${results.length} table(s) poker détectée(s)`, {
+            tables: results.map(t => ({ title: t.title, handle: t.handle }))
+          });
         }
 
         return results;
