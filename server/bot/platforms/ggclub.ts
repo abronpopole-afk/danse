@@ -643,8 +643,8 @@ export class GGClubAdapter extends PlatformAdapter {
 
           // 1. Détection par titre (GGClub, Poker, ou titre utilisateur spécifique)
           const lowerTitle = title.toLowerCase();
-          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "telegram"];
-          if (pokerKeywords.some(key => lowerTitle.includes(key))) {
+          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "cachuette sur zezett"];
+          if (pokerKeywords.some(key => lowerTitle.includes(key)) && !lowerTitle.includes("telegram")) {
             isMatch = true;
             matchReason = "title_keyword";
           }
@@ -653,7 +653,7 @@ export class GGClubAdapter extends PlatformAdapter {
           if (!isMatch && bounds.width >= 350 && bounds.width <= 1400 && bounds.height >= 400 && bounds.height <= 1000) {
             const ratio = bounds.width / bounds.height;
             if (ratio > 0.8 && ratio < 1.8) {
-              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer"];
+              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode"];
               if (!exclusions.some(ex => lowerTitle.includes(ex))) {
                 isMatch = true;
                 matchReason = "size_and_ratio";

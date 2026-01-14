@@ -490,5 +490,5 @@ export const storage = new DatabaseStorage(db, {
   platformConfig,
   actionLogs,
   botStats,
-  playerProfileState // Assuming playerProfileState is defined in @shared/schema
+  playerProfileState
 });

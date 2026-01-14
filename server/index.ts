@@ -62,15 +62,14 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    const activeSessions = await storage.getBotSessions();
+    const sessions = await storage.getAllBotSessions();
+    const activeSessions = sessions.filter(s => s.status === 'running');
     for (const session of activeSessions) {
-      if (session.status === "running") {
-        await storage.updateBotSession(session.id, {
-          status: "stopped",
-          stoppedAt: new Date(),
-        });
-        log(`🧹 Session active résiduelle nettoyée au démarrage: ${session.id}`);
-      }
+      await storage.updateBotSession(session.id, {
+        status: "stopped",
+        stoppedAt: new Date(),
+      });
+      log(`🧹 Session active résiduelle nettoyée au démarrage: ${session.id}`);
     }
   } catch (error) {
     log(`Warning: Could not cleanup active sessions: ${error}`);
