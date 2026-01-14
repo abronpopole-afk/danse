@@ -643,20 +643,17 @@ export class GGClubAdapter extends PlatformAdapter {
 
           // 1. Détection par titre (GGClub, Poker, ou titre utilisateur spécifique)
           const lowerTitle = title.toLowerCase();
-          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha"];
+          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "telegram"];
           if (pokerKeywords.some(key => lowerTitle.includes(key))) {
             isMatch = true;
             matchReason = "title_keyword";
           }
 
-          // 2. Détection par taille de fenêtre (Tables GGClub typiques: 800x600, 1000x750, etc.)
-          // On élargit la plage pour capturer toutes les variantes
+          // 2. Détection par taille de fenêtre (Tables GGClub typiques)
           if (!isMatch && bounds.width >= 350 && bounds.width <= 1400 && bounds.height >= 400 && bounds.height <= 1000) {
-            // Ratio typique d'une table de poker (souvent proche de 4:3 ou 16:10)
             const ratio = bounds.width / bounds.height;
             if (ratio > 0.8 && ratio < 1.8) {
-              // Exclure les applications système connues
-              const exclusions = ["task manager", "settings", "calculator", "telegram", "browser", "chrome", "edge"];
+              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer"];
               if (!exclusions.some(ex => lowerTitle.includes(ex))) {
                 isMatch = true;
                 matchReason = "size_and_ratio";
@@ -678,198 +675,27 @@ export class GGClubAdapter extends PlatformAdapter {
               width: bounds.width,
               height: bounds.height,
               isActive: activeWindow && activeWindow.handle === win.handle,
-              isMinimized: false // On assume non-minimisé si on détecte par taille active
+              isMinimized: false
             });
           }
         }
-          // Pattern très large pour GGClub / GGPoker ou toute table de poker
-          // L'utilisateur veut pouvoir détecter n'importe quelle table même avec un titre personnalisé.
-          const isPokerTable = 
-            title.includes("Table") || 
-            title.includes("Club") || 
-            title.includes("GG") ||
-            title.includes("Poker") ||
-            title.includes("$") ||
-            title.includes("NL") ||
-            title.includes("PL") ||
-            title.toLowerCase().includes("ton nez") ||
-            (bounds.width > 700 && bounds.width < 1200 && bounds.height > 500 && bounds.height < 900); // Détection par taille typique
 
-          // Exclure les fenêtres de l'application elle-même et fenêtres système
-          const titleLower = title.toLowerCase();
-          
-          // Liste des patterns à exclure (applications système et notre propre app)
-          const excludePatterns = [
-            "gto poker bot",
-            "explorateur",
-            "explorer",
-            "file explorer",
-            "chrome",
-            "edge",
-            "firefox",
-            "visual studio",
-            "vscode",
-            "cmd.exe",
-            "powershell",
-            "terminal",
-            "notepad",
-            "task manager",
-            "gestionnaire",
-            "settings",
-            "paramètres",
-            "control panel",
-            "panneau",
-          ];
-          
-          const isExcludedWindow = excludePatterns.some(pattern => titleLower.includes(pattern));
-
-          if (isExcludedWindow) {
-            logger.debug("GGClubAdapter", "⏭️ Fenêtre système/app ignorée", { title });
-            continue;
-          }
-          
-          // Essayer de vérifier le nom du processus (si disponible)
-          let processPath = "";
-          try {
-            if (typeof win.path === 'string') {
-              processPath = win.path.toLowerCase();
-            } else if (typeof win.getProcessPath === 'function') {
-              processPath = (win.getProcessPath() || "").toLowerCase();
-            } else if (win.process && typeof win.process.path === 'string') {
-              processPath = win.process.path.toLowerCase();
-            }
-          } catch (e) {
-            // Ignorer - le processPath est optionnel
-          }
-          
-          // Vérification par processus (plus fiable que le titre)
-          // ClubGG utilise "ClubGG.exe" comme exécutable
-          // ATTENTION: Exclure le processus du bot lui-même
-          const isGGPokerProcess = 
-            (processPath.includes("ggpoker") ||
-            processPath.includes("ggclub") ||
-            processPath.includes("clubgg")) &&  // ClubGG.exe - patterns STRICTS
-            !processPath.includes("rest-express") &&  // Exclure le bot
-            !processPath.includes("gto-poker") &&     // Exclure le bot
-            !processPath.includes("electron");        // Exclure Electron lui-même
-          
-          // Log seulement si match
-          if (isGGPokerProcess || titleLower.includes("clubgg")) {
-            logger.debug("GGClubAdapter", "🔎 Candidat GGClub", {
-              title,
-              processPath: processPath || "(non disponible)"
-            });
-          }
-
-          // Critères de détection pour GGClub/GGPoker
-          // PRIORITÉ PROCESSUS: Si c'est ClubGG.exe = c'est une table poker (peu importe le titre)
-          // Titre uniquement comme critère SECONDAIRE/fallback
-          
-          // Si le processus est ClubGG = ON ACCEPTE (peu importe le titre, même "pipi")
-          // Sinon = on accepte UNIQUEMENT si c'est clairement une fenêtre système à exclure
-          const isSystemWindow = 
-            title.startsWith("\\") ||           // Handles système (\\BaseNamedObjects\\...)
-            titleLower.includes("explorer") || // File explorer
-            titleLower.includes("firefox") ||  // Browser
-            titleLower.includes("chrome") ||   // Browser
-            titleLower.includes("vscode") ||   // Editor
-            titleLower.includes("command") ||  // Terminal
-            titleLower.includes("powershell"); // Terminal
-          
-          // Décision finale: si processus ClubGG = ACCEPTER (c'est une vraie table)
-          // Sinon = refuser (sauf si titre contient des patterns poker explicites)
-          const isGGPokerWindow = (isGGPokerProcess || isPokerTable) && !isSystemWindow;
-          
-          // Log si fenêtre ClubGG détectée
-          if (isGGPokerProcess || isPokerTable) {
-            logger.info("GGClubAdapter", "🎯 Table détectée (processus ClubGG)", {
-              title,
-              processPath: processPath || "(non disponible)"
-            });
-          }
-
-          if (isGGPokerWindow) {
-            const bounds = win.getBounds();
-
-            // Ne pas ajouter les fenêtres minimisées/invisibles
-            if (bounds.width === 0 || bounds.height === 0) {
-              logger.debug("GGClubAdapter", "⏭️ Fenêtre ignorée (minimisée)", { title });
-              continue;
-            }
-            
-            // Validation des dimensions typiques d'une table de poker
-            // Les tables de poker ont généralement des proportions de 4:3 à 16:9
-            // et une taille minimale raisonnable (au moins 300x200 - relaxé pour petites tables)
-            const aspectRatio = bounds.width / bounds.height;
-            const isReasonableSize = bounds.width >= 300 && bounds.height >= 200;
-            const isReasonableAspect = aspectRatio >= 0.8 && aspectRatio <= 3.0;
-            
-            // Si le processus correspond, on accepte TOUJOURS (même avec dimensions bizarres)
-            // Car c'est le critère le plus fiable
-            if (isGGPokerProcess) {
-              // Accepter directement si le processus match
-              logger.info("GGClubAdapter", "✅ Fenêtre acceptée via processus", { 
-                title, 
-                processPath,
-                dimensions: `${bounds.width}x${bounds.height}`
-              });
-            } else if (!isReasonableSize || !isReasonableAspect) {
-              // Seulement vérifier dimensions si on n'a PAS de match processus
-              logger.debug("GGClubAdapter", "⏭️ Fenêtre ignorée (dimensions atypiques pour table)", { 
-                title, 
-                width: bounds.width, 
-                height: bounds.height,
-                aspectRatio: aspectRatio.toFixed(2)
-              });
-              continue;
-            }
-
-            results.push({
-              handle: win.id,
-              title,
-              x: bounds.x,
-              y: bounds.y,
-              width: bounds.width,
-              height: bounds.height,
-              isActive: activeWindow && activeWindow.id === win.id,
-              isMinimized: false,
-            });
-
-            logger.info("GGClubAdapter", "✅ Table GGClub détectée", {
-              handle: win.id,
-              title,
-              dimensions: `${bounds.width}x${bounds.height}`,
-              position: `(${bounds.x}, ${bounds.y})`,
-            });
-          }
-        }
+        return results;
       } catch (error) {
         logger.error("GGClubAdapter", "❌ Erreur scan windows", { 
           error: String(error),
           stack: error instanceof Error ? error.stack : undefined
         });
+        return [];
       }
     } else {
       logger.error("GGClubAdapter", "❌ node-window-manager NON disponible", {
         IS_WINDOWS,
         windowManagerLoaded: !!windowManager,
-        platform: process.platform,
-        solution: "Vérifiez que vous êtes sur Windows et que le module est chargé"
+        platform: process.platform
       });
+      return [];
     }
-
-    // Logs finaux
-    if (results.length === 0) {
-      logger.warning("GGClubAdapter", "❌ Aucune table GGClub détectée", {
-        windowManagerAvailable: !!windowManager,
-        platform: process.platform,
-        suggestion: "1. Vérifiez que GGClub est OUVERT\n2. Vérifiez qu'une table est ACTIVE (pas minimisée)\n3. Regardez les logs ci-dessus pour voir toutes les fenêtres détectées",
-      });
-    } else {
-      logger.session("GGClubAdapter", `✅ ${results.length} table(s) détectée(s)`);
-    }
-
-    return results;
   }
 
   async captureScreen(windowHandle: number): Promise<Buffer> {
