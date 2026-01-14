@@ -659,7 +659,7 @@ export class GGClubAdapter extends PlatformAdapter {
           } catch (e) {}
 
           // Ignorer les fenêtres vides, trop petites ou sans titre significatif
-          if (!bounds || bounds.width < 200 || bounds.height < 200) continue;
+          if (!bounds || bounds.width < 400 || bounds.height < 300) continue;
           if (!title || title.trim() === "" || title.toLowerCase() === "table sans titre") continue;
 
           let isMatch = false;
@@ -671,7 +671,7 @@ export class GGClubAdapter extends PlatformAdapter {
           // 1. Détection par nom de processus (Priorité haute)
           if (GGCLUB_PROCESS_NAMES.some(p => lowerProcess.includes(p))) {
             // Même avec le bon processus, on filtre les fenêtres utilitaires
-            const utilityKeywords = ["login", "update", "crash", "reporter", "config"];
+            const utilityKeywords = ["login", "update", "crash", "reporter", "config", "settings"];
             if (!utilityKeywords.some(key => lowerTitle.includes(key))) {
               isMatch = true;
               matchReason = "process_match";
@@ -691,9 +691,9 @@ export class GGClubAdapter extends PlatformAdapter {
           if (!isMatch && bounds.width >= 400 && bounds.width <= 1600 && bounds.height >= 300 && bounds.height <= 1200) {
             const ratio = bounds.width / bounds.height;
             if (ratio > 0.7 && ratio < 2.0) {
-              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode", "realtek", "nvidia", "discord"];
+              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode", "realtek", "nvidia", "discord", "spotify", "teams", "slack"];
               if (!exclusions.some(ex => lowerTitle.includes(ex))) {
-                // Si on match par taille, on demande quand même un titre un peu poker
+                // Si on match par taille, on demande quand même un titre qui ressemble à une table (nom de table ou chiffres)
                 const looksLikeTable = lowerTitle.includes("table") || /\d+/.test(lowerTitle);
                 if (looksLikeTable) {
                   isMatch = true;
