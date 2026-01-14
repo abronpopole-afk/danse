@@ -516,13 +516,23 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            logger.session("GGClubAdapter", "🎰 Nouvelle table détectée!", {
-              windowId: window.windowId,
-              title: window.title,
-              dimensions: `${window.width}x${window.height}`,
-            });
-            this.activeWindows.set(window.windowId, window);
-            this.emitPlatformEvent("table_detected", { window });
+            // Filtre strict : Seules les tables de poker confirmées sont logguées comme "Nouvelle table"
+            const isPokerTable = window.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/);
+            const isNotUtility = !window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs/);
+
+            if (isPokerTable && isNotUtility) {
+              logger.session("GGClubAdapter", "🎰 Nouvelle table détectée!", {
+                windowId: window.windowId,
+                title: window.title,
+                dimensions: `${window.width}x${window.height}`,
+              });
+              this.activeWindows.set(window.windowId, window);
+              this.emitPlatformEvent("table_detected", { window });
+            } else {
+              // On l'ajoute silencieusement à activeWindows pour ne pas la rescanner, 
+              // mais on ne loggue rien et on n'émet pas d'événement
+              this.activeWindows.set(window.windowId, window);
+            }
           }
         }
       } catch (error) {

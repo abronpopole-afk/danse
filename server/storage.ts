@@ -147,11 +147,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveBotSession(): Promise<BotSession | undefined> {
-    logger.debug('[Storage]', 'Recherche session active...');
+    // logger.debug('[Storage]', 'Recherche session active...');
     const result = await this.db.select().from(this.schema.botSessions)
       .where(eq(this.schema.botSessions.status, "running"))
       .orderBy(desc(this.schema.botSessions.startedAt))
       .limit(1);
+    /*
     if (result[0]) {
       logger.session('[Storage]', '✅ Session active trouvée', { 
         sessionId: result[0].id,
@@ -160,6 +161,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       logger.info('[Storage]', 'ℹ️ Aucune session active');
     }
+    */
     return result[0];
   }
 
@@ -333,7 +335,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlatformConfig(): Promise<PlatformConfig | undefined> {
-    logger.debug('[Storage]', 'Récupération configuration plateforme...');
+    // logger.debug('[Storage]', 'Récupération configuration plateforme...');
     const result = await this.db.select().from(this.schema.platformConfig).limit(1);
     if (result[0]) {
       // Auto-fix: mapper les noms de plateforme incorrects vers le nom canonique
@@ -346,7 +348,7 @@ export class DatabaseStorage implements IStorage {
       const currentName = result[0].platformName?.toLowerCase();
       if (currentName && platformNameMap[currentName]) {
         const correctName = platformNameMap[currentName];
-        logger.warning('[Storage]', `⚠️ Auto-fix: platformName ${result[0].platformName} -> ${correctName}`);
+        // logger.warning('[Storage]', `⚠️ Auto-fix: platformName ${result[0].platformName} -> ${correctName}`);
         
         // Corriger dans la base de données
         await this.db.update(this.schema.platformConfig)
@@ -354,16 +356,18 @@ export class DatabaseStorage implements IStorage {
           .where(eq(this.schema.platformConfig.id, result[0].id));
         
         result[0].platformName = correctName;
-        logger.session('[Storage]', `✅ PlatformName corrigé en base: ${correctName}`);
+        // logger.session('[Storage]', `✅ PlatformName corrigé en base: ${correctName}`);
       }
       
+      /*
       logger.info('[Storage]', '✅ Config plateforme trouvée', { 
         platform: result[0].platformName,
         enabled: result[0].enabled,
         connectionStatus: result[0].connectionStatus 
       });
+      */
     } else {
-      logger.warning('[Storage]', '⚠️ Aucune config plateforme');
+      // logger.warning('[Storage]', '⚠️ Aucune config plateforme');
     }
     return result[0];
   }
