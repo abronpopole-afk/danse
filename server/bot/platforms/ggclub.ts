@@ -632,13 +632,56 @@ export class GGClubAdapter extends PlatformAdapter {
         });
 
         for (const win of windows) {
-          const title = win.getTitle();
+          const title = win.getTitle() || "";
           const bounds = win.getBounds();
 
-          if (!title) continue;
-          
-          logger.debug("GGClubAdapter", `Analyse fenêtre: "${title}"`, { bounds });
+          // Ignorer les fenêtres vides ou trop petites
+          if (!bounds || bounds.width < 100 || bounds.height < 100) continue;
 
+          let isMatch = false;
+          let matchReason = "";
+
+          // 1. Détection par titre (GGClub, Poker, ou titre utilisateur spécifique)
+          const lowerTitle = title.toLowerCase();
+          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha"];
+          if (pokerKeywords.some(key => lowerTitle.includes(key))) {
+            isMatch = true;
+            matchReason = "title_keyword";
+          }
+
+          // 2. Détection par taille de fenêtre (Tables GGClub typiques: 800x600, 1000x750, etc.)
+          // On élargit la plage pour capturer toutes les variantes
+          if (!isMatch && bounds.width >= 350 && bounds.width <= 1400 && bounds.height >= 400 && bounds.height <= 1000) {
+            // Ratio typique d'une table de poker (souvent proche de 4:3 ou 16:10)
+            const ratio = bounds.width / bounds.height;
+            if (ratio > 0.8 && ratio < 1.8) {
+              // Exclure les applications système connues
+              const exclusions = ["task manager", "settings", "calculator", "telegram", "browser", "chrome", "edge"];
+              if (!exclusions.some(ex => lowerTitle.includes(ex))) {
+                isMatch = true;
+                matchReason = "size_and_ratio";
+              }
+            }
+          }
+
+          if (isMatch) {
+            logger.info("GGClubAdapter", `🎯 Fenêtre MATCH: "${title}"`, { 
+              handle: win.handle, 
+              reason: matchReason,
+              bounds 
+            });
+            results.push({
+              handle: win.handle,
+              title: title || "Table sans titre",
+              x: bounds.x,
+              y: bounds.y,
+              width: bounds.width,
+              height: bounds.height,
+              isActive: activeWindow && activeWindow.handle === win.handle,
+              isMinimized: false // On assume non-minimisé si on détecte par taille active
+            });
+          }
+        }
           // Pattern très large pour GGClub / GGPoker ou toute table de poker
           // L'utilisateur veut pouvoir détecter n'importe quelle table même avec un titre personnalisé.
           const isPokerTable = 
