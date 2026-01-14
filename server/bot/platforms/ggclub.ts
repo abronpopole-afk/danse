@@ -337,17 +337,21 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async connect(config: ConnectionConfig): Promise<boolean> {
+    /*
     logger.session("GGClubAdapter", "=== CONNEXION À GGCLUB ===", {
       platform: this.platformName,
       hasCredentials: !!config.credentials,
       autoReconnect: config.autoReconnect,
       maxReconnectAttempts: config.maxReconnectAttempts,
     });
+    */
     
     this.updateConnectionStatus("connecting");
 
     try {
+      /*
       logger.info("GGClubAdapter", "Étape 1: Authentification...");
+      */
       const isAuthenticated = await this.authenticate(config.credentials);
       
       if (!isAuthenticated) {
@@ -355,21 +359,27 @@ export class GGClubAdapter extends PlatformAdapter {
         this.updateConnectionStatus("error");
         return false;
       }
+      /*
       logger.info("GGClubAdapter", "✓ Authentification réussie");
 
       logger.info("GGClubAdapter", "Étape 2: Démarrage polling fenêtres...");
+      */
       this.startWindowPolling();
       
+      /*
       logger.info("GGClubAdapter", "Étape 3: Démarrage heartbeat...");
+      */
       this.startHeartbeat();
       
+      /*
       logger.info("GGClubAdapter", "Étape 4: Démarrage anti-détection...");
+      */
       this.antiDetectionMonitor.start();
 
       this.updateConnectionStatus("connected");
       this.reconnectAttempts = 0;
 
-      logger.session("GGClubAdapter", "✅ CONNEXION RÉUSSIE", {
+      logger.session("GGClubAdapter", "✅ BOT CONNECTÉ ET PRÊT", {
         status: "connected",
         platform: this.platformName,
       });
@@ -485,7 +495,7 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private startWindowPolling(): void {
-    logger.info("GGClubAdapter", "🔄 Démarrage du polling fenêtres (interval: 2s)");
+    // logger.info("GGClubAdapter", "🔄 Démarrage du polling fenêtres (interval: 2s)");
     
     this.windowPollingInterval = setInterval(async () => {
       try {
@@ -552,7 +562,7 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectTableWindows(): Promise<TableWindow[]> {
-    logger.debug("GGClubAdapter", "Détection des fenêtres GGClub...");
+    // logger.debug("GGClubAdapter", "Détection des fenêtres GGClub...");
 
     if (!IS_WINDOWS || !windowManager) {
       logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
@@ -605,7 +615,7 @@ export class GGClubAdapter extends PlatformAdapter {
         const windows = windowManager.getWindows();
         const activeWindow = windowManager.getActiveWindow();
 
-        logger.info("GGClubAdapter", `🔍 Scan de ${windows.length} fenêtres Windows...`);
+        // logger.info("GGClubAdapter", `🔍 Scan de ${windows.length} fenêtres Windows...`);
 
         // Log TOUTES les fenêtres pour debug avec plus de détails
         const allTitles: any[] = [];
@@ -728,9 +738,13 @@ export class GGClubAdapter extends PlatformAdapter {
         }
 
         if (results.length > 0) {
-          logger.session("GGClubAdapter", `🎰 ${results.length} table(s) poker détectée(s)`, {
-            tables: results.map(t => ({ title: t.title, handle: t.handle }))
-          });
+          // Log uniquement les VRAIES tables de poker matchées
+          const pokerTables = results.filter(r => r.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/));
+          if (pokerTables.length > 0) {
+            logger.session("GGClubAdapter", `🎰 ${pokerTables.length} table(s) de poker active(s)`, {
+              tables: pokerTables.map(t => ({ title: t.title, handle: t.handle }))
+            });
+          }
         }
 
         return results;
