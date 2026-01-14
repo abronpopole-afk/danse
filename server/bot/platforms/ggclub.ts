@@ -516,21 +516,24 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            // Filtre strict : Seules les tables de poker confirmées sont logguées comme "Nouvelle table"
-            const isPokerTable = window.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/);
-            const isNotUtility = !window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs/);
+            // Filtre : Processus clubgg.exe OU titre contenant des mots-clés poker
+            const isClubGGProcess = window.processName.toLowerCase().includes("clubgg");
+            const isPokerTitle = window.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/);
+            
+            // Exclusion des fenêtres utilitaires connues
+            const isUtility = window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs|settings|config/);
 
-            if (isPokerTable && isNotUtility) {
+            if ((isClubGGProcess || isPokerTitle) && !isUtility) {
               logger.session("GGClubAdapter", "🎰 Nouvelle table détectée!", {
                 windowId: window.windowId,
                 title: window.title,
+                process: window.processName,
                 dimensions: `${window.width}x${window.height}`,
               });
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
             } else {
-              // On l'ajoute silencieusement à activeWindows pour ne pas la rescanner, 
-              // mais on ne loggue rien et on n'émet pas d'événement
+              // Silencieux pour le reste
               this.activeWindows.set(window.windowId, window);
             }
           }
