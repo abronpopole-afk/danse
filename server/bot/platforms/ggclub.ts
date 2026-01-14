@@ -607,10 +607,14 @@ export class GGClubAdapter extends PlatformAdapter {
 
         // Log TOUTES les fenêtres pour debug avec plus de détails
         const allTitles: any[] = [];
+        const GGCLUB_PROCESS_NAMES = ["clubgg", "ggpoker", "game"]; // Common process names for ClubGG
+
         for (const win of windows) {
           const title = win.getTitle();
           const bounds = win.getBounds();
           let processPath = "";
+          let processName = "";
+          
           try {
             if (typeof win.path === 'string') {
               processPath = win.path.toLowerCase();
@@ -619,44 +623,82 @@ export class GGClubAdapter extends PlatformAdapter {
             } else if (win.process && typeof win.process.path === 'string') {
               processPath = win.process.path.toLowerCase();
             }
+            
+            if (processPath) {
+              processName = processPath.split(/[\\/]/).pop() || "";
+            }
           } catch (e) {}
 
-          if (title) {
-            allTitles.push({ title, bounds, processPath });
+          if (title || processName) {
+            allTitles.push({ title, bounds, processPath, processName });
           }
         }
 
         logger.info("GGClubAdapter", "📋 Liste détaillée des fenêtres ouvertes", { 
           count: allTitles.length,
-          windows: allTitles.slice(0, 30) // Augmenté pour voir plus de candidats
+          windows: allTitles.slice(0, 30)
         });
 
         for (const win of windows) {
           const title = win.getTitle() || "";
           const bounds = win.getBounds();
+          
+          let processPath = "";
+          let processName = "";
+          try {
+            if (typeof win.path === 'string') {
+              processPath = win.path.toLowerCase();
+            } else if (typeof win.getProcessPath === 'function') {
+              processPath = (win.getProcessPath() || "").toLowerCase();
+            } else if (win.process && typeof win.process.path === 'string') {
+              processPath = win.process.path.toLowerCase();
+            }
+            if (processPath) {
+              processName = (processPath.split(/[\\/]/).pop() || "").toLowerCase();
+            }
+          } catch (e) {}
 
-          // Ignorer les fenêtres vides ou trop petites
-          if (!bounds || bounds.width < 100 || bounds.height < 100) continue;
+          // Ignorer les fenêtres vides, trop petites ou sans titre significatif
+          if (!bounds || bounds.width < 200 || bounds.height < 200) continue;
+          if (!title || title.trim() === "" || title.toLowerCase() === "table sans titre") continue;
 
           let isMatch = false;
           let matchReason = "";
 
-          // 1. Détection par titre (GGClub, Poker, ou titre utilisateur spécifique)
           const lowerTitle = title.toLowerCase();
-          const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "cachuette sur zezett"];
-          if (pokerKeywords.some(key => lowerTitle.includes(key)) && !lowerTitle.includes("telegram")) {
-            isMatch = true;
-            matchReason = "title_keyword";
+          const lowerProcess = processName.toLowerCase();
+
+          // 1. Détection par nom de processus (Priorité haute)
+          if (GGCLUB_PROCESS_NAMES.some(p => lowerProcess.includes(p))) {
+            // Même avec le bon processus, on filtre les fenêtres utilitaires
+            const utilityKeywords = ["login", "update", "crash", "reporter", "config"];
+            if (!utilityKeywords.some(key => lowerTitle.includes(key))) {
+              isMatch = true;
+              matchReason = "process_match";
+            }
           }
 
-          // 2. Détection par taille de fenêtre (Tables GGClub typiques)
-          if (!isMatch && bounds.width >= 350 && bounds.width <= 1400 && bounds.height >= 400 && bounds.height <= 1000) {
+          // 2. Détection par titre (GGClub, Poker, etc.)
+          if (!isMatch) {
+            const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "cachuette sur zezett"];
+            if (pokerKeywords.some(key => lowerTitle.includes(key)) && !lowerTitle.includes("telegram")) {
+              isMatch = true;
+              matchReason = "title_keyword";
+            }
+          }
+
+          // 3. Détection par taille de fenêtre (Tables GGClub typiques) - Filtre strict
+          if (!isMatch && bounds.width >= 400 && bounds.width <= 1600 && bounds.height >= 300 && bounds.height <= 1200) {
             const ratio = bounds.width / bounds.height;
-            if (ratio > 0.8 && ratio < 1.8) {
-              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode"];
+            if (ratio > 0.7 && ratio < 2.0) {
+              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode", "realtek", "nvidia", "discord"];
               if (!exclusions.some(ex => lowerTitle.includes(ex))) {
-                isMatch = true;
-                matchReason = "size_and_ratio";
+                // Si on match par taille, on demande quand même un titre un peu poker
+                const looksLikeTable = lowerTitle.includes("table") || /\d+/.test(lowerTitle);
+                if (looksLikeTable) {
+                  isMatch = true;
+                  matchReason = "size_ratio_heuristic";
+                }
               }
             }
           }
@@ -665,11 +707,12 @@ export class GGClubAdapter extends PlatformAdapter {
             logger.info("GGClubAdapter", `🎯 Fenêtre MATCH: "${title}"`, { 
               handle: win.handle, 
               reason: matchReason,
+              process: processName,
               bounds 
             });
             results.push({
               handle: win.handle,
-              title: title || "Table sans titre",
+              title: title,
               x: bounds.x,
               y: bounds.y,
               width: bounds.width,
