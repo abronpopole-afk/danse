@@ -10,6 +10,7 @@
 - [x] S'assurer que les fenêtres système (Explorer, Chrome, etc.) sont ignorées silencieusement.
 - [x] Valider que seules les fenêtres de taille poker (>= 700x500) sont capturées.
 
-## Phase 3 : Nettoyage et Validation (EN COURS)
+## Phase 3 : Nettoyage et Validation (TERMINÉ)
 - [x] Supprimer les logs excessifs qui polluent la console.
-- [ ] Redémarrer les workflows et vérifier la stabilité globale.
+- [x] Redémarrer les workflows et vérifier la stabilité globale.
+- [x] Validation finale de la cohérence du code.
