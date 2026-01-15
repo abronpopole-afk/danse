@@ -219,9 +219,29 @@ export class CardRankClassifier {
     this.rankVectors = new Map(Object.entries(RANK_FEATURE_VECTORS));
   }
 
+  private async loadWeights(): Promise<void> {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const rankPath = path.join(process.cwd(), 'rank_weights.json');
+      const suitPath = path.join(process.cwd(), 'suit_weights.json');
+      
+      if (fs.existsSync(rankPath)) {
+        const data = fs.readFileSync(rankPath, 'utf-8');
+        const weights = JSON.parse(data);
+        this.rankVectors = new Map(Object.entries(weights));
+        console.log(`[CardRankClassifier] Weights loaded: ${this.rankVectors.size} ranks`);
+      }
+    } catch (error) {
+      console.error("[CardRankClassifier] Error loading weights:", error);
+    }
+  }
+
   async initialize(): Promise<void> {
     const { tf, sharp } = await loadMLDependencies();
     this.mlAvailable = !!(tf && sharp);
+    await this.loadWeights();
     console.log(`[CardRankClassifier] Initialized (ML available: ${this.mlAvailable})`);
   }
 
