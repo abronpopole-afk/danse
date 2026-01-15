@@ -530,28 +530,31 @@ export class GGClubAdapter extends PlatformAdapter {
               continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
             }
 
-            // 2. FILTRE DE TITRE STRICT (Exclusions)
-            const isExcludedTitle = 
-              lowerTitle.includes("explorateur") || 
-              lowerTitle.includes("explorer") || 
-              lowerTitle.includes("bloc-notes") || 
-              lowerTitle.includes("notepad") || 
-              lowerTitle.includes("chrome") ||
-              lowerTitle.includes("edge") ||
-              lowerTitle.includes("replit") ||
-              lowerTitle.includes("bot") ||
-              lowerTitle.includes("wizard") ||
-              lowerTitle.includes("session") ||
-              lowerTitle.includes("log") ||
-              lowerTitle.includes("terminé") ||
-              lowerTitle.includes("gto") ||
-              lowerTitle.includes("poker bot") ||
-              lowerTitle === "poker" || 
-              lowerTitle === "clubgg" ||
-              lowerTitle.includes("explorateur de fichiers") ||
-              lowerTitle.includes("google chrome") ||
-              lowerTitle.includes("pokerwizardbot") ||
-              lowerTitle.includes("form1");
+        // 2. FILTRE DE TITRE STRICT (Exclusions)
+        const isExcludedTitle = 
+          lowerTitle.includes("explorateur") || 
+          lowerTitle.includes("explorer") || 
+          lowerTitle.includes("bloc-notes") || 
+          lowerTitle.includes("notepad") || 
+          lowerTitle.includes("chrome") ||
+          lowerTitle.includes("edge") ||
+          lowerTitle.includes("replit") ||
+          lowerTitle.includes("bot") ||
+          lowerTitle.includes("wizard") ||
+          lowerTitle.includes("session") ||
+          lowerTitle.includes("log") ||
+          lowerTitle.includes("terminé") ||
+          lowerTitle.includes("gto") ||
+          lowerTitle.includes("poker bot") ||
+          lowerTitle === "poker" || 
+          lowerTitle === "clubgg" ||
+          lowerTitle.includes("explorateur de fichiers") ||
+          lowerTitle.includes("google chrome") ||
+          lowerTitle.includes("pokerwizardbot") ||
+          lowerTitle.includes("form1") ||
+          lowerTitle.includes("visual studio") ||
+          lowerTitle.includes("cmd.exe") ||
+          lowerTitle.includes("powershell");
 
             // 3. FILTRE DE TAILLE (Heuristique de table de poker)
             // Une table de poker GGClub ne descend normalement jamais sous ces dimensions en jeu
