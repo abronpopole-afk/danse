@@ -524,6 +524,8 @@ export class GGClubAdapter extends PlatformAdapter {
             const lowerTitle = window.title.toLowerCase();
 
             // Exclusion STRICTE des fenêtres système et utilitaires
+            // On exclut tout ce qui n'est PAS une table de poker.
+            // On vérifie spécifiquement que le processus est clubgg.exe ET que ce n'est pas une fenêtre parasite.
             const isSystemOrUtility = lowerTitle.includes("explorateur") || 
                                     lowerTitle.includes("explorer") || 
                                     lowerTitle.includes("bloc-notes") || 
@@ -533,13 +535,36 @@ export class GGClubAdapter extends PlatformAdapter {
                                     lowerTitle.includes("settings") || 
                                     lowerTitle.includes("config") || 
                                     lowerTitle.includes("gto-poker-bot") ||
+                                    lowerTitle.includes("replit") ||
+                                    lowerTitle.includes("google chrome") ||
+                                    lowerTitle.includes("pokerwizardbot") ||
+                                    lowerTitle.includes("poker bot") ||
+                                    lowerTitle.includes("discord") ||
+                                    lowerTitle.includes("vscode") ||
+                                    lowerTitle.includes("microsoft edge") ||
+                                    lowerTitle.includes("visual studio code") ||
+                                    lowerTitle.includes("gestionnaire") ||
+                                    lowerTitle.includes("cmd") ||
+                                    lowerTitle.includes("powershell") ||
+                                    lowerTitle.includes("chrome") ||
+                                    lowerTitle.includes("edge") ||
+                                    lowerTitle.includes("replit") ||
+                                    lowerTitle.includes("gto-poker-bot-windows") ||
                                     lowerTitle === "poker" || 
                                     lowerTitle === "clubgg" || 
-                                    lowerProcess === "explorer.exe" ||
-                                    lowerProcess === "notepad.exe";
+                                    lowerProcess.includes("explorer.exe") ||
+                                    lowerProcess.includes("notepad.exe") ||
+                                    lowerProcess.includes("chrome.exe") ||
+                                    lowerProcess.includes("msedge.exe") ||
+                                    lowerProcess.includes("code.exe") ||
+                                    lowerProcess.includes("discord.exe") ||
+                                    lowerProcess.includes("taskmgr.exe") ||
+                                    lowerProcess.includes("cmd.exe");
 
-            // CONDITION : Processus Poker + Pas un utilitaire + Taille de table de jeu (> 800x600)
-            if (isPokerProcess && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
+            // CONDITION : Uniquement les fenêtres du processus clubgg.exe qui ne sont PAS des utilitaires et qui font la taille d'une TABLE.
+            // On utilise .includes pour le processName au cas où le chemin complet est fourni.
+            if (lowerProcess.includes("clubgg.exe") && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
+              // LOGS UNIQUEMENT POUR LES VRAIES TABLES DE JEU
               logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
                 title: window.title,
                 size: `${window.width}x${window.height}`,
@@ -549,7 +574,7 @@ export class GGClubAdapter extends PlatformAdapter {
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
             } else {
-              // Enregistrement silencieux pour éviter les boucles, mais AUCUN AFFICHAGE
+              // Silence total pour tout le reste (Lobby, Explorer, IDE, etc.)
               this.activeWindows.set(window.windowId, window);
             }
           }
