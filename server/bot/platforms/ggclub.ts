@@ -257,19 +257,24 @@ export class GGClubAdapter extends PlatformAdapter {
   private async initializeCardClassifier(): Promise<void> {
     if (this.enableML) {
       try {
+        console.log("[GGClubAdapter] Initializing PokerOCREngine instance...");
         this.pokerOCREngine = await getPokerOCREngine({
           useMLPrimary: true,
           confidenceThreshold: 0.75,
           collectTrainingData: true,
         });
+        
         if (this.pokerOCREngine) {
-          console.log("[GGClubAdapter] ML PokerOCREngine initialized successfully");
+          console.log("[GGClubAdapter] PokerOCREngine instance obtained, triggering explicit initialization...");
+          // ensure it's fully initialized
+          await this.pokerOCREngine.initialize();
+          console.log("[GGClubAdapter] ✅ ML PokerOCREngine explicit initialization completed");
         } else {
-          console.log("[GGClubAdapter] ML PokerOCREngine not available, using fallback OCR");
+          console.warn("[GGClubAdapter] ❌ ML PokerOCREngine factory returned null, using fallback OCR");
           this.enableML = false;
         }
       } catch (error) {
-        console.error("[GGClubAdapter] Failed to initialize ML PokerOCREngine:", error);
+        console.error("[GGClubAdapter] ❌ Failed to initialize ML PokerOCREngine:", error);
         this.enableML = false;
         this.pokerOCREngine = null;
       }
