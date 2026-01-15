@@ -19,6 +19,7 @@ Rendre le `CardClassifier` fonctionnel en générant un modèle OCR minimal (poi
 - [x] Modifier `server/bot/card-classifier.ts` pour charger les fichiers JSON au démarrage.
 - [x] Remplacer les vecteurs de caractéristiques codés en dur par les poids issus du modèle entraîné.
 - [x] Implémenter la méthode `predict()` utilisant le réseau de neurones.
+- [x] Ajouter des logs de chargement explicites pour validation sur Windows.
 
 ### 4. Validation et Calibration
 - [x] Créer un script de test `scripts/test-recognition.ts` pour valider la précision sur des captures d'écran réelles.

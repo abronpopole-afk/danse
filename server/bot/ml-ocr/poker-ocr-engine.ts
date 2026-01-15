@@ -72,7 +72,9 @@ export class PokerOCREngine {
     if (this.initialized) return;
 
     try {
+      console.log('[PokerOCREngine] Starting CardClassifier initialization...');
       await this.cardClassifier.initialize();
+      console.log('[PokerOCREngine] CardClassifier initialization completed');
     } catch (e) {
       console.warn('[PokerOCREngine] CardClassifier initialization failed:', e);
     }

@@ -81,26 +81,30 @@ export class CardClassifier {
       const path = await import('path');
       
       const weightsPath = path.join(process.cwd(), 'server/bot/ml-ocr/weights');
+      console.log(`[CardClassifier] Loading weights from: ${weightsPath}`);
       
       try {
         const rankWeights = await fs.readFile(path.join(weightsPath, 'rank-weights.json'), 'utf-8');
         this.rankNetwork.importWeights(rankWeights);
-      } catch {
-        console.log('[CardClassifier] No rank weights found, using random initialization');
+        console.log('[CardClassifier] Rank weights loaded successfully');
+      } catch (err: any) {
+        console.log(`[CardClassifier] Rank weights NOT found at ${path.join(weightsPath, 'rank-weights.json')}: ${err.message}`);
       }
       
       try {
         const suitWeights = await fs.readFile(path.join(weightsPath, 'suit-weights.json'), 'utf-8');
         this.suitNetwork.importWeights(suitWeights);
-      } catch {
-        console.log('[CardClassifier] No suit weights found, using random initialization');
+        console.log('[CardClassifier] Suit weights loaded successfully');
+      } catch (err: any) {
+        console.log(`[CardClassifier] Suit weights NOT found at ${path.join(weightsPath, 'suit-weights.json')}: ${err.message}`);
       }
       
       try {
         const digitWeights = await fs.readFile(path.join(weightsPath, 'digit-weights.json'), 'utf-8');
         this.digitNetwork.importWeights(digitWeights);
-      } catch {
-        console.log('[CardClassifier] No digit weights found, using random initialization');
+        console.log('[CardClassifier] Digit weights loaded successfully');
+      } catch (err: any) {
+        console.log(`[CardClassifier] Digit weights NOT found at ${path.join(weightsPath, 'digit-weights.json')}: ${err.message}`);
       }
       
       this.initialized = true;
