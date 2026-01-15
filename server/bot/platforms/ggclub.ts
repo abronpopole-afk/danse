@@ -729,10 +729,23 @@ export class GGClubAdapter extends PlatformAdapter {
 
           // 1. DÉTECTION PAR NOM DE PROCESSUS (STRICT)
           // Seul clubgg.exe est autorisé
-          const isClubGGProcess = lowerProcess.includes("clubgg.exe");
+          const lowerProcess = (processName || "").toLowerCase();
+          const lowerTitle = (title || "").toLowerCase();
+          
+          const isClubGGProcess = lowerProcess.includes("clubgg.exe") || 
+                                 lowerProcess.includes("clubgg") ||
+                                 lowerProcess.includes("ggpoker") ||
+                                 lowerProcess.includes("game");
           
           if (!isClubGGProcess) {
-            continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
+            // Log pour comprendre pourquoi la fenêtre est rejetée
+            if (lowerTitle.includes("poker") || lowerTitle.includes("holdem") || lowerTitle.includes("table")) {
+              logger.info("GGClubAdapter", `Fenêtre ignorée (processus non-match): "${title}"`, { 
+                processName, 
+                processPath 
+              });
+            }
+            continue;
           }
 
           // 2. FILTRE DE TITRE (Exclusions)
@@ -765,6 +778,9 @@ export class GGClubAdapter extends PlatformAdapter {
 
           // 3. FILTRE DE TAILLE (Heuristique de table de poker)
           // On demande un titre qui ressemble à une table ou une taille cohérente
+          let isMatch = false;
+          let matchReason = "";
+
           if (bounds.width >= 500 && bounds.height >= 400) {
             isMatch = true;
             matchReason = "valid_poker_table";
