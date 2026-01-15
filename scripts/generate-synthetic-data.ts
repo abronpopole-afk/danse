@@ -2,49 +2,41 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Ce script génère des données synthétiques pour l'entraînement de l'OCR.
- * Il simule les rangs (2-A) et les couleurs (S, H, D, C) sous forme de vecteurs.
+ * Script de génération de données synthétiques amélioré
+ * Simule des images 32x32 pour l'entraînement du NeuralNetwork
  */
 
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
-const SUITS = ["S", "H", "D", "C"]; // Spades, Hearts, Diamonds, Clubs
+const SUITS = ["s", "h", "d", "c"];
+const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', 'K', 'M', 'B', '$', '€'];
 
-function generateRankData() {
-    const data: Record<string, number[][]> = {};
-    
-    for (const rank of RANKS) {
-        data[rank] = [];
-        // Générer 100 variations légèrement bruitées pour chaque rang
-        for (let i = 0; i < 100; i++) {
-            const baseVector = new Array(15).fill(0).map(() => Math.random() > 0.5 ? 1 : 0);
-            data[rank].push(baseVector);
-        }
+function generateImageData(size: number, channels: number) {
+    const data = new Array(size * size * channels);
+    for (let i = 0; i < data.length; i++) {
+        data[i] = Math.random();
     }
-    
-    return data;
-}
-
-function generateSuitData() {
-    const data: Record<string, number[][]> = {};
-    
-    for (const suit of SUITS) {
-        data[suit] = [];
-        for (let i = 0; i < 100; i++) {
-            const baseVector = new Array(15).fill(0).map(() => Math.random() > 0.5 ? 1 : 0);
-            data[suit].push(baseVector);
-        }
-    }
-    
     return data;
 }
 
 const dataset = {
-    ranks: generateRankData(),
-    suits: generateSuitData(),
+    ranks: {} as Record<string, number[][]>,
+    suits: {} as Record<string, number[][]>,
+    digits: {} as Record<string, number[][]>,
     timestamp: new Date().toISOString()
 };
 
-const outputPath = path.join(process.cwd(), 'scripts', 'synthetic-data.json');
-fs.writeFileSync(outputPath, JSON.stringify(dataset, null, 2));
+RANKS.forEach(r => {
+    dataset.ranks[r] = Array.from({length: 10}, () => generateImageData(32, 1));
+});
 
-console.log(`✅ Données synthétiques générées dans : ${outputPath}`);
+SUITS.forEach(s => {
+    dataset.suits[s] = Array.from({length: 10}, () => generateImageData(32, 3));
+});
+
+DIGITS.forEach(d => {
+    dataset.digits[d] = Array.from({length: 10}, () => generateImageData(32, 1));
+});
+
+const outputPath = path.join(process.cwd(), 'scripts', 'synthetic-data.json');
+fs.writeFileSync(outputPath, JSON.stringify(dataset));
+console.log(`✅ Données synthétiques générées : ${outputPath}`);

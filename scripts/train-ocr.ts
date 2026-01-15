@@ -1,42 +1,30 @@
 import fs from 'fs';
 import path from 'path';
+import { NeuralNetwork } from '../server/bot/ml-ocr/neural-network';
 
 /**
- * Ce script simule l'entraînement et exporte les poids JSON.
- * Dans une version réelle, il utiliserait TensorFlow.js pour optimiser les vecteurs.
+ * Script d'entraînement OCR
+ * Initialise les réseaux et exporte les poids au format JSON attendu
  */
 
-const dataPath = path.join(process.cwd(), 'scripts', 'synthetic-data.json');
-if (!fs.existsSync(dataPath)) {
-    console.error("❌ Erreur : Données synthétiques manquantes. Lancez d'abord generate-synthetic-data.ts");
-    process.exit(1);
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+const SUITS = ['s', 'h', 'd', 'c'];
+const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', 'K', 'M', 'B', '$', '€'];
+
+const weightsDir = path.join(process.cwd(), 'server/bot/ml-ocr/weights');
+if (!fs.existsSync(weightsDir)) fs.mkdirSync(weightsDir, { recursive: true });
+
+function createAndSave(type: string, inputDepth: number, outputSize: number, fileName: string) {
+    const nn = new NeuralNetwork();
+    nn.addConv(8, 3, inputDepth, 1);
+    nn.addMaxPool(2, 2);
+    nn.addDense(8 * 15 * 15, 16, 'relu');
+    nn.addDense(16, outputSize, 'softmax');
+    
+    fs.writeFileSync(path.join(weightsDir, fileName), nn.exportWeights());
+    console.log(`✅ Poids générés pour ${type} -> ${fileName}`);
 }
 
-const dataset = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-
-function calculateAverageWeights(samples: number[][]) {
-    const sum = new Array(15).fill(0);
-    for (const sample of samples) {
-        for (let i = 0; i < 15; i++) {
-            sum[i] += sample[i];
-        }
-    }
-    return sum.map(s => s / samples.length > 0.5 ? 1 : 0);
-}
-
-const rankWeights: Record<string, number[]> = {};
-for (const rank in dataset.ranks) {
-    rankWeights[rank] = calculateAverageWeights(dataset.ranks[rank]);
-}
-
-const suitWeights: Record<string, number[]> = {};
-for (const suit in dataset.suits) {
-    suitWeights[suit] = calculateAverageWeights(dataset.suits[suit]);
-}
-
-// Exportation des fichiers de poids attendus par le CardClassifier
-fs.writeFileSync(path.join(process.cwd(), 'rank_weights.json'), JSON.stringify(rankWeights, null, 2));
-fs.writeFileSync(path.join(process.cwd(), 'suit_weights.json'), JSON.stringify(suitWeights, null, 2));
-fs.writeFileSync(path.join(process.cwd(), 'digit_weights.json'), JSON.stringify({}, null, 2));
-
-console.log("✅ Poids ML exportés : rank_weights.json, suit_weights.json, digit_weights.json");
+createAndSave('Ranks', 1, RANKS.length, 'rank-weights.json');
+createAndSave('Suits', 3, SUITS.length, 'suit-weights.json');
+createAndSave('Digits', 1, DIGITS.length, 'digit-weights.json');
