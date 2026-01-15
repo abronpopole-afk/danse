@@ -550,6 +550,7 @@ export class GGClubAdapter extends PlatformAdapter {
               lowerTitle === "clubgg" ||
               lowerTitle.includes("explorateur de fichiers") ||
               lowerTitle.includes("google chrome") ||
+              lowerTitle.includes("pokerwizardbot") ||
               lowerTitle.includes("form1");
 
             // 3. FILTRE DE TAILLE (Heuristique de table de poker)
