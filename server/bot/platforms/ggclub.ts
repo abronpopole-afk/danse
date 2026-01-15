@@ -724,7 +724,7 @@ export class GGClubAdapter extends PlatformAdapter {
           } catch (e) {}
 
           // Ignorer les fenêtres vides, trop petites ou sans titre significatif
-          if (!bounds || bounds.width < 400 || bounds.height < 300) continue;
+          if (!bounds || bounds.width < 100 || bounds.height < 100) continue;
           if (!title || title.trim() === "" || title.toLowerCase() === "table sans titre") continue;
 
           // 1. DÉTECTION PAR NOM DE PROCESSUS (STRICT)
@@ -732,19 +732,22 @@ export class GGClubAdapter extends PlatformAdapter {
           const lowerProcess = (processName || "").toLowerCase();
           const lowerTitle = (title || "").toLowerCase();
           
+          // Debugging log for every window found during scanning
+          if (lowerTitle.includes("poker") || lowerTitle.includes("club") || lowerTitle.includes("gg") || lowerTitle.includes("game")) {
+            logger.info("GGClubAdapter", `Fenêtre scannée: "${title}"`, { 
+              processName, 
+              processPath,
+              bounds: `${bounds.width}x${bounds.height}`
+            });
+          }
+
           const isClubGGProcess = lowerProcess.includes("clubgg.exe") || 
                                  lowerProcess.includes("clubgg") ||
                                  lowerProcess.includes("ggpoker") ||
-                                 lowerProcess.includes("game");
+                                 lowerProcess.includes("game") ||
+                                 lowerProcess.includes("poker");
           
           if (!isClubGGProcess) {
-            // Log pour comprendre pourquoi la fenêtre est rejetée
-            if (lowerTitle.includes("poker") || lowerTitle.includes("holdem") || lowerTitle.includes("table")) {
-              logger.info("GGClubAdapter", `Fenêtre ignorée (processus non-match): "${title}"`, { 
-                processName, 
-                processPath 
-              });
-            }
             continue;
           }
 
@@ -781,10 +784,10 @@ export class GGClubAdapter extends PlatformAdapter {
           let isMatch = false;
           let matchReason = "";
 
-          // Seuil plus permissif pour ClubGG (certaines tables peuvent être petites)
-          if (bounds.width >= 400 && bounds.height >= 300) {
+          // Seuil ultra-permissif pour s'assurer de ne rien rater
+          if (bounds.width >= 200 && bounds.height >= 200) {
             isMatch = true;
-            matchReason = "valid_poker_table";
+            matchReason = "size_within_limits";
           }
 
           if (isMatch) {
