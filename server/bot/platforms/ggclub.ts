@@ -562,19 +562,20 @@ export class GGClubAdapter extends PlatformAdapter {
                                     lowerProcess.includes("cmd.exe");
 
             // CONDITION : Uniquement les fenêtres du processus clubgg.exe qui ne sont PAS des utilitaires et qui font la taille d'une TABLE.
-            // On utilise .includes pour le processName au cas où le chemin complet est fourni.
-            if (lowerProcess.includes("clubgg.exe") && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
+            const isClubGG = lowerProcess.includes("clubgg.exe");
+            
+            if (isClubGG && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
               // LOGS UNIQUEMENT POUR LES VRAIES TABLES DE JEU
               logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
                 title: window.title,
-                size: `${window.width}x${window.height}`,
-                process: window.processName
+                size: `${window.width}x${window.height}`
               });
               
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
             } else {
               // Silence total pour tout le reste (Lobby, Explorer, IDE, etc.)
+              // On enregistre quand même la fenêtre pour ne pas la retraiter au prochain tick
               this.activeWindows.set(window.windowId, window);
             }
           }
