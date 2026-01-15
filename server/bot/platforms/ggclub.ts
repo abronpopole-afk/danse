@@ -516,30 +516,40 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            // Filtre : Processus clubgg.exe UNIQUEMENT (plus de heuristiques de titre floues)
-            const isClubGGProcess = window.processName.toLowerCase() === "clubgg.exe";
+            // Filtrage des processus poker connus
+            const lowerProcess = window.processName.toLowerCase();
+            const isPokerProcess = lowerProcess === "clubgg.exe" || lowerProcess === "ggpoker.exe" || lowerProcess === "game.exe";
             
-            // Exclusion des fenêtres utilitaires connues même si elles sont dans clubgg.exe
-            const isUtility = window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs|settings|config|gto-poker-bot/);
+            // Titre de la fenêtre pour exclusion
+            const lowerTitle = window.title.toLowerCase();
 
-            if (isClubGGProcess && !isUtility) {
-              // Vérification supplémentaire de la taille pour ignorer les popups/tooltips
-              if (window.width < 400 || window.height < 300) {
-                this.activeWindows.set(window.windowId, window);
-                continue;
-              }
+            // Exclusion STRICTE des fenêtres système et utilitaires
+            const isSystemOrUtility = lowerTitle.includes("explorateur") || 
+                                    lowerTitle.includes("explorer") || 
+                                    lowerTitle.includes("bloc-notes") || 
+                                    lowerTitle.includes("notepad") || 
+                                    lowerTitle.includes("calculatrice") || 
+                                    lowerTitle.includes("logs") || 
+                                    lowerTitle.includes("settings") || 
+                                    lowerTitle.includes("config") || 
+                                    lowerTitle.includes("gto-poker-bot") ||
+                                    lowerTitle === "poker" || 
+                                    lowerTitle === "clubgg" || 
+                                    lowerProcess === "explorer.exe" ||
+                                    lowerProcess === "notepad.exe";
 
-              logger.session("GGClubAdapter", "🎰 Table potentielle détectée (clubgg.exe)", {
-                windowId: window.windowId,
+            // CONDITION : Processus Poker + Pas un utilitaire + Taille de table de jeu (> 800x600)
+            if (isPokerProcess && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
+              logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
                 title: window.title,
-                dimensions: `${window.width}x${window.height}`,
+                size: `${window.width}x${window.height}`,
+                process: window.processName
               });
               
-              // Ici nous émettons l'événement pour que le TableManager l'enregistre
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
             } else {
-              // Silencieux pour le reste (incluant explorer.exe)
+              // Enregistrement silencieux pour éviter les boucles, mais AUCUN AFFICHAGE
               this.activeWindows.set(window.windowId, window);
             }
           }
