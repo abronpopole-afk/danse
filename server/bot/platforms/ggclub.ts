@@ -501,7 +501,10 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         const windows = await this.detectTableWindows();
         
-        logger.debug("GGClubAdapter", `Polling: ${windows.length} fenêtre(s) détectée(s), ${this.activeWindows.size} active(s)`);
+        // Log minimal pour debug en mode verbeux uniquement
+        if (this.debugMode) {
+          logger.debug("GGClubAdapter", `Polling: ${windows.length} fenêtre(s) détectée(s), ${this.activeWindows.size} active(s)`);
+        }
 
         // Gestion des fenêtres fermées
         for (const [windowId, existingWindow] of this.activeWindows) {
@@ -516,67 +519,49 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            // Filtrage des processus poker connus
-            const lowerProcess = window.processName.toLowerCase();
-            const isPokerProcess = lowerProcess === "clubgg.exe" || lowerProcess === "ggpoker.exe" || lowerProcess === "game.exe";
-            
-            // Titre de la fenêtre pour exclusion
-            const lowerTitle = window.title.toLowerCase();
+            const lowerProcess = (window.processName || "").toLowerCase();
+            const lowerTitle = (window.title || "").toLowerCase();
 
-            // Exclusion STRICTE des fenêtres système et utilitaires
-            // On exclut tout ce qui n'est PAS une table de poker.
-            // On vérifie spécifiquement que le processus est clubgg.exe ET que ce n'est pas une fenêtre parasite.
-            const isSystemOrUtility = lowerTitle.includes("explorateur") || 
-                                    lowerTitle.includes("explorer") || 
-                                    lowerTitle.includes("bloc-notes") || 
-                                    lowerTitle.includes("notepad") || 
-                                    lowerTitle.includes("calculatrice") || 
-                                    lowerTitle.includes("logs") || 
-                                    lowerTitle.includes("settings") || 
-                                    lowerTitle.includes("config") || 
-                                    lowerTitle.includes("gto-poker-bot") ||
-                                    lowerTitle.includes("replit") ||
-                                    lowerTitle.includes("google chrome") ||
-                                    lowerTitle.includes("pokerwizardbot") ||
-                                    lowerTitle.includes("poker bot") ||
-                                    lowerTitle.includes("discord") ||
-                                    lowerTitle.includes("vscode") ||
-                                    lowerTitle.includes("microsoft edge") ||
-                                    lowerTitle.includes("visual studio code") ||
-                                    lowerTitle.includes("gestionnaire") ||
-                                    lowerTitle.includes("cmd") ||
-                                    lowerTitle.includes("powershell") ||
-                                    lowerTitle.includes("chrome") ||
-                                    lowerTitle.includes("edge") ||
-                                    lowerTitle.includes("replit") ||
-                                    lowerTitle.includes("gto-poker-bot-windows") ||
-                                    lowerTitle === "poker" || 
-                                    lowerTitle === "clubgg" || 
-                                    lowerProcess.includes("explorer.exe") ||
-                                    lowerProcess.includes("notepad.exe") ||
-                                    lowerProcess.includes("chrome.exe") ||
-                                    lowerProcess.includes("msedge.exe") ||
-                                    lowerProcess.includes("code.exe") ||
-                                    lowerProcess.includes("discord.exe") ||
-                                    lowerProcess.includes("taskmgr.exe") ||
-                                    lowerProcess.includes("cmd.exe");
-
-            // CONDITION : Uniquement les fenêtres du processus clubgg.exe qui ne sont PAS des utilitaires et qui font la taille d'une TABLE.
+            // 1. FILTRE DE PROCESSUS STRICT
+            // Seul clubgg.exe est autorisé comme source de tables de poker pour cet adaptateur
             const isClubGG = lowerProcess.includes("clubgg.exe");
             
-            if (isClubGG && !isSystemOrUtility && window.width >= 800 && window.height >= 600) {
-              // LOGS UNIQUEMENT POUR LES VRAIES TABLES DE JEU
+            if (!isClubGG) {
+              continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
+            }
+
+            // 2. FILTRE DE TITRE STRICT (Exclusions)
+            const isExcludedTitle = 
+              lowerTitle.includes("explorateur") || 
+              lowerTitle.includes("explorer") || 
+              lowerTitle.includes("bloc-notes") || 
+              lowerTitle.includes("notepad") || 
+              lowerTitle.includes("chrome") ||
+              lowerTitle.includes("edge") ||
+              lowerTitle.includes("replit") ||
+              lowerTitle.includes("bot") ||
+              lowerTitle.includes("wizard") ||
+              lowerTitle.includes("session") ||
+              lowerTitle.includes("log") ||
+              lowerTitle.includes("terminé") ||
+              lowerTitle.includes("gto") ||
+              lowerTitle.includes("poker bot") ||
+              lowerTitle === "poker" || 
+              lowerTitle === "clubgg";
+
+            // 3. FILTRE DE TAILLE (Heuristique de table de poker)
+            // Une table de poker GGClub ne descend normalement jamais sous ces dimensions en jeu
+            const isTableSize = window.width >= 600 && window.height >= 400;
+
+            if (!isExcludedTitle && isTableSize) {
               logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
                 title: window.title,
+                process: window.processName,
                 size: `${window.width}x${window.height}`
               });
               
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
-            } else {
-              // Silence total pour tout le reste (Lobby, Explorer, IDE, etc.)
-              // On enregistre quand même la fenêtre pour ne pas la retraiter au prochain tick
-              this.activeWindows.set(window.windowId, window);
             }
           }
         }
