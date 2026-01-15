@@ -519,16 +519,16 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            const lowerProcess = (window.processName || "").toLowerCase();
-            const lowerTitle = (window.title || "").toLowerCase();
+        const lowerProcess = (window.processName || "").toLowerCase();
+        const lowerTitle = (window.title || "").toLowerCase();
 
-            // 1. FILTRE DE PROCESSUS STRICT
-            // Seul clubgg.exe est autorisé comme source de tables de poker pour cet adaptateur
-            const isClubGG = lowerProcess.includes("clubgg.exe");
-            
-            if (!isClubGG) {
-              continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
-            }
+        // 1. FILTRE DE PROCESSUS STRICT
+        // Seul clubgg.exe est autorisé comme source de tables de poker pour cet adaptateur
+        const isClubGG = lowerProcess.includes("clubgg.exe");
+        
+        if (!isClubGG) {
+          continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
+        }
 
         // 2. FILTRE DE TITRE STRICT (Exclusions)
         const isExcludedTitle = 
@@ -548,33 +548,32 @@ export class GGClubAdapter extends PlatformAdapter {
           lowerTitle.includes("poker bot") ||
           lowerTitle === "poker" || 
           lowerTitle === "clubgg" ||
-          lowerTitle.includes("explorateur de fichiers") ||
           lowerTitle.includes("google chrome") ||
-          lowerTitle.includes("pokerwizardbot") ||
           lowerTitle.includes("form1") ||
           lowerTitle.includes("visual studio") ||
           lowerTitle.includes("cmd.exe") ||
           lowerTitle.includes("powershell");
 
-            // 3. FILTRE DE TAILLE (Heuristique de table de poker)
-            // Une table de poker GGClub ne descend normalement jamais sous ces dimensions en jeu
-            // On augmente le seuil pour être plus sélectif
-            const isTableSize = window.width >= 700 && window.height >= 500;
+        if (isExcludedTitle) {
+          continue;
+        }
 
-            if (!isExcludedTitle && isTableSize) {
-              logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
-                title: window.title,
-                process: (window as any).processName || "unknown",
-                size: `${window.width}x${window.height}`
-              });
-              
-              this.activeWindows.set(window.windowId, window);
-              this.emitPlatformEvent("table_detected", { window });
-            } else {
-              // On ignore sans logger pour ne pas polluer les logs
-              // On enregistre quand même la fenêtre comme traitée pour éviter les logs de détection système
-              this.activeWindows.set(window.windowId, window);
-            }
+        // 3. FILTRE DE TAILLE (Heuristique de table de poker)
+        const isTableSize = window.width >= 500 && window.height >= 400;
+
+        if (isTableSize) {
+          logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
+            title: window.title,
+            process: (window as any).processName || "unknown",
+            size: `${window.width}x${window.height}`
+          });
+          
+          this.activeWindows.set(window.windowId, window);
+          this.emitPlatformEvent("table_detected", { window });
+        } else {
+          // On enregistre quand même la fenêtre comme traitée mais on ne l'émet pas comme table
+          this.activeWindows.set(window.windowId, window);
+        }
           }
         }
       } catch (error: any) {
@@ -728,45 +727,47 @@ export class GGClubAdapter extends PlatformAdapter {
           if (!bounds || bounds.width < 400 || bounds.height < 300) continue;
           if (!title || title.trim() === "" || title.toLowerCase() === "table sans titre") continue;
 
-          let isMatch = false;
-          let matchReason = "";
-
-          const lowerTitle = title.toLowerCase();
-          const lowerProcess = processName.toLowerCase();
-
-          // 1. Détection par nom de processus (Priorité haute)
-          if (GGCLUB_PROCESS_NAMES.some(p => lowerProcess.includes(p))) {
-            // Même avec le bon processus, on filtre les fenêtres utilitaires
-            const utilityKeywords = ["login", "update", "crash", "reporter", "config", "settings"];
-            if (!utilityKeywords.some(key => lowerTitle.includes(key))) {
-              isMatch = true;
-              matchReason = "process_match";
-            }
+          // 1. DÉTECTION PAR NOM DE PROCESSUS (STRICT)
+          // Seul clubgg.exe est autorisé
+          const isClubGGProcess = lowerProcess.includes("clubgg.exe");
+          
+          if (!isClubGGProcess) {
+            continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
           }
 
-          // 2. Détection par titre (GGClub, Poker, etc.)
-          if (!isMatch) {
-            const pokerKeywords = ["ggclub", "poker", "bouré total chacal", "ton nez", "holdem", "omaha", "clubgg", "nl", "pl", "$", "cachuette sur zezett"];
-            if (pokerKeywords.some(key => lowerTitle.includes(key)) && !lowerTitle.includes("telegram")) {
-              isMatch = true;
-              matchReason = "title_keyword";
-            }
+          // 2. FILTRE DE TITRE (Exclusions)
+          const isExcludedTitle = 
+            lowerTitle.includes("explorateur") || 
+            lowerTitle.includes("explorer") || 
+            lowerTitle.includes("bloc-notes") || 
+            lowerTitle.includes("notepad") || 
+            lowerTitle.includes("chrome") ||
+            lowerTitle.includes("edge") ||
+            lowerTitle.includes("replit") ||
+            lowerTitle.includes("bot") ||
+            lowerTitle.includes("wizard") ||
+            lowerTitle.includes("session") ||
+            lowerTitle.includes("log") ||
+            lowerTitle.includes("terminé") ||
+            lowerTitle.includes("gto") ||
+            lowerTitle.includes("poker bot") ||
+            lowerTitle === "poker" || 
+            lowerTitle === "clubgg" ||
+            lowerTitle.includes("google chrome") ||
+            lowerTitle.includes("form1") ||
+            lowerTitle.includes("visual studio") ||
+            lowerTitle.includes("cmd.exe") ||
+            lowerTitle.includes("powershell");
+
+          if (isExcludedTitle) {
+            continue;
           }
 
-          // 3. Détection par taille de fenêtre (Tables GGClub typiques) - Filtre strict
-          if (!isMatch && bounds.width >= 400 && bounds.width <= 1600 && bounds.height >= 300 && bounds.height <= 1200) {
-            const ratio = bounds.width / bounds.height;
-            if (ratio > 0.7 && ratio < 2.0) {
-              const exclusions = ["task manager", "settings", "calculator", "browser", "chrome", "edge", "explorer", "telegram", "widgets", "rest-express", "visual studio", "vscode", "realtek", "nvidia", "discord", "spotify", "teams", "slack"];
-              if (!exclusions.some(ex => lowerTitle.includes(ex))) {
-                // Si on match par taille, on demande quand même un titre qui ressemble à une table (nom de table ou chiffres)
-                const looksLikeTable = lowerTitle.includes("table") || /\d+/.test(lowerTitle);
-                if (looksLikeTable) {
-                  isMatch = true;
-                  matchReason = "size_ratio_heuristic";
-                }
-              }
-            }
+          // 3. FILTRE DE TAILLE (Heuristique de table de poker)
+          // On demande un titre qui ressemble à une table ou une taille cohérente
+          if (bounds.width >= 500 && bounds.height >= 400) {
+            isMatch = true;
+            matchReason = "valid_poker_table";
           }
 
           if (isMatch) {
