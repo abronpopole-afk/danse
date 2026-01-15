@@ -547,21 +547,29 @@ export class GGClubAdapter extends PlatformAdapter {
               lowerTitle.includes("gto") ||
               lowerTitle.includes("poker bot") ||
               lowerTitle === "poker" || 
-              lowerTitle === "clubgg";
+              lowerTitle === "clubgg" ||
+              lowerTitle.includes("explorateur de fichiers") ||
+              lowerTitle.includes("google chrome") ||
+              lowerTitle.includes("form1");
 
             // 3. FILTRE DE TAILLE (Heuristique de table de poker)
             // Une table de poker GGClub ne descend normalement jamais sous ces dimensions en jeu
-            const isTableSize = window.width >= 600 && window.height >= 400;
+            // On augmente le seuil pour être plus sélectif
+            const isTableSize = window.width >= 700 && window.height >= 500;
 
             if (!isExcludedTitle && isTableSize) {
               logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
                 title: window.title,
-                process: window.processName,
+                process: (window as any).processName || "unknown",
                 size: `${window.width}x${window.height}`
               });
               
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
+            } else {
+              // On ignore sans logger pour ne pas polluer les logs
+              // On enregistre quand même la fenêtre comme traitée pour éviter les logs de détection système
+              this.activeWindows.set(window.windowId, window);
             }
           }
         }
