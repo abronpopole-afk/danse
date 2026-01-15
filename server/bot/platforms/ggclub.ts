@@ -781,7 +781,8 @@ export class GGClubAdapter extends PlatformAdapter {
           let isMatch = false;
           let matchReason = "";
 
-          if (bounds.width >= 500 && bounds.height >= 400) {
+          // Seuil plus permissif pour ClubGG (certaines tables peuvent être petites)
+          if (bounds.width >= 400 && bounds.height >= 300) {
             isMatch = true;
             matchReason = "valid_poker_table";
           }
