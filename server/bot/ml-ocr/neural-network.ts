@@ -4,16 +4,6 @@
  * No external ML dependencies required
  */
 
-export interface LayerConfig {
-  type: 'conv' | 'maxpool' | 'dense' | 'flatten';
-  filters?: number;
-  kernelSize?: number;
-  stride?: number;
-  poolSize?: number;
-  units?: number;
-  activation?: 'relu' | 'softmax' | 'sigmoid' | 'none';
-}
-
 export interface Tensor {
   data: Float32Array;
   shape: number[];
@@ -88,9 +78,15 @@ export class ConvLayer {
           for (let ky = 0; ky < this.kernelSize; ky++) {
             for (let kx = 0; kx < this.kernelSize; kx++) {
               for (let d = 0; d < depth; d++) {
-                const inputIdx = ((startY + ky) * width + (startX + kx)) * depth + d;
-                const filterIdx = (ky * this.kernelSize + kx) * depth + d;
-                sum += input.data[inputIdx] * filter.data[filterIdx];
+                const iy = startY + ky;
+                const ix = startX + kx;
+                
+                // Bounds check
+                if (iy >= 0 && iy < height && ix >= 0 && ix < width) {
+                  const inputIdx = (iy * width + ix) * depth + d;
+                  const filterIdx = (ky * this.kernelSize + kx) * depth + d;
+                  sum += input.data[inputIdx] * filter.data[filterIdx];
+                }
               }
             }
           }
@@ -138,13 +134,17 @@ export class MaxPoolLayer {
           
           for (let py = 0; py < this.poolSize; py++) {
             for (let px = 0; px < this.poolSize; px++) {
-              const inputIdx = ((startY + py) * width + (startX + px)) * depth + d;
-              max = Math.max(max, input.data[inputIdx]);
+              const iy = startY + py;
+              const ix = startX + px;
+              if (iy >= 0 && iy < height && ix >= 0 && ix < width) {
+                const inputIdx = (iy * width + ix) * depth + d;
+                max = Math.max(max, input.data[inputIdx]);
+              }
             }
           }
           
           const outIdx = (y * outWidth + x) * depth + d;
-          output.data[outIdx] = max;
+          output.data[outIdx] = max === -Infinity ? 0 : max;
         }
       }
     }
@@ -219,7 +219,6 @@ export class DenseLayer {
 
 export class NeuralNetwork {
   private layers: (ConvLayer | MaxPoolLayer | DenseLayer)[] = [];
-  private flattenOutputSize: number = 0;
 
   addConv(numFilters: number, kernelSize: number, inputDepth: number, stride: number = 1): this {
     this.layers.push(new ConvLayer(numFilters, kernelSize, inputDepth, stride));
@@ -246,7 +245,7 @@ export class NeuralNetwork {
       } else if (layer instanceof MaxPoolLayer) {
         current = layer.forward(current as Tensor);
       } else if (layer instanceof DenseLayer) {
-        if (!isFlat && current instanceof Object && 'shape' in current) {
+        if (!isFlat && (current as Tensor).shape) {
           current = (current as Tensor).data;
           isFlat = true;
         }
@@ -255,10 +254,6 @@ export class NeuralNetwork {
     }
 
     return current as Float32Array;
-  }
-
-  getLayerCount(): number {
-    return this.layers.length;
   }
 
   exportWeights(): string {
