@@ -574,9 +574,9 @@ export class GGClubAdapter extends PlatformAdapter {
             }
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         logger.error("GGClubAdapter", "❌ Erreur polling fenêtres", {
-          error: String(error),
+          error: String(error?.message || error),
           stack: error instanceof Error ? error.stack : undefined,
         });
       }
@@ -614,11 +614,11 @@ export class GGClubAdapter extends PlatformAdapter {
     // logger.debug("GGClubAdapter", "Détection des fenêtres GGClub...");
 
     if (!IS_WINDOWS || !windowManager) {
-      logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
+      /* logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
         IS_WINDOWS,
         windowManagerLoaded: !!windowManager,
         platform: process.platform
-      });
+      }); */
       return [];
     }
 
