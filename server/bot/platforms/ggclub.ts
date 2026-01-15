@@ -785,13 +785,13 @@ export class GGClubAdapter extends PlatformAdapter {
           let matchReason = "";
 
           // Seuil ultra-permissif pour s'assurer de ne rien rater
-          if (bounds.width >= 200 && bounds.height >= 200) {
+          if (bounds.width >= 100 && bounds.height >= 100) {
             isMatch = true;
-            matchReason = "size_within_limits";
+            matchReason = "valid_poker_table";
           }
 
           if (isMatch) {
-            logger.info("GGClubAdapter", `🎯 Fenêtre MATCH: "${title}"`, { 
+            logger.session("GGClubAdapter", `🎯 Fenêtre MATCH: "${title}"`, { 
               handle: win.handle, 
               reason: matchReason,
               process: processName,
@@ -811,13 +811,10 @@ export class GGClubAdapter extends PlatformAdapter {
         }
 
         if (results.length > 0) {
-          // Log uniquement les VRAIES tables de poker matchées
-          const pokerTables = results.filter(r => r.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/));
-          if (pokerTables.length > 0) {
-            logger.session("GGClubAdapter", `🎰 ${pokerTables.length} table(s) de poker active(s)`, {
-              tables: pokerTables.map(t => ({ title: t.title, handle: t.handle }))
-            });
-          }
+          // Log toutes les tables de poker matchées
+          logger.session("GGClubAdapter", `🎰 ${results.length} table(s) de poker active(s)`, {
+            tables: results.map(t => ({ title: t.title, handle: t.handle }))
+          });
         }
 
         return results;
