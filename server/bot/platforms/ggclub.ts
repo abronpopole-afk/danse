@@ -516,24 +516,30 @@ export class GGClubAdapter extends PlatformAdapter {
         // Gestion des nouvelles fenêtres
         for (const window of windows) {
           if (!this.activeWindows.has(window.windowId)) {
-            // Filtre : Processus clubgg.exe OU titre contenant des mots-clés poker
-            const isClubGGProcess = window.processName.toLowerCase().includes("clubgg");
-            const isPokerTitle = window.title.toLowerCase().match(/poker|holdem|omaha|table|blind|cachuette|bouré/);
+            // Filtre : Processus clubgg.exe UNIQUEMENT (plus de heuristiques de titre floues)
+            const isClubGGProcess = window.processName.toLowerCase() === "clubgg.exe";
             
-            // Exclusion des fenêtres utilitaires connues
-            const isUtility = window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs|settings|config/);
+            // Exclusion des fenêtres utilitaires connues même si elles sont dans clubgg.exe
+            const isUtility = window.title.toLowerCase().match(/explorateur|bloc-notes|notepad|calculatrice|terminé|logs|settings|config|gto-poker-bot/);
 
-            if ((isClubGGProcess || isPokerTitle) && !isUtility) {
-              logger.session("GGClubAdapter", "🎰 Nouvelle table détectée!", {
+            if (isClubGGProcess && !isUtility) {
+              // Vérification supplémentaire de la taille pour ignorer les popups/tooltips
+              if (window.width < 400 || window.height < 300) {
+                this.activeWindows.set(window.windowId, window);
+                continue;
+              }
+
+              logger.session("GGClubAdapter", "🎰 Table potentielle détectée (clubgg.exe)", {
                 windowId: window.windowId,
                 title: window.title,
-                process: window.processName,
                 dimensions: `${window.width}x${window.height}`,
               });
+              
+              // Ici nous émettons l'événement pour que le TableManager l'enregistre
               this.activeWindows.set(window.windowId, window);
               this.emitPlatformEvent("table_detected", { window });
             } else {
-              // Silencieux pour le reste
+              // Silencieux pour le reste (incluant explorer.exe)
               this.activeWindows.set(window.windowId, window);
             }
           }
