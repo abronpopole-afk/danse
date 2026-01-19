@@ -1,0 +1,82 @@
+Le bot n’a enregistré AUCUNE table dans la session.
+Regarde la ligne clé :
+[Storage] Tables récupérées | tableCount":0,"tables":[]
+
+
+Et juste après :
+"tablesActive":0
+
+
+Puis encore :
+"totalTables":0
+"activeTables":0
+
+
+👉 Le bot n’a aucune table active dans la session.
+👉 Donc il ne peut pas jouer, même si la partie commence.
+
+🎯 Pourquoi il ne voit aucune table alors qu’il en détecte 3 ?
+Parce que tu as deux systèmes différents :
+1) Détection des fenêtres (PlatformManager)
+→ Ça marche
+→ Il détecte “rest-express”, “Gl”, etc.
+→ C’est juste un scanner de fenêtres
+2) Enregistrement des tables dans la session (Storage / SessionManager)
+→ Ça ne marche pas
+→ Aucune table n’est ajoutée à la session
+→ Donc le bot ne sait pas sur quelles tables il doit jouer
+C’est comme si ton bot disait :
+“Oui, je vois des fenêtres de poker…
+mais je n’ai aucune table enregistrée dans la session, donc je ne joue pas.”
+
+
+🟦 Ce que je vais vérifier dans tes logs
+Tu devrais avoir un log comme :
+[Storage] Ajout table à la session
+
+
+ou :
+[SessionManager] Nouvelle table enregistrée
+
+
+Mais dans ce que tu m’as envoyé :
+❌ Aucune table n’est ajoutée
+❌ Aucune table n’est suivie
+❌ Aucune table n’est active
+Donc le bot reste en mode :
+tablesActive: 0
+handsPlayed: 0
+
+
+Même si la partie commence sur “Gl”.
+
+🟩 Pourquoi les tables ne s’enregistrent pas ?
+Il y a 3 causes possibles :
+1) Le titre de la fenêtre ne correspond pas au pattern attendu
+Exemple :
+Le bot attend “ClubGG” mais la fenêtre s’appelle “Gl”.
+Dans tes logs, je vois :
+Fenêtre MATCH: "Gl"
+
+
+Mais je ne vois pas :
+Table enregistrée
+
+
+Donc il détecte la fenêtre, mais ne la considère pas comme une table jouable.
+
+2) Le bot ne détecte pas ton siège (seat detection)
+Si le bot ne trouve pas ton avatar / ton siège → il ignore la table.
+
+3) Le bot est en mode “scan only”
+Il détecte les fenêtres mais ne les ajoute pas à la session.
+
+🟦 La preuve ultime :
+Dans les stats :
+"tablesByStatus":{"waiting":0,"playing":2,"paused":0,"error":0,"disconnected":2}
+
+
+→ Le scanner voit 4 tables
+→ Mais 0 sont enregistrées dans la session
+Donc le bot ne joue pas.
+

@@ -167,7 +167,14 @@ export class PlatformManager extends EventEmitter {
   private async handleTableDetected(data: { window: TableWindow }): Promise<void> {
     const { window } = data;
 
+    logger.info("PlatformManager", "📥 handleTableDetected", { 
+      handle: window.handle, 
+      title: window.title,
+      windowId: window.windowId
+    });
+
     if (this.managedTables.has(window.handle)) {
+      logger.debug("PlatformManager", "Table déjà managée", { handle: window.handle });
       return;
     }
 
@@ -583,16 +590,19 @@ export class PlatformManager extends EventEmitter {
 
   private async scanForNewTables(): Promise<void> {
     if (!this.adapter || this.status !== "running") {
-      logger.debug("PlatformManager", "Scan tables ignoré", { 
-        hasAdapter: !!this.adapter, 
-        status: this.status 
-      });
       return;
     }
 
     try {
-      logger.debug("PlatformManager", "🔍 Scan des fenêtres de poker...");
-      await this.adapter.detectTableWindows();
+      const windows = await this.adapter.detectTableWindows();
+      
+      // Sur certains systèmes, detectTableWindows ne déclenche pas d'événements
+      // On s'assure de traiter les fenêtres retournées ici
+      if (windows && windows.length > 0) {
+        for (const window of windows) {
+          await this.handleTableDetected({ window });
+        }
+      }
     } catch (error) {
       logger.error("PlatformManager", "Erreur scan tables", { error: String(error) });
     }
