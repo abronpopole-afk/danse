@@ -180,10 +180,35 @@ export class PlatformManager extends EventEmitter {
 
     try {
       const tableManager = getTableManager();
+      
+      const activeSession = await storage.getActiveBotSession();
+      if (activeSession) {
+        tableManager.setSessionId(activeSession.id);
+        logger.info("PlatformManager", "Liaison de la table à la session active", { sessionId: activeSession.id });
+      } else {
+        logger.warning("PlatformManager", "⚠️ Aucune session de bot active trouvée pour lier la table");
+      }
+
       const tableSession = await tableManager.addTable({
         tableIdentifier: window.windowId,
         tableName: window.title,
         stakes: this.extractStakesFromTitle(window.title),
+      });
+
+      // DÉMARRAGE FORCÉ ET ENREGISTREMENT DB
+      await tableSession.start();
+      
+      // Forcer la mise à jour de la table avec le sessionId actuel si possible
+      if (activeSession) {
+        await storage.updatePokerTable(tableSession.getId(), { 
+          sessionId: activeSession.id,
+          status: "playing"
+        });
+      }
+
+      logger.info("PlatformManager", "🚀 Table démarrée et synchronisée avec la session", { 
+        tableId: tableSession.getId(),
+        sessionId: tableManager.getSessionId()
       });
 
       const managedTable: ManagedTable = {

@@ -1,5 +1,3 @@
-import { type TableWindow } from "./ggclub";
-
 import { type TableWindow } from "../platform-adapter";
 
 export interface GGClubWindowInfo {
