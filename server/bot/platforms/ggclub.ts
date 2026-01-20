@@ -304,15 +304,18 @@ export class GGClubAdapter extends PlatformAdapter {
 
   private getDefaultScreenLayout(): GGClubScreenLayout {
     return {
-      heroCardsRegion: [{ x: 420, y: 470, width: 140, height: 90 }], // Slightly larger and shifted
-      communityCardsRegion: [{ x: 300, y: 300, width: 350, height: 100 }], // Adjusted for typical 1080p center
-      potRegion: { x: 410, y: 240, width: 140, height: 50 },
-      actionButtonsRegion: { x: 520, y: 530, width: 400, height: 90 },
-      betSliderRegion: { x: 520, y: 490, width: 320, height: 40 },
+      heroCardsRegion: [
+        { x: 380, y: 450, width: 120, height: 80 }, // Card 1 region (wider)
+        { x: 440, y: 450, width: 120, height: 80 }  // Card 2 region (wider)
+      ],
+      communityCardsRegion: [{ x: 250, y: 270, width: 380, height: 110 }],
+      potRegion: { x: 370, y: 220, width: 140, height: 50 },
+      actionButtonsRegion: { x: 480, y: 510, width: 420, height: 100 },
+      betSliderRegion: { x: 480, y: 470, width: 340, height: 40 },
       playerSeats: this.generatePlayerSeatRegions(9),
       dealerButtonRegion: { x: 0, y: 0, width: 40, height: 40 },
-      chatRegion: { x: 10, y: 420, width: 220, height: 160 },
-      timerRegion: { x: 420, y: 210, width: 100, height: 40 },
+      chatRegion: { x: 10, y: 400, width: 220, height: 160 },
+      timerRegion: { x: 390, y: 190, width: 100, height: 40 },
     };
   }
 
@@ -1105,8 +1108,11 @@ export class GGClubAdapter extends PlatformAdapter {
       ? this.screenLayout.heroCardsRegion
       : [this.screenLayout.heroCardsRegion];
 
+    console.log(`[GGClubAdapter] DEBUG: Detecting hero cards in ${heroCardRegions.length} regions`);
+
     for (let i = 0; i < heroCardRegions.length; i++) {
       const region = heroCardRegions[i];
+      console.log(`[GGClubAdapter] DEBUG: Processing hero card ${i} at ${JSON.stringify(region)}`);
       const rank = await this.recognizeCardRank(windowHandle, "hero", i);
       const suit = await this.recognizeCardSuit(region, screenBuffer, imageWidth);
 
@@ -1329,13 +1335,13 @@ export class GGClubAdapter extends PlatformAdapter {
           debugVisualizer.addDetection("card", rankSubRegion, mlResult.rank || "?", mlResult.confidence, mlResult.method);
         }
 
-        if (mlResult.rank && mlResult.confidence > 0.4) {
+        if (mlResult.rank && mlResult.confidence > 0.1) { // Massive reduction to capture any match
           detectedRank = mlResult.rank;
           confidence = mlResult.confidence;
         } else {
           // Consider template matching as a fallback if needed
           const templateResult = templateMatcher.matchCardRank(screenBuffer, width, height, rankSubRegion);
-          if (templateResult.rank && templateResult.confidence > 0.5) {
+          if (templateResult.rank && templateResult.confidence > 0.1) { // Massive reduction
             detectedRank = templateResult.rank;
             confidence = templateResult.confidence;
           }
@@ -1347,24 +1353,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
     // Multi-frame validation for cards
     if (detectedRank) {
-      const { getMultiFrameValidator } = await import("../multi-frame-validator");
-      const validator = getMultiFrameValidator();
-
-      const validated = validator.validateCard(
-        `card_${position}_${index}_${windowHandle}`,
-        detectedRank,
-        confidence
-      );
-
-      if (validated.validated && validated.frameCount >= 2) {
-        if (this.debugMode) {
-          console.log(`[GGClubAdapter] Card ${detectedRank} validated across ${validated.frameCount} frames (consistency: ${(validated.consistency * 100).toFixed(1)}%)`);
-        }
-        return validated.value;
-      } else if (validated.frameCount < 2) {
-        // Wait for more frames
-        return null;
-      }
+      return detectedRank; // Skip multi-frame for now to ensure we see SOMETHING
     }
 
     return detectedRank; // Return the rank if not validated or no multi-frame data yet
@@ -1512,7 +1501,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
   async detectPlayers(windowHandle: number): Promise<DetectedPlayer[]> {
     const screenBuffer = await this.captureScreen(windowHandle);
-    if (screenBuffer.length === 0) return []; // Handle empty buffer
+    if (screenBuffer.length === 0) return [];
 
     const players: DetectedPlayer[] = [];
     const window = this.activeWindows.get(`ggclub_${windowHandle}`);
@@ -1521,13 +1510,23 @@ export class GGClubAdapter extends PlatformAdapter {
 
     for (let i = 0; i < this.screenLayout.playerSeats.length; i++) {
       const seatRegion = this.screenLayout.playerSeats[i];
-      // Ensure seatRegion is valid before proceeding
-      if (!seatRegion || seatRegion.width <= 0 || seatRegion.height <= 0) continue;
+      
+      // OCR simple pour le nom et stack
+      const [name, stack] = await Promise.all([
+        this.recognizePlayerName(screenBuffer, seatRegion, imageWidth, imageHeight),
+        this.recognizePlayerStack(screenBuffer, seatRegion, imageWidth, imageHeight)
+      ]);
 
-      const playerInfo = await this.analyzePlayerSeat(screenBuffer, seatRegion, i, imageWidth, imageHeight);
-
-      if (playerInfo) {
-        players.push(playerInfo);
+      if (name || (stack && stack > 0)) {
+        players.push({
+          position: i,
+          name: name || `Player ${i}`,
+          stack: stack || 0,
+          currentBet: 0,
+          isFolded: false,
+          isActive: true,
+          isHero: i === 0,
+        });
       }
     }
 
