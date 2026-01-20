@@ -167,8 +167,17 @@ export class PlatformManager extends EventEmitter {
   private async handleTableDetected(data: { window: TableWindow }): Promise<void> {
     const { window } = data;
 
+    // Check if window handle is already managed
     if (this.managedTables.has(window.handle)) {
       return;
+    }
+
+    // Double-check by windowId to prevent duplicates from different handles (if applicable)
+    for (const managed of this.managedTables.values()) {
+      if (managed.windowId === window.windowId) {
+        logger.debug("PlatformManager", "Table avec cet ID déjà gérée", { windowId: window.windowId });
+        return;
+      }
     }
 
     try {
