@@ -7,16 +7,14 @@
  * @author [Your Name/Organization]
  */
 
-import {
-  PlatformAdapter,
-  PlatformCapabilities,
-  ConnectionConfig,
-  PlatformCredentials,
-  TableWindow,
-  GameTableState,
+import { GameStateDetector } from "../game-state-detector";
+import { 
+  PlatformAdapter, 
+  TableWindow, 
+  GameTableState, 
+  DetectedButton, 
   CardInfo,
   DetectedPlayer,
-  DetectedButton,
   ScreenRegion,
   ConnectionStatus,
   PlatformAdapterRegistry,
