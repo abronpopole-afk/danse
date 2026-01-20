@@ -64,7 +64,13 @@ export class VisionWorker {
     if (!adapter) return null;
 
     try {
-      return await adapter.getGameState(windowHandle);
+      const state = await adapter.getGameState(windowHandle);
+      if (state) {
+        console.log(`[VisionWorker] SUCCESS: Game state detected for ${windowHandle}`);
+      } else {
+        console.log(`[VisionWorker] WARNING: No game state for ${windowHandle}`);
+      }
+      return state;
     } catch (error) {
       console.error(`[VisionWorker] Error detecting table state for ${windowHandle}:`, error);
       return null;

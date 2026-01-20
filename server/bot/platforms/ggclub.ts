@@ -849,20 +849,34 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     try {
+      // Priorité au module DXGI pour Windows (performances 6x supérieures)
       const { getDXGICapture } = await import("../dxgi-capture");
       const dxgi = getDXGICapture();
       const buffer = await dxgi.captureScreen(windowHandle);
       
       if (buffer && buffer.length > 0) {
         this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
+        this.antiDetectionMonitor.recordScreenCapture();
+        return buffer;
       }
-      
-      this.antiDetectionMonitor.recordScreenCapture();
-      return buffer;
     } catch (error) {
-      logger.error("GGClubAdapter", "Capture screen error", { error: String(error) });
-      return Buffer.alloc(0);
+      logger.warn("GGClubAdapter", "DXGI capture failed, trying fallback", { error: String(error) });
     }
+
+    // Fallback via screencapture-js si DXGI échoue
+    try {
+      const screenshot = await import("screenshot-desktop");
+      const buffer = await screenshot({ format: 'png' });
+      if (buffer && buffer.length > 0) {
+        this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
+        this.antiDetectionMonitor.recordScreenCapture();
+        return buffer;
+      }
+    } catch (error) {
+      logger.error("GGClubAdapter", "All capture methods failed", { error: String(error) });
+    }
+
+    return Buffer.alloc(0);
   }
 
   private async performAutoRecalibration(windowHandle: number): Promise<void> {
