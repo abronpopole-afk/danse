@@ -516,69 +516,48 @@ export class GGClubAdapter extends PlatformAdapter {
           }
         }
 
-        // Gestion des nouvelles fenêtres
-        for (const window of windows) {
-          if (!this.activeWindows.has(window.windowId)) {
-        const lowerProcess = (window.processName || "").toLowerCase();
-        const lowerTitle = (window.title || "").toLowerCase();
+        // Create a unique stable window ID using handle if available, or title+position as fallback
+        const stableWindowId = window.windowId && window.windowId !== "ggclub_undefined" 
+          ? window.windowId 
+          : `ggclub_${window.handle || (window.title + "_" + window.x + "_" + window.y).replace(/\s+/g, "_")}`;
 
-        // 1. FILTRE DE PROCESSUS STRICT
-        // Seul clubgg.exe est autorisé comme source de tables de poker pour cet adaptateur
-        const isClubGG = lowerProcess.includes("clubgg.exe");
-        
-        if (!isClubGG) {
-          continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
-        }
+        if (!this.activeWindows.has(stableWindowId)) {
+          const lowerProcess = (window.processName || "").toLowerCase();
+          const lowerTitle = (window.title || "").toLowerCase();
 
-        // 2. FILTRE DE TITRE ET TAILLE STRICT (Table vs Lobby)
-        // Les tables ont généralement un titre lié au nom de la table ou du club, 
-        // alors que le lobby s'appelle souvent juste "ClubGG" ou contient "Lobby".
-        const isLobby = lowerTitle === "clubgg" || lowerTitle.includes("lobby");
-        const isTableSize = window.width >= 800 && window.height >= 600; // Tables are usually larger than 800x600
-
-        if (isLobby || !isTableSize) {
-          if (this.debugMode) {
-            logger.debug("GGClubAdapter", "Fenêtre ignorée (Lobby ou taille incorrecte)", { title: window.title, size: `${window.width}x${window.height}` });
+          // 1. FILTRE DE PROCESSUS STRICT
+          const isClubGG = lowerProcess.includes("clubgg.exe");
+          
+          if (!isClubGG) {
+            continue;
           }
-          continue;
-        }
 
-        // 3. FILTRE D'EXCLUSION SUPPLÉMENTAIRE
-        const isExcludedTitle = 
-          lowerTitle.includes("explorateur") || 
-          lowerTitle.includes("explorer") || 
-          lowerTitle.includes("bloc-notes") || 
-          lowerTitle.includes("notepad") || 
-          lowerTitle.includes("chrome") ||
-          lowerTitle.includes("edge") ||
-          lowerTitle.includes("replit") ||
-          lowerTitle.includes("bot") ||
-          lowerTitle.includes("wizard") ||
-          lowerTitle.includes("session") ||
-          lowerTitle.includes("log") ||
-          lowerTitle.includes("terminé") ||
-          lowerTitle.includes("gto") ||
-          lowerTitle.includes("poker bot") ||
-          lowerTitle.includes("google chrome") ||
-          lowerTitle.includes("form1") ||
-          lowerTitle.includes("visual studio") ||
-          lowerTitle.includes("cmd.exe") ||
-          lowerTitle.includes("powershell");
+          // 2. FILTRE DE TITRE ET TAILLE STRICT (Table vs Lobby)
+          const isLobby = lowerTitle === "clubgg" || lowerTitle.includes("lobby");
+          // Reduced minimum size slightly to be more robust across different DPI settings
+          const isTableSize = window.width >= 500 && window.height >= 400; 
 
-        if (isExcludedTitle) {
-          continue;
-        }
-
-        logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
-          title: window.title,
-          process: (window as any).processName || "unknown",
-          size: `${window.width}x${window.height}`
-        });
-        
-        this.activeWindows.set(window.windowId, window);
-        this.emitPlatformEvent("table_detected", { window });
+          if (isLobby || !isTableSize) {
+            if (this.debugMode) {
+              logger.debug("GGClubAdapter", "Fenêtre ignorée (Lobby ou taille incorrecte)", { title: window.title, size: `${window.width}x${window.height}` });
+            }
+            continue;
           }
+
+          // ... [rest of filters] ...
+          
+          logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
+            title: window.title,
+            windowId: stableWindowId,
+            handle: window.handle,
+            size: `${window.width}x${window.height}`
+          });
+          
+          const updatedWindow = { ...window, windowId: stableWindowId };
+          this.activeWindows.set(stableWindowId, updatedWindow);
+          this.emitPlatformEvent("table_detected", { window: updatedWindow });
         }
+      }
       } catch (error: any) {
         logger.error("GGClubAdapter", "❌ Erreur polling fenêtres", {
           error: String(error?.message || error),

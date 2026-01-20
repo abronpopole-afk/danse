@@ -1,0 +1,89 @@
+ Que disent objectivement ces nouveaux logs ?
+🎯 1. Le bot détecte bien la fenêtre GGClub
+À chaque cycle, on voit :
+🎯 Fenêtre MATCH: "popovitch"
+reason: "valid_poker_table"
+process: "clubgg.exe"
+bounds: {x:..., y:..., width:566, height:420}
+
+
+➡️ La détection de fenêtre fonctionne parfaitement.
+➡️ Le module node-window-manager fonctionne.
+➡️ Le pattern de détection (titre, process, dimensions) matche correctement.
+
+🧩 2. Le bot ajoute des tables dans la session
+Dans la session de 15h30, on voit même 2 tables ajoutées :
+Table ajoutée | tableId: 0fbaa2ba...
+Table ajoutée | tableId: d6dcfc6d...
+
+Puis :
+tableCount: 2
+tables: [ {name:"popovitch"}, {name:"popovitch"} ]
+
+
+➡️ Le bot croit qu’il y a deux tables distinctes, alors qu’en réalité il n’y en a qu’une.
+➡️ Cela signifie que la logique d’unicité de fenêtre ne fonctionne pas.
+
+🧠 3. Le bot ne passe jamais à l’étape suivante (OCR / analyse / actions)
+Dans tous les logs :
+- aucune capture d’écran
+- aucun OCR
+- aucune analyse de cartes
+- aucune décision
+- aucune action robotjs
+Le bot reste bloqué dans :
+status: "waiting"
+
+
+➡️ Il détecte la fenêtre, mais ne démarre jamais le pipeline de jeu.
+
+🔍 4. Le bot scanne les fenêtres, mais ne voit jamais la table comme “active”
+Dans les logs, on voit :
+isActive: true
+isMinimized: false
+
+
+Donc la fenêtre est active, mais aucun événement “table_ready” ou “table_updated” n’apparaît.
+➡️ Le bot ne passe jamais du statut “waiting” → “playing”.
+
+🧨 5. Le bot détecte la même fenêtre comme si c’était plusieurs fenêtres différentes
+C’est le point le plus important.
+Dans la session de 15h30 :
+- À 15:30:40.518 → tableId A ajoutée
+- À 15:30:40.523 → tableId B ajoutée
+Les deux ont :
+- le même titre : "popovitch"
+- le même process : "clubgg.exe"
+- les mêmes dimensions
+- la même position
+➡️ Le bot pense que c’est deux fenêtres différentes alors que c’est la même.
+Cela prouve que :
+❌ windowId est toujours "ggclub_undefined"
+Dans tous les logs :
+windowId: "ggclub_undefined"
+
+
+Donc :
+👉 Le bot n’arrive pas à récupérer l’ID natif de la fenêtre via node-window-manager.
+Et donc :
+- il ne peut pas reconnaître qu’une fenêtre déjà détectée est la même qu’avant
+- il crée une nouvelle table à chaque cycle
+- il ne peut pas associer une table à une fenêtre stable
+- il ne peut pas lancer l’OCR car il ne sait pas quelle fenêtre capturer
+
+🧨 Conclusion Étape 1 : Le problème est IDENTIFIÉ
+🎯 Le bot détecte la fenêtre, mais windowId est toujours undefined.
+Conséquences :
+- le bot croit qu’il y a plusieurs tables
+- il ne peut pas associer une fenêtre à une table existante
+- il reste bloqué en “waiting”
+- il ne lance jamais l’OCR
+- il ne joue jamais
+🧩 Cause racine probable :
+node-window-manager en mode packaged ne renvoie pas l’ID natif de la fenêtre.
+C’est exactement ce que tu soupçonnais :
+➡️ le module fonctionne en dev, mais pas en packaged.
+
+(Analyse de pourquoi windowId est undefined en packaged, et comment le prouver dans les logs)
+
+
