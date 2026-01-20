@@ -951,7 +951,8 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
-    const table = this.activeWindows.get(String(windowHandle)) || this.activeWindows.get(`ggclub_${windowHandle}`);
+    const tableId = `ggclub_${windowHandle}`;
+    const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
     if (!table) {
       throw new Error(`Table with handle ${windowHandle} not found`);
     }
@@ -977,7 +978,7 @@ export class GGClubAdapter extends PlatformAdapter {
         potSize: state.potSize || 0,
         heroStack: state.heroStack || 0,
         heroPosition: 0, // Default for now
-        players: [], // To be implemented with player detection regions
+        players: state.playersData ? (state.playersData as any[]) : [], 
         isHeroTurn: (state.availableActions || []).length > 0,
         currentStreet: (state.communityCards?.length === 0 || !state.communityCards) ? "preflop" : 
                       state.communityCards?.length === 3 ? "flop" :
