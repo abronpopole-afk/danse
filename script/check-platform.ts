@@ -12,7 +12,7 @@ console.log(`Environnement Replit : ${isReplit ? 'OUI' : 'NON'}\n`);
 const modules = [
   { name: 'tesseract.js', required: false, windowsOnly: false },
   { name: 'screenshot-desktop', required: true, windowsOnly: true },
-  { name: 'robotjs', required: true, windowsOnly: true },
+  { name: 'robotjs', required: false, windowsOnly: true },
   { name: 'node-window-manager', required: true, windowsOnly: true },
   { name: 'sharp', required: false, windowsOnly: false },
 ];
