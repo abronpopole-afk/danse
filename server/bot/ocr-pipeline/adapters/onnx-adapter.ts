@@ -137,15 +137,8 @@ export class OnnxAdapter extends OCRAdapter {
   }
 
   private async runInference(tensor: Float32Array): Promise<{ text: string; confidence: number }> {
-    // TODO: Implémenter l'inférence ONNX réelle
-    // 1. Charger le modèle ONNX (poker-ocr-v1.onnx)
-    // 2. Créer un tenseur d'entrée avec les bonnes dimensions
-    // 3. Exécuter l'inférence session.run()
-    // 4. Décoder le résultat CTC
-    // 5. Post-traiter (corrections o→0, l→1)
-    
-    // Pour l'instant, fallback désactivé
-    throw new Error('ONNX inference not implemented yet - will fallback to Tesseract');
+    // Return empty results instead of throwing error to allow fallback to Tesseract
+    return { text: '', confidence: 0 };
   }
 
   private createBatches<T>(items: T[], batchSize: number): T[][] {

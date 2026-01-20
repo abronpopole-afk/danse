@@ -848,12 +848,21 @@ export class GGClubAdapter extends PlatformAdapter {
       return cachedCapture.buffer;
     }
 
-    const buffer = await this.performScreenCapture(windowHandle);
-
-    this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
-    this.antiDetectionMonitor.recordScreenCapture();
-
-    return buffer;
+    try {
+      const { getDXGICapture } = await import("../dxgi-capture");
+      const dxgi = getDXGICapture();
+      const buffer = await dxgi.captureScreen(windowHandle);
+      
+      if (buffer && buffer.length > 0) {
+        this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
+      }
+      
+      this.antiDetectionMonitor.recordScreenCapture();
+      return buffer;
+    } catch (error) {
+      logger.error("GGClubAdapter", "Capture screen error", { error: String(error) });
+      return Buffer.alloc(0);
+    }
   }
 
   private async performAutoRecalibration(windowHandle: number): Promise<void> {
@@ -942,111 +951,72 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
-    // Check if recalibration is needed
-    if (this.autoCalibration.shouldRecalibrate(windowHandle)) {
-      await this.performAutoRecalibration(windowHandle);
-    }
-
-    const screenBuffer = await this.captureScreen(windowHandle);
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-    
-    console.log(`[GGClubAdapter] [${windowHandle}] === DÉBUT ANALYSE ÉTAT TABLE ===`);
-    console.log(`[GGClubAdapter] [${windowHandle}] Window Info: Title="${window?.title}", Size=${window?.width}x${window?.height}, BufferLength=${screenBuffer.length}`);
-
-    if (screenBuffer.length === 0) {
-      console.warn(`[GGClubAdapter] Failed to capture screen for window ${windowHandle}. Returning empty game state.`);
-      return {
-        tableId: `ggclub_${windowHandle}`,
-        windowHandle,
-        heroCards: [],
-        communityCards: [],
-        potSize: 0,
-        heroStack: 0,
-        heroPosition: 0,
-        players: [],
-        isHeroTurn: false,
-        currentStreet: "preflop",
-        facingBet: 0,
-        blindLevel: { smallBlind: 0, bigBlind: 0 },
-        availableActions: [],
-        betSliderRegion: { x: 0, y: 0, width: 0, height: 0 },
-        timestamp: Date.now(),
-      };
-    }
-
-    if (!window) {
-        console.warn(`[GGClubAdapter] Window not found for ${windowHandle}`);
-        return this.lastGameState || {
-            tableId: `ggclub_${windowHandle}`,
-            windowHandle,
-            heroCards: [],
-            communityCards: [],
-            potSize: 0,
-            heroStack: 0,
-            heroPosition: 0,
-            players: [],
-            isHeroTurn: false,
-            currentStreet: "preflop",
-            facingBet: 0,
-            blindLevel: { smallBlind: 0, bigBlind: 0 },
-            availableActions: [],
-            betSliderRegion: { x: 0, y: 0, width: 0, height: 0 },
-            timestamp: Date.now(),
-        };
+    const table = this.activeWindows.get(String(windowHandle)) || this.activeWindows.get(`ggclub_${windowHandle}`);
+    if (!table) {
+      throw new Error(`Table with handle ${windowHandle} not found`);
     }
 
     try {
-        // Exécution des détections avec logs
-        const heroCards = await this.detectHeroCards(windowHandle);
-        const communityCards = await this.detectCommunityCards(windowHandle);
-        const potSize = await this.detectPot(windowHandle);
-        const players = await this.detectPlayers(windowHandle);
-        const availableActions = await this.detectAvailableActions(windowHandle);
-        const isHeroTurn = availableActions.length > 0;
+      const screenshot = await this.captureScreen(windowHandle);
+      const { initializeOCRPipeline } = await import("../ocr-pipeline/ocr-pipeline");
+      const ocrPipeline = await initializeOCRPipeline();
+      
+      // Crucial: Set the frame size for proper scaling of regions
+      // This fixes the issue where regions don't match the window size
+      ocrPipeline.setFrameSize(table.width, table.height);
+      
+      const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
+      const state = await ocrPipeline.extractTableState(frame);
+      
+      // Map extracted state to GameTableState
+      const gameTableState: GameTableState = {
+        tableId: table.windowId,
+        windowHandle: table.handle,
+        heroCards: (state.heroCards || []).map(c => parseCardNotation(c)),
+        communityCards: (state.communityCards || []).map(c => parseCardNotation(c)),
+        potSize: state.potSize || 0,
+        heroStack: state.heroStack || 0,
+        heroPosition: 0, // Default for now
+        players: [], // To be implemented with player detection regions
+        isHeroTurn: (state.availableActions || []).length > 0,
+        currentStreet: (state.communityCards?.length === 0 || !state.communityCards) ? "preflop" : 
+                      state.communityCards?.length === 3 ? "flop" :
+                      state.communityCards?.length === 4 ? "turn" :
+                      state.communityCards?.length === 5 ? "river" : "unknown",
+        facingBet: 0,
+        blindLevel: { smallBlind: 1, bigBlind: 2 }, // Default for now
+        availableActions: (state.availableActions || []).map(a => ({
+          type: a as any,
+          region: { x: 0, y: 0, width: 0, height: 0 },
+          isEnabled: true
+        })),
+        timestamp: Date.now()
+      };
 
-        const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
-        const currentStreet = this.determineStreet(communityCards.length);
-        const facingBet = this.calculateFacingBet(players, heroPlayer?.position || 0);
+      if (this.debugMode) {
+        logger.debug("GGClubAdapter", "Detected Game State", {
+          heroCards: gameTableState.heroCards.length,
+          pot: gameTableState.potSize,
+          actions: gameTableState.availableActions.length
+        });
+      }
 
-        const gameState: GameTableState = {
-            tableId: `ggclub_${windowHandle}`,
-            windowHandle,
-            heroCards,
-            communityCards,
-            potSize,
-            heroStack: heroPlayer?.stack || 0,
-            heroPosition: heroPlayer?.position || 0,
-            players,
-            isHeroTurn,
-            currentStreet,
-            facingBet,
-            blindLevel: { smallBlind: 0, bigBlind: 0 },
-            availableActions,
-            betSliderRegion: this.screenLayout.betSliderRegion,
-            timestamp: Date.now(),
-        };
+      // Emit game_state event for the platform manager
+      this.emitPlatformEvent("game_state", gameTableState);
 
-        console.log(`[GGClubAdapter] === ANALYSE ÉTAT TERMINÉE [${windowHandle}] ===`);
-        console.log(`[GGClubAdapter] > Hero Cards: ${JSON.stringify(heroCards)}`);
-        console.log(`[GGClubAdapter] > Pot: ${potSize}`);
-        console.log(`[GGClubAdapter] > Players: ${players.length}`);
-        console.log(`[GGClubAdapter] > Hero Turn: ${isHeroTurn}`);
+      if (gameTableState.isHeroTurn) {
+        this.emitPlatformEvent("action_required", {
+          windowHandle,
+          gameState: gameTableState,
+          availableActions: gameTableState.availableActions
+        });
+      }
 
-        this.lastGameState = gameState;
-        this.emitPlatformEvent("game_state", { gameState });
-
-        if (isHeroTurn) {
-            this.emitPlatformEvent("action_required", { 
-                windowHandle, 
-                gameState,
-                availableActions,
-            });
-        }
-
-        return gameState;
+      this.lastGameState = gameTableState;
+      return gameTableState;
     } catch (error) {
-        console.error(`[GGClubAdapter] [${windowHandle}] Erreur critique getGameState:`, error);
-        throw error;
+      logger.error("GGClubAdapter", "Error getting game state", { error: String(error) });
+      throw error;
     }
   }
 

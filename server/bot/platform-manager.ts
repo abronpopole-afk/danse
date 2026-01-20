@@ -121,6 +121,14 @@ export class PlatformManager extends EventEmitter {
     return false;
   }
 
+  getAdapter(): PlatformAdapter | null {
+    return this.adapter;
+  }
+
+  getManagedTables(): ManagedTable[] {
+    return Array.from(this.managedTables.values());
+  }
+
   private setupAdapterListeners(): void {
     if (!this.adapter) return;
 

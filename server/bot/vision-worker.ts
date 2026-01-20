@@ -59,10 +59,16 @@ export class VisionWorker {
   }
 
   private async detectTableState(windowHandle: number, workerManager: any): Promise<any | null> {
-    // Cette méthode utilisera le worker pool pour le traitement vision
-    // Pour l'instant, retourne null
-    // TODO: Implémenter avec workerManager.processVisionTask()
-    return null;
+    const platformManager = getPlatformManager();
+    const adapter = platformManager.getAdapter();
+    if (!adapter) return null;
+
+    try {
+      return await adapter.getGameState(windowHandle);
+    } catch (error) {
+      console.error(`[VisionWorker] Error detecting table state for ${windowHandle}:`, error);
+      return null;
+    }
   }
 
   stop(): void {
