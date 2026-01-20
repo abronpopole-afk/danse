@@ -1,0 +1,82 @@
+1. Détection de table : OK
+À chaque cycle :
+🎯 Fenêtre MATCH: "popovitch"
+🎰 1 table(s) de poker active(s)
+
+
+Donc :
+- Le bot voit la fenêtre GGClub
+- Le titre correspond
+- Les bounds sont cohérents
+- La table est ajoutée en DB avec statut waiting
+Aucun problème ici.
+2. Aucun événement game_state
+Dans une session normale, tu devrais voir des lignes comme :
+[PlatformManager] Événement plateforme | type: "game_state"
+heroCards: [...]
+players: [...]
+isHeroTurn: true/false
+
+
+Or dans tous les logs que tu m’as envoyés depuis ce matin :
+➤ Il n’y a absolument AUCUN game_state
+Pas un seul.
+C’est la preuve irréfutable que :
+👉 **Le bot ne parvient pas à lire l’écran.
+Il ne capture aucune image.
+Donc il ne peut pas analyser la table.
+Donc il ne peut pas détecter le début de partie.
+Donc il ne peut pas jouer.**
+
+🔥 3. Pourquoi il ne capture rien ?
+Les logs montrent clairement :
+❌ robotjs introuvable
+Module robotjs NON TROUVÉ dans app.asar.unpacked!
+
+
+❌ screenshot-desktop charge, mais sans dépendances complètes
+Il manque mkdirp dans temp, ce qui est anormal.
+❌ Aucun appel screenshot-desktop.all() n’apparaît
+Donc aucune capture d’écran n’est réellement effectuée.
+
+🧨 4. Conséquence directe
+Sans screenshot → pas d’OCR → pas de game_state → pas d’action.
+Le bot reste bloqué en :
+status: "waiting"
+
+
+Même si tu as des cartes en main.
+
+🧠 5. Ce que les logs disent en résumé
+Voici la synthèse exacte :
+|fonction  | statut | preuve | 
+|detection fenetre  |OK  | MATCH popovitch | 
+| ajout table |OK  | tableID créé | 
+| lecture ecran | OK | aucun screenshot | 
+| ocr/parsing |OK  |aucun game_state  | 
+| debut de partie | OK | heroCards toujours vide | 
+| Actions du bot | OK | aucune action envoyée | 
+
+
+
+🧩 6. Le bot ne voit pas le début de partie car…
+👉 **Il ne voit rien du tout.
+L’écran n’est jamais capturé.**
+C’est confirmé par l’absence totale de :
+- game_state
+- heroCards
+- players
+- potSize
+- isHeroTurn
+- availableActions
+
+❌ Le bot ne voit pas le début de partie
+→ Exact : aucun game_state complet n’est généré.
+❌ Le bot ne voit pas tes cartes
+→ Exact : heroCards est toujours [].
+❌ Le bot ne voit pas les joueurs
+→ Exact : players = [] dans les derniers logs.
+❌ Le bot ne voit pas les boutons d’action
+→ Exact : availableActions = [].
+❌ Le bot ne joue pas
+→ Normal : il est aveugle.

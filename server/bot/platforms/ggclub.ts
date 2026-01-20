@@ -849,7 +849,6 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     try {
-      // Priorité au module DXGI pour Windows (performances 6x supérieures)
       const { getDXGICapture } = await import("../dxgi-capture");
       const dxgi = getDXGICapture();
       const buffer = await dxgi.captureScreen(windowHandle);
@@ -860,12 +859,33 @@ export class GGClubAdapter extends PlatformAdapter {
         return buffer;
       }
     } catch (error) {
-      logger.warn("GGClubAdapter", "DXGI capture failed, trying fallback", { error: String(error) });
+      console.log(`[Capture] DXGI capture not available for ${windowHandle}`);
     }
 
-    // Fallback via screencapture-js si DXGI échoue
     try {
-      const screenshot = await import("screenshot-desktop");
+      const robot = require("robotjs");
+      const { windowManager } = require("node-window-manager");
+      const windows = windowManager.getWindows();
+      const window = windows.find((w: any) => w.handle === windowHandle);
+      
+      if (window) {
+        const bounds = window.getBounds();
+        const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
+        
+        if (bitmap && bitmap.image) {
+          const buffer = Buffer.from(bitmap.image);
+          this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
+          this.antiDetectionMonitor.recordScreenCapture();
+          return buffer;
+        }
+      }
+    } catch (error) {
+      // Silently fail fallback
+    }
+
+    // Second Fallback: screenshot-desktop
+    try {
+      const screenshot = require("screenshot-desktop");
       const buffer = await screenshot({ format: 'png' });
       if (buffer && buffer.length > 0) {
         this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
@@ -873,7 +893,7 @@ export class GGClubAdapter extends PlatformAdapter {
         return buffer;
       }
     } catch (error) {
-      logger.error("GGClubAdapter", "All capture methods failed", { error: String(error) });
+      // Silently fail fallback
     }
 
     return Buffer.alloc(0);

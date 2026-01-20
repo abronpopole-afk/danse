@@ -86,10 +86,27 @@ class DXGICaptureImpl implements DXGICapture {
   }
 
   private async fallbackCapture(windowHandle?: number): Promise<Buffer> {
-    // Fallback vers screenshot-desktop
-    const screenshotDesktop = (await import('screenshot-desktop')).default;
-    const screenshot = await screenshotDesktop({ format: 'png' });
-    return screenshot;
+    // Fallback via robotjs ou screenshot-desktop
+    try {
+      const robot = require('robotjs');
+      const { windowManager } = require('node-window-manager');
+      const windows = windowManager.getWindows();
+      const window = windowHandle ? windows.find((w: any) => w.handle === windowHandle) : null;
+      
+      if (window) {
+        const bounds = window.getBounds();
+        const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
+        return Buffer.from(bitmap.image);
+      }
+    } catch {}
+
+    try {
+      const screenshotDesktop = require('screenshot-desktop');
+      const screenshot = await screenshotDesktop({ format: 'png' });
+      return screenshot;
+    } catch {
+      return Buffer.alloc(0);
+    }
   }
 
   getPerformanceStats(): { avgFps: number; avgLatency: number } {
