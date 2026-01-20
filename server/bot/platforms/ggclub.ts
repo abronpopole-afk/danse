@@ -249,6 +249,16 @@ export class GGClubAdapter extends PlatformAdapter {
     this.autoCalibration = getAutoCalibrationManager();
     ocrPool.initialize();
     this.mlInitPromise = this.initializeCardClassifier();
+
+    // Initialisation du profil par défaut pour GGClub
+    const profile = this.calibrationManager.getProfileForPlatform("ggclub", 9);
+    if (profile) {
+      this.activeCalibration = profile;
+      logger.info("GGClubAdapter", "Profil de calibration par défaut chargé", { 
+        name: profile.name,
+        targetWindowSize: profile.windowSize
+      });
+    }
   }
 
   private async initializeCardClassifier(): Promise<void> {
@@ -999,6 +1009,37 @@ export class GGClubAdapter extends PlatformAdapter {
       throw new Error(`Table with handle ${windowHandle} not found`);
     }
 
+    // MISE À JOUR DYNAMIQUE DU SCALING DES RÉGIONS
+    if (this.activeCalibration) {
+      const scaled = this.calibrationManager.scaleRegionsForWindow(
+        this.activeCalibration,
+        table.width,
+        table.height
+      );
+      this.scaledRegions.set(windowHandle, scaled);
+      
+      // Mise à jour de screenLayout pour utiliser les régions scalées
+      this.screenLayout = {
+        heroCardsRegion: [
+          { ...scaled.heroCards, width: scaled.heroCards.width / 2 },
+          { ...scaled.heroCards, x: scaled.heroCards.x + scaled.heroCards.width / 2, width: scaled.heroCards.width / 2 }
+        ],
+        communityCardsRegion: [scaled.communityCards],
+        potRegion: scaled.pot,
+        actionButtonsRegion: scaled.actionButtons,
+        betSliderRegion: scaled.betSlider,
+        playerSeats: scaled.playerSeats,
+        dealerButtonRegion: scaled.dealerButton,
+        chatRegion: scaled.chat,
+        timerRegion: scaled.timer
+      };
+
+      logger.info("GGClubAdapter", `[${windowHandle}] Régions recalculées pour taille ${table.width}x${table.height}`, {
+        potRegion: this.screenLayout.potRegion,
+        heroCards: this.screenLayout.heroCardsRegion[0]
+      });
+    }
+
     try {
       logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
       const screenshot = await this.captureScreen(windowHandle);
@@ -1020,7 +1061,11 @@ export class GGClubAdapter extends PlatformAdapter {
       logger.info("GGClubAdapter", `[${windowHandle}] Frame poussée au pipeline. Extraction de l'état...`);
       
       const state = await ocrPipeline.extractTableState(frame);
-      logger.info("GGClubAdapter", `[${windowHandle}] État extrait du pipeline OCR`, { state });
+      logger.info("GGClubAdapter", `[${windowHandle}] État brut extrait du pipeline OCR`, { 
+        potText: state.potSize,
+        actions: state.availableActions,
+        heroCards: state.heroCards
+      });
       
       // Map extracted state to GameTableState
       const gameTableState: GameTableState = {
@@ -1728,81 +1773,66 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectAvailableActions(windowHandle: number): Promise<DetectedButton[]> {
+    const table = this.activeWindows.get(`ggclub_${windowHandle}`);
     const screenBuffer = await this.captureScreen(windowHandle);
-    if (screenBuffer.length === 0) return [];
+    if (screenBuffer.length === 0 || !table) return [];
 
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-    const imageWidth = window?.width || 880;
-    const imageHeight = window?.height || 600;
+    
+    logger.info("GGClubAdapter", `[${windowHandle}] Recherche boutons dans région: ${JSON.stringify(region)}`);
 
-    if (!region || region.width <= 0 || region.height <= 0) return [];
+    // OCR des boutons d'action
+    const ocrResult = await this.performOCR(screenBuffer, region, table.width, table.height);
+    logger.info("GGClubAdapter", `[${windowHandle}] OCR Boutons d'action résultat: "${ocrResult.text}"`);
 
-    const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature }> = [
-      { type: "fold", color: GGCLUB_UI_COLORS.foldButton },
-      { type: "call", color: GGCLUB_UI_COLORS.callButton },
-      { type: "check", color: GGCLUB_UI_COLORS.checkButton },
-      { type: "raise", color: GGCLUB_UI_COLORS.raiseButton },
-      { type: "allin", color: GGCLUB_UI_COLORS.allInButton },
+    const actionKeywords = [
+      { type: "fold", words: ["fold", "coucher", "f0ld"] },
+      { type: "check", words: ["check", "parole"] },
+      { type: "call", words: ["call", "suivre"] },
+      { type: "raise", words: ["raise", "relancer", "bet", "miser"] },
+      { type: "allin", words: ["all-in", "allin", "tapis"] }
     ];
 
-    // Fallback Level 1: Template Matching (more robust)
-    const templateResults = templateMatcher.detectAllButtons(
-      screenBuffer, 
-      imageWidth, 
-      imageHeight, 
-      region
-    );
-
-    if (templateResults.length > 0) {
-      console.log(`[GGClubAdapter] Buttons detected via template matching: ${templateResults.length}`);
-      for (const result of templateResults) {
-        const amount = await this.extractButtonAmount(screenBuffer, result.region, imageWidth, imageHeight);
+    const textLower = ocrResult.text.toLowerCase();
+    for (const action of actionKeywords) {
+      if (action.words.some(word => textLower.includes(word))) {
+        logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté: ${action.type}`);
         buttons.push({
-          type: result.type as DetectedButton["type"],
-          region: result.region,
-          isEnabled: true,
-          amount,
+          type: action.type as any,
+          region: region, // Pour simplifier on clique au centre de la zone d'action si trouvé
+          isEnabled: true
         });
       }
-      return buttons;
     }
 
-    // Fallback Level 2: Color-based detection (original)
-    console.warn("[GGClubAdapter] Template matching failed, falling back to color detection");
-    let xOffset = 0;
-    const buttonWidth = 90; // Approximate button width
-    const buttonSpacing = 10; // Approximate spacing
-
-    for (const buttonDef of buttonTypes) {
-      const buttonRegion: ScreenRegion = {
-        x: region.x + xOffset,
-        y: region.y,
-        width: buttonWidth,
-        height: buttonDef.color.tolerance, // Use tolerance as a proxy for height, adjust as needed
-      };
-
-      const isVisible = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, imageWidth, imageHeight);
-
-      if (isVisible) {
-        const amount = await this.extractButtonAmount(screenBuffer, buttonRegion, imageWidth, imageHeight);
-        buttons.push({
-          type: buttonDef.type,
-          region: buttonRegion,
-          isEnabled: true,
-          amount,
-        });
-      }
-
-      xOffset += buttonWidth + buttonSpacing;
-    }
-
-    // Fallback Level 3: Contour/shape detection if no buttons detected yet
     if (buttons.length === 0) {
-      console.warn("[GGClubAdapter] Color detection failed, attempting shape detection");
-      const shapeButtons = await this.detectButtonsByShape(screenBuffer, imageWidth, imageHeight, region);
-      buttons.push(...shapeButtons);
+      logger.warning("GGClubAdapter", `[${windowHandle}] Aucun bouton détecté via OCR, tentative par couleur...`);
+      // Fallback par couleur si OCR échoue
+      const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature }> = [
+        { type: "fold", color: GGCLUB_UI_COLORS.foldButton },
+        { type: "call", color: GGCLUB_UI_COLORS.callButton },
+        { type: "check", color: GGCLUB_UI_COLORS.checkButton },
+        { type: "raise", color: GGCLUB_UI_COLORS.raiseButton },
+        { type: "allin", color: GGCLUB_UI_COLORS.allInButton },
+      ];
+
+      let xOffset = 0;
+      const buttonWidth = Math.round(region.width / 4);
+      for (const buttonDef of buttonTypes) {
+        const buttonRegion: ScreenRegion = {
+          x: region.x + xOffset,
+          y: region.y,
+          width: buttonWidth,
+          height: region.height,
+        };
+        const isVisible = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, table.width, table.height);
+        if (isVisible) {
+          logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur: ${buttonDef.type}`);
+          buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
+        }
+        xOffset += buttonWidth;
+      }
     }
 
     return buttons;
