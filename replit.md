@@ -3,6 +3,19 @@
 ## Overview
 The GTO Poker Bot is a sophisticated system designed for automated, undetectable poker gameplay on platforms like GGClub. It integrates Game Theory Optimal (GTO) strategies with advanced humanization techniques, dynamic player profiling, and intelligent task scheduling. The project aims to provide a reliable and adaptable solution for automated poker, built with a React frontend, Express backend, and PostgreSQL database.
 
+## Recent Updates (2026-01-20)
+- ✅ **Fixed OCR Logging**: Added explicit logs to CardClassifier and PokerOCREngine initialization to show model loading progress
+  - When PokerOCREngine initializes, you now see:
+    - `[CardClassifier] Creating neural network architectures...`
+    - `[CardClassifier] ✓ Rank weights loaded successfully`
+    - `[CardClassifier] ✓ Suit weights loaded successfully`
+    - `[CardClassifier] ✓ Digit weights loaded successfully`
+    - `[PokerOCREngine] ✓ Initialized with ML primary - Ready for OCR`
+- ✅ **ML Weight Generation**: Fixed NeuralNetwork architecture to match CardClassifier layer structure
+  - Rank/Digit: Conv(16,3,1,1) → MaxPool → Conv(32,3,16,1) → MaxPool → Dense(2304,64) → Dense(64,13)
+  - Suits: Conv(8,5,3,1) → MaxPool → Conv(16,3,8,1) → MaxPool → Dense(400,32) → Dense(32,4)
+- ✅ **Bounds Checking**: Fixed ConvLayer forward pass to prevent index out-of-bounds errors in neural network predictions
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -32,6 +45,7 @@ Utilizes Express.js with TypeScript, a WebSocket Server, Drizzle ORM, and Node.j
 -   **Calibration System:** Manages platform-specific screen region definitions, DPI scaling, and passive auto-recalibration to adapt to window movements.
 -   **Safe Mode System:** Dynamically adjusts bot behavior (Normal, Conservative, Freeze) based on suspicion level to prevent detection and bans.
 -   **Anti-Detection Architecture:** Multi-layered defense including timing humanization, natural mouse movements, behavioral patterns, and player profile integration to mimic human play.
+-   **ML-Based OCR Engine:** Custom JavaScript NeuralNetwork for card/rank/suit/digit recognition with HSV color detection fallback. Loads weights from JSON files at initialization.
 
 ### Database Architecture
 Uses PostgreSQL with Drizzle ORM. The schema includes tables for users, bot sessions, poker tables, hand histories, action logs, bot stats, and configuration for humanizer, GTO, platform, and player profile state. Key decisions include AES-256-GCM password encryption, JSONB for flexible settings and player profile state, and accountId field for multi-account support in platform_config.

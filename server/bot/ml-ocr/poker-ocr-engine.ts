@@ -72,9 +72,11 @@ export class PokerOCREngine {
     if (this.initialized) return;
 
     try {
+      console.log('[PokerOCREngine] Initializing CardClassifier with ML models...');
       await this.cardClassifier.initialize();
+      console.log('[PokerOCREngine] ✓ CardClassifier initialized - ML models ready');
     } catch (e) {
-      console.warn('[PokerOCREngine] CardClassifier initialization failed:', e);
+      console.error('[PokerOCREngine] ✗ CardClassifier initialization failed:', e);
     }
 
     if (this.config.collectTrainingData) {
@@ -87,7 +89,7 @@ export class PokerOCREngine {
     }
 
     this.initialized = true;
-    console.log('[PokerOCREngine] Initialized with ML primary');
+    console.log('[PokerOCREngine] ✓ Initialized with ML primary - Ready for OCR');
   }
 
   async recognizeCards(

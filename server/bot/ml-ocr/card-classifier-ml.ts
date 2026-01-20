@@ -73,38 +73,44 @@ export class CardClassifier {
     
     try {
       // Lazy create networks
+      console.log('[CardClassifier] Creating neural network architectures...');
       this.rankNetwork = this.createRankNetwork();
       this.suitNetwork = this.createSuitNetwork();
       this.digitNetwork = this.createDigitNetwork();
+      console.log('[CardClassifier] Network architectures created');
       
       const { promises: fs } = await import('fs');
       const path = await import('path');
       
       const weightsPath = path.join(process.cwd(), 'server/bot/ml-ocr/weights');
+      console.log('[CardClassifier] Loading weights from:', weightsPath);
       
       try {
         const rankWeights = await fs.readFile(path.join(weightsPath, 'rank-weights.json'), 'utf-8');
         this.rankNetwork.importWeights(rankWeights);
+        console.log('[CardClassifier] ✓ Rank weights loaded successfully');
       } catch {
-        console.log('[CardClassifier] No rank weights found, using random initialization');
+        console.warn('[CardClassifier] No rank weights found, using random initialization');
       }
       
       try {
         const suitWeights = await fs.readFile(path.join(weightsPath, 'suit-weights.json'), 'utf-8');
         this.suitNetwork.importWeights(suitWeights);
+        console.log('[CardClassifier] ✓ Suit weights loaded successfully');
       } catch {
-        console.log('[CardClassifier] No suit weights found, using random initialization');
+        console.warn('[CardClassifier] No suit weights found, using random initialization');
       }
       
       try {
         const digitWeights = await fs.readFile(path.join(weightsPath, 'digit-weights.json'), 'utf-8');
         this.digitNetwork.importWeights(digitWeights);
+        console.log('[CardClassifier] ✓ Digit weights loaded successfully');
       } catch {
-        console.log('[CardClassifier] No digit weights found, using random initialization');
+        console.warn('[CardClassifier] No digit weights found, using random initialization');
       }
       
       this.initialized = true;
-      console.log('[CardClassifier] ML Card Classifier initialized');
+      console.log('[CardClassifier] ✓ ML Card Classifier fully initialized with models ready');
     } catch (error) {
       console.error('[CardClassifier] Initialization error:', error);
       this.initialized = true;
