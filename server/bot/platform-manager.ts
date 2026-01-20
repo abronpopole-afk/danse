@@ -136,6 +136,22 @@ export class PlatformManager extends EventEmitter {
       this.handlePlatformEvent(event);
     });
 
+    this.adapter.on("hero_turn", async (data: any) => {
+      const managedTable = this.managedTables.get(data.windowHandle);
+      if (managedTable) {
+        logger.info("PlatformManager", `[GAME] Hero to act detected on table ${data.tableId}`);
+        await managedTable.tableSession.start();
+        managedTable.tableSession.updateState({ status: "playing" });
+        
+        await storage.createActionLog({
+          tableId: managedTable.tableSession.getId(),
+          logType: "info",
+          message: "[GAME] Hero to act detected",
+          metadata: { windowHandle: data.windowHandle }
+        });
+      }
+    });
+
     this.adapter.on("configUpdated", (config: any) => {
       this.emit("configUpdated", config);
     });

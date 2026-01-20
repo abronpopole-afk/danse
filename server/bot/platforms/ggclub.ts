@@ -1143,7 +1143,6 @@ export class GGClubAdapter extends PlatformAdapter {
       throw error;
     }
   }
-  }
 
   private findHeroPosition(players: DetectedPlayer[]): number {
     const heroPlayer = players.find(p => p.name === "Hero" || p.isActive);
