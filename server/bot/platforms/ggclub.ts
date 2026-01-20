@@ -81,7 +81,7 @@ async function loadNativeModules(): Promise<void> {
         throw new Error("Module loaded but no default export");
       }
     } catch (e) {
-      logger.error("GGClubAdapter", "❌ robotjs ÉCHEC", { error: String(e) });
+      logger.error("GGClubAdapter", "❌ robotjs ÉCHEC (Attendu sur Replit/Linux)", { error: String(e) });
     }
 
     try {
