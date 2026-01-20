@@ -1773,7 +1773,8 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectAvailableActions(windowHandle: number): Promise<DetectedButton[]> {
-    const table = this.activeWindows.get(`ggclub_${windowHandle}`);
+    const tableId = `ggclub_${windowHandle}`;
+    const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
     const screenBuffer = await this.captureScreen(windowHandle);
     if (screenBuffer.length === 0 || !table) return [];
 
