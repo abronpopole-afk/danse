@@ -530,7 +530,20 @@ export class GGClubAdapter extends PlatformAdapter {
           continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
         }
 
-        // 2. FILTRE DE TITRE STRICT (Exclusions)
+        // 2. FILTRE DE TITRE ET TAILLE STRICT (Table vs Lobby)
+        // Les tables ont généralement un titre lié au nom de la table ou du club, 
+        // alors que le lobby s'appelle souvent juste "ClubGG" ou contient "Lobby".
+        const isLobby = lowerTitle === "clubgg" || lowerTitle.includes("lobby");
+        const isTableSize = window.width >= 800 && window.height >= 600; // Tables are usually larger than 800x600
+
+        if (isLobby || !isTableSize) {
+          if (this.debugMode) {
+            logger.debug("GGClubAdapter", "Fenêtre ignorée (Lobby ou taille incorrecte)", { title: window.title, size: `${window.width}x${window.height}` });
+          }
+          continue;
+        }
+
+        // 3. FILTRE D'EXCLUSION SUPPLÉMENTAIRE
         const isExcludedTitle = 
           lowerTitle.includes("explorateur") || 
           lowerTitle.includes("explorer") || 
@@ -546,8 +559,6 @@ export class GGClubAdapter extends PlatformAdapter {
           lowerTitle.includes("terminé") ||
           lowerTitle.includes("gto") ||
           lowerTitle.includes("poker bot") ||
-          lowerTitle === "poker" || 
-          lowerTitle === "clubgg" ||
           lowerTitle.includes("google chrome") ||
           lowerTitle.includes("form1") ||
           lowerTitle.includes("visual studio") ||
@@ -558,22 +569,14 @@ export class GGClubAdapter extends PlatformAdapter {
           continue;
         }
 
-        // 3. FILTRE DE TAILLE (Heuristique de table de poker)
-        const isTableSize = window.width >= 500 && window.height >= 400;
-
-        if (isTableSize) {
-          logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
-            title: window.title,
-            process: (window as any).processName || "unknown",
-            size: `${window.width}x${window.height}`
-          });
-          
-          this.activeWindows.set(window.windowId, window);
-          this.emitPlatformEvent("table_detected", { window });
-        } else {
-          // On enregistre quand même la fenêtre comme traitée mais on ne l'émet pas comme table
-          this.activeWindows.set(window.windowId, window);
-        }
+        logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
+          title: window.title,
+          process: (window as any).processName || "unknown",
+          size: `${window.width}x${window.height}`
+        });
+        
+        this.activeWindows.set(window.windowId, window);
+        this.emitPlatformEvent("table_detected", { window });
           }
         }
       } catch (error: any) {
@@ -945,9 +948,14 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     const screenBuffer = await this.captureScreen(windowHandle);
+    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+    
+    console.log(`[GGClubAdapter] [${windowHandle}] === DÉBUT ANALYSE ÉTAT TABLE ===`);
+    console.log(`[GGClubAdapter] [${windowHandle}] Window Info: Title="${window?.title}", Size=${window?.width}x${window?.height}, BufferLength=${screenBuffer.length}`);
+
     if (screenBuffer.length === 0) {
       console.warn(`[GGClubAdapter] Failed to capture screen for window ${windowHandle}. Returning empty game state.`);
-      return { // Return a default/empty state to avoid crashes
+      return {
         tableId: `ggclub_${windowHandle}`,
         windowHandle,
         heroCards: [],
@@ -966,7 +974,6 @@ export class GGClubAdapter extends PlatformAdapter {
       };
     }
 
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
     if (!window) {
         console.warn(`[GGClubAdapter] Window not found for ${windowHandle}`);
         return this.lastGameState || {
@@ -989,8 +996,6 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     try {
-        console.log(`[GGClubAdapter] [${windowHandle}] === DÉBUT ANALYSE ÉTAT TABLE ===`);
-        
         // Exécution des détections avec logs
         const heroCards = await this.detectHeroCards(windowHandle);
         const communityCards = await this.detectCommunityCards(windowHandle);
@@ -998,7 +1003,6 @@ export class GGClubAdapter extends PlatformAdapter {
         const players = await this.detectPlayers(windowHandle);
         const availableActions = await this.detectAvailableActions(windowHandle);
         const isHeroTurn = availableActions.length > 0;
-        const blinds = await this.detectBlinds(windowHandle);
 
         const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
         const currentStreet = this.determineStreet(communityCards.length);
@@ -1016,7 +1020,7 @@ export class GGClubAdapter extends PlatformAdapter {
             isHeroTurn,
             currentStreet,
             facingBet,
-            blindLevel: { smallBlind: 0, bigBlind: 0 }, // Using simple blinds for now
+            blindLevel: { smallBlind: 0, bigBlind: 0 },
             availableActions,
             betSliderRegion: this.screenLayout.betSliderRegion,
             timestamp: Date.now(),
