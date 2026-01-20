@@ -1024,7 +1024,13 @@ export class GGClubAdapter extends PlatformAdapter {
       availableActions,
     ] = await Promise.all(tasks);
 
-    console.log(`[GGClubAdapter] DEBUG: Detected heroCards: ${JSON.stringify(heroCards)}, playersCount: ${players.length}, potSize: ${potSize}, isHeroTurn: ${isHeroTurn}`);
+    console.log(`[GGClubAdapter] === ANALYSE ÉTAT TABLE [${windowHandle}] ===`);
+    console.log(`[GGClubAdapter] > Hero Cards: ${JSON.stringify(heroCards)}`);
+    console.log(`[GGClubAdapter] > Community: ${JSON.stringify(communityCards)}`);
+    console.log(`[GGClubAdapter] > Pot Size: ${potSize}`);
+    console.log(`[GGClubAdapter] > Players: ${players.length} détectés`);
+    console.log(`[GGClubAdapter] > Hero Turn: ${isHeroTurn}`);
+    console.log(`[GGClubAdapter] > Actions: ${JSON.stringify(availableActions)}`);
 
     const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
     const currentStreet = this.determineStreet(communityCards.length);
@@ -1095,26 +1101,34 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectHeroCards(windowHandle: number): Promise<CardInfo[]> {
+    console.log(`[GGClubAdapter] [${windowHandle}] detectHeroCards - début`);
     const startTime = Date.now();
     const screenBuffer = await this.captureScreen(windowHandle);
-    if (screenBuffer.length === 0) return []; // Handle empty buffer
+    if (screenBuffer.length === 0) {
+      console.log(`[GGClubAdapter] [${windowHandle}] detectHeroCards - buffer vide`);
+      return [];
+    }
 
     const cards: CardInfo[] = [];
     const tableWindow = this.activeWindows.get(`ggclub_${windowHandle}`);
     const imageWidth = tableWindow?.width || 880;
+    const imageHeight = tableWindow?.height || 600;
+
+    console.log(`[GGClubAdapter] [${windowHandle}] detectHeroCards - Dimensions: ${imageWidth}x${imageHeight}`);
 
     // Ensure screenLayout.heroCardsRegion is treated as an array
     const heroCardRegions = Array.isArray(this.screenLayout.heroCardsRegion)
       ? this.screenLayout.heroCardsRegion
       : [this.screenLayout.heroCardsRegion];
 
-    console.log(`[GGClubAdapter] DEBUG: Detecting hero cards in ${heroCardRegions.length} regions`);
-
     for (let i = 0; i < heroCardRegions.length; i++) {
       const region = heroCardRegions[i];
-      console.log(`[GGClubAdapter] DEBUG: Processing hero card ${i} at ${JSON.stringify(region)}`);
+      console.log(`[GGClubAdapter] [${windowHandle}] Analyse région carte ${i}: ${JSON.stringify(region)}`);
+      
       const rank = await this.recognizeCardRank(windowHandle, "hero", i);
       const suit = await this.recognizeCardSuit(region, screenBuffer, imageWidth);
+      
+      console.log(`[GGClubAdapter] [${windowHandle}] Carte ${i} - Rang: ${rank || '?'}, Couleur: ${suit || '?'}`);
 
       if (rank && suit) {
         cards.push({
@@ -1122,65 +1136,9 @@ export class GGClubAdapter extends PlatformAdapter {
           suit,
           raw: `${rank}${suit[0]}`,
         });
-      } else {
-        // Log failed card detection
-        visionErrorLogger.logCardDetectionError(
-          windowHandle,
-          region,
-          "valid card",
-          `${rank || "?"}${suit?.[0] || "?"}`,
-          0.3,
-          this.debugMode ? screenBuffer : undefined
-        );
       }
     }
-
-    // Validation logique des cartes
-    if (cards.length === 2) {
-      const { ocrErrorCorrector } = await import("../ocr-error-correction");
-      const notations = cards.map(c => c.raw);
-      const validation = ocrErrorCorrector.validateCards(notations);
-
-      if (!validation.valid) {
-        console.warn(`[GGClubAdapter] Invalid hero cards detected: ${validation.errors.join(", ")}`);
-
-        // Log validation error
-        visionErrorLogger.logCardDetectionError(
-          windowHandle,
-          heroCardRegions[0], // Use first region for logging
-          "2 valid cards",
-          notations.join(", "),
-          0.4,
-          this.debugMode ? screenBuffer : undefined
-        );
-
-        if (validation.fixedCards) {
-          console.log(`[GGClubAdapter] Cards corrected to: ${validation.fixedCards.join(", ")}`);
-          return validation.fixedCards.map(notation => ({
-            rank: notation.slice(0, -1),
-            suit: notation.slice(-1),
-            raw: notation,
-          }));
-        }
-        return []; // Invalide si pas de correction possible
-      }
-    } else if (cards.length !== 0) {
-      // Log incomplete detection
-      visionErrorLogger.logCardDetectionError(
-        windowHandle,
-        heroCardRegions[0], // Use first region for logging
-        "2 cards",
-        `${cards.length} cards`,
-        0.5,
-        this.debugMode ? screenBuffer : undefined
-      );
-    }
-
-    const processingTime = Date.now() - startTime;
-    if (processingTime > 300) {
-      visionErrorLogger.logPerformanceIssue(windowHandle, processingTime, this.activeWindows.size);
-    }
-
+    console.log(`[GGClubAdapter] [${windowHandle}] detectHeroCards - Cartes finales: ${JSON.stringify(cards)} (temps: ${Date.now() - startTime}ms)`);
     return cards;
   }
 
@@ -1395,9 +1353,13 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectPot(windowHandle: number): Promise<number> {
+    console.log(`[GGClubAdapter] [${windowHandle}] detectPot - début`);
     try {
       const screenBuffer = await this.captureScreen(windowHandle);
-      if (screenBuffer.length === 0) return 0; // Handle empty buffer
+      if (screenBuffer.length === 0) {
+        console.log(`[GGClubAdapter] [${windowHandle}] detectPot - buffer vide`);
+        return 0; 
+      }
 
       // Guard: validate buffer before processing
       if (!this.validateImageBuffer(screenBuffer)) {
