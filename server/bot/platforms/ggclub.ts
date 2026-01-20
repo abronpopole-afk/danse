@@ -1049,6 +1049,24 @@ export class GGClubAdapter extends PlatformAdapter {
         throw new Error("Screenshot capture failed or returned empty buffer");
       }
       
+      // ÉTAPE 1 (priorité absolue): SIGNAL VISUEL FIABLE
+      // Les boutons Fold / Call / Raise sont visibles et actifs
+      const buttons = await this.detectAvailableActions(windowHandle);
+      const isHeroTurn = buttons.length > 0;
+
+      if (isHeroTurn) {
+        // ÉTAPE 2: LOG ET ÉVÉNEMENT
+        logger.info("GAME", "Hero to act detected", { tableId, windowHandle });
+        
+        // On émet l'événement pour que le système (TableManager/Storage) mette à jour poker_tables et status=playing
+        this.emit('hero_turn', { 
+          tableId, 
+          windowHandle, 
+          title: table.title,
+          buttons 
+        });
+      }
+
       logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie (${screenshot.length} octets). Initialisation OCR Pipeline...`);
       
       const { initializeOCRPipeline } = await import("../ocr-pipeline/ocr-pipeline");
@@ -1077,18 +1095,14 @@ export class GGClubAdapter extends PlatformAdapter {
         heroStack: state.heroStack || 0,
         heroPosition: 0, // Default for now
         players: state.playersData ? (state.playersData as any[]) : [], 
-        isHeroTurn: (state.availableActions || []).length > 0,
+        isHeroTurn: isHeroTurn, // Utilise notre signal fiable de l'étape 1
         currentStreet: (state.communityCards?.length === 0 || !state.communityCards) ? "preflop" : 
                       state.communityCards?.length === 3 ? "flop" :
                       state.communityCards?.length === 4 ? "turn" :
                       state.communityCards?.length === 5 ? "river" : "unknown",
         facingBet: 0,
         blindLevel: { smallBlind: 1, bigBlind: 2 }, // Default for now
-        availableActions: (state.availableActions || []).map(a => ({
-          type: a as any,
-          region: { x: 0, y: 0, width: 0, height: 0 },
-          isEnabled: true
-        })),
+        availableActions: buttons, // Utilise les boutons détectés à l'étape 1
         timestamp: Date.now()
       };
 
@@ -1128,6 +1142,7 @@ export class GGClubAdapter extends PlatformAdapter {
       logger.error("GGClubAdapter", "Error getting game state", { error: String(error) });
       throw error;
     }
+  }
   }
 
   private findHeroPosition(players: DetectedPlayer[]): number {
