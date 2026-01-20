@@ -757,6 +757,7 @@ export class GGClubAdapter extends PlatformAdapter {
             lowerTitle.includes("chrome") ||
             lowerTitle.includes("edge") ||
             lowerTitle.includes("replit") ||
+            lowerTitle.includes("rest-express") ||
             lowerTitle.includes("bot") ||
             lowerTitle.includes("wizard") ||
             lowerTitle.includes("session") ||
