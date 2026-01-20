@@ -304,15 +304,15 @@ export class GGClubAdapter extends PlatformAdapter {
 
   private getDefaultScreenLayout(): GGClubScreenLayout {
     return {
-      heroCardsRegion: [{ x: 380, y: 450, width: 120, height: 80 }], // Default to array
-      communityCardsRegion: [{ x: 280, y: 280, width: 320, height: 90 }], // Default to array
-      potRegion: { x: 380, y: 230, width: 120, height: 40 },
-      actionButtonsRegion: { x: 500, y: 520, width: 380, height: 80 },
-      betSliderRegion: { x: 500, y: 480, width: 300, height: 30 },
+      heroCardsRegion: [{ x: 420, y: 470, width: 140, height: 90 }], // Slightly larger and shifted
+      communityCardsRegion: [{ x: 300, y: 300, width: 350, height: 100 }], // Adjusted for typical 1080p center
+      potRegion: { x: 410, y: 240, width: 140, height: 50 },
+      actionButtonsRegion: { x: 520, y: 530, width: 400, height: 90 },
+      betSliderRegion: { x: 520, y: 490, width: 320, height: 40 },
       playerSeats: this.generatePlayerSeatRegions(9),
-      dealerButtonRegion: { x: 0, y: 0, width: 30, height: 30 },
-      chatRegion: { x: 10, y: 400, width: 200, height: 150 },
-      timerRegion: { x: 400, y: 200, width: 80, height: 30 },
+      dealerButtonRegion: { x: 0, y: 0, width: 40, height: 40 },
+      chatRegion: { x: 10, y: 420, width: 220, height: 160 },
+      timerRegion: { x: 420, y: 210, width: 100, height: 40 },
     };
   }
 
@@ -786,6 +786,7 @@ export class GGClubAdapter extends PlatformAdapter {
           if (bounds.width >= 100 && bounds.height >= 100) {
             isMatch = true;
             matchReason = "valid_poker_table";
+            logger.info("GGClubAdapter", `DEBUG: Window MATCH criteria met for "${title}"`);
           }
 
           if (isMatch) {
@@ -1019,6 +1020,8 @@ export class GGClubAdapter extends PlatformAdapter {
       isHeroTurn,
       availableActions,
     ] = await Promise.all(tasks);
+
+    console.log(`[GGClubAdapter] DEBUG: Detected heroCards: ${JSON.stringify(heroCards)}, playersCount: ${players.length}, potSize: ${potSize}, isHeroTurn: ${isHeroTurn}`);
 
     const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
     const currentStreet = this.determineStreet(communityCards.length);
@@ -1287,8 +1290,10 @@ export class GGClubAdapter extends PlatformAdapter {
     // Enhanced card recognition using ML model if available
     if (this.enableML && this.pokerOCREngine) {
       try {
+        console.log(`[GGClubAdapter] DEBUG: Recognizing rank for ${position} card ${index} at region: ${JSON.stringify(rankRegion)}`);
         // Assuming classify method returns { rank: string, confidence: number, method: string }
         const result = await this.pokerOCREngine.recognizeRank(screenBuffer, window.width, window.height, rankRegion);
+        console.log(`[GGClubAdapter] DEBUG: ML Result: ${result.rank} (conf: ${result.confidence})`);
 
         if (this.debugMode) {
           const debugVisualizer = (await import("../debug-visualizer")).getDebugVisualizer();
@@ -1381,6 +1386,7 @@ export class GGClubAdapter extends PlatformAdapter {
         };
 
         const result = detectSuitByHSV(screenBuffer, width, height, suitRegion);
+        console.log(`[GGClubAdapter] DEBUG: Suit detection result: ${result.suit} (conf: ${result.confidence}) at region: ${JSON.stringify(suitRegion)}`);
 
         if (this.debugMode) {
           debugVisualizer.addDetection("card", suitRegion, result.suit || "?", result.confidence, "hsv");
@@ -1431,7 +1437,7 @@ export class GGClubAdapter extends PlatformAdapter {
             'pot'
           );
 
-          if (potResult.confidence > 0.5) {
+          if (potResult.confidence > 0.3) { // Lowered from 0.5
             const parsed = this.parseAmount(potResult.rawText);
             if (parsed > 0) {
               logger.debug("GGClubAdapter", "Pot detected via ML", { value: parsed, confidence: potResult.confidence });
@@ -1443,7 +1449,13 @@ export class GGClubAdapter extends PlatformAdapter {
         }
       }
 
-      // Fallback: return 0 if detection fails (Tesseract disabled - causes crashes)
+      // Fallback: try alternative preprocessing if ML confidence is low
+      const altResult = await this.performOCRWithAlternativePreprocessing(screenBuffer, region, window);
+      const altParsed = this.parseAmount(altResult.text);
+      if (altParsed > 0) {
+        return altParsed;
+      }
+
       return 0;
     } catch (error) {
       logger.error("GGClubAdapter", "Error in detectPot", { error: String(error) });
