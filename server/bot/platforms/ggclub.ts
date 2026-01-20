@@ -305,17 +305,17 @@ export class GGClubAdapter extends PlatformAdapter {
   private getDefaultScreenLayout(): GGClubScreenLayout {
     return {
       heroCardsRegion: [
-        { x: 410, y: 455, width: 45, height: 65 }, // Card 1 - Rank/Suit area
-        { x: 455, y: 455, width: 45, height: 65 }  // Card 2 - Rank/Suit area
+        { x: 410, y: 450, width: 50, height: 75 }, // Zone Rang/Couleur Carte 1
+        { x: 460, y: 450, width: 50, height: 75 }  // Zone Rang/Couleur Carte 2
       ],
-      communityCardsRegion: [{ x: 280, y: 275, width: 340, height: 80 }],
-      potRegion: { x: 400, y: 225, width: 100, height: 40 },
-      actionButtonsRegion: { x: 500, y: 520, width: 380, height: 70 },
-      betSliderRegion: { x: 500, y: 485, width: 300, height: 30 },
+      communityCardsRegion: [{ x: 280, y: 270, width: 340, height: 90 }],
+      potRegion: { x: 390, y: 220, width: 120, height: 50 },
+      actionButtonsRegion: { x: 480, y: 510, width: 400, height: 80 },
+      betSliderRegion: { x: 480, y: 470, width: 320, height: 40 },
       playerSeats: this.generatePlayerSeatRegions(9),
       dealerButtonRegion: { x: 0, y: 0, width: 40, height: 40 },
-      chatRegion: { x: 10, y: 410, width: 200, height: 150 },
-      timerRegion: { x: 420, y: 195, width: 80, height: 35 },
+      chatRegion: { x: 10, y: 400, width: 220, height: 160 },
+      timerRegion: { x: 400, y: 190, width: 100, height: 40 },
     };
   }
 
@@ -967,110 +967,83 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-    const imageWidth = window?.width || 880;
-
-    // Détection différentielle (optimisée pour 24 tables)
-    const regions = {
-      heroCardsRegion: this.screenLayout.heroCardsRegion,
-      communityCardsRegion: this.screenLayout.communityCardsRegion,
-      potRegion: this.screenLayout.potRegion,
-      actionButtonsRegion: this.screenLayout.actionButtonsRegion,
-    };
-
-    const diff = this.diffDetector.detectChanges(windowHandle, screenBuffer, imageWidth, regions);
-
-    // Si rien n'a changé dans les régions critiques, réutiliser le cache
-    const hasCriticalChanges = this.criticalRegions.some(r => diff.changedRegions.includes(r));
-
-    if (!hasCriticalChanges && this.lastGameState) {
-      // Ensure the cached state is up-to-date before returning
-      return this.lastGameState;
+    if (!window) {
+        console.warn(`[GGClubAdapter] Window not found for ${windowHandle}`);
+        return this.lastGameState || {
+            tableId: `ggclub_${windowHandle}`,
+            windowHandle,
+            heroCards: [],
+            communityCards: [],
+            potSize: 0,
+            heroStack: 0,
+            heroPosition: 0,
+            players: [],
+            isHeroTurn: false,
+            currentStreet: "preflop",
+            facingBet: 0,
+            blindLevel: { smallBlind: 0, bigBlind: 0 },
+            availableActions: [],
+            betSliderRegion: { x: 0, y: 0, width: 0, height: 0 },
+            timestamp: Date.now(),
+        };
     }
 
-    // Sinon, recalculer uniquement les régions qui ont changé
-    const tasks: Promise<any>[] = [];
+    try {
+        console.log(`[GGClubAdapter] [${windowHandle}] === DÉBUT ANALYSE ÉTAT TABLE ===`);
+        
+        // Exécution des détections avec logs
+        const heroCards = await this.detectHeroCards(windowHandle);
+        const communityCards = await this.detectCommunityCards(windowHandle);
+        const potSize = await this.detectPot(windowHandle);
+        const players = await this.detectPlayers(windowHandle);
+        const availableActions = await this.detectAvailableActions(windowHandle);
+        const isHeroTurn = availableActions.length > 0;
+        const blinds = await this.detectBlinds(windowHandle);
 
-    if (diff.changedRegions.includes('heroCardsRegion')) {
-      tasks.push(this.detectHeroCards(windowHandle));
-    } else {
-      tasks.push(Promise.resolve(this.lastGameState?.heroCards || []));
+        const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
+        const currentStreet = this.determineStreet(communityCards.length);
+        const facingBet = this.calculateFacingBet(players, heroPlayer?.position || 0);
+
+        const gameState: GameTableState = {
+            tableId: `ggclub_${windowHandle}`,
+            windowHandle,
+            heroCards,
+            communityCards,
+            potSize,
+            heroStack: heroPlayer?.stack || 0,
+            heroPosition: heroPlayer?.position || 0,
+            players,
+            isHeroTurn,
+            currentStreet,
+            facingBet,
+            blindLevel: { smallBlind: 0, bigBlind: 0 }, // Using simple blinds for now
+            availableActions,
+            betSliderRegion: this.screenLayout.betSliderRegion,
+            timestamp: Date.now(),
+        };
+
+        console.log(`[GGClubAdapter] === ANALYSE ÉTAT TERMINÉE [${windowHandle}] ===`);
+        console.log(`[GGClubAdapter] > Hero Cards: ${JSON.stringify(heroCards)}`);
+        console.log(`[GGClubAdapter] > Pot: ${potSize}`);
+        console.log(`[GGClubAdapter] > Players: ${players.length}`);
+        console.log(`[GGClubAdapter] > Hero Turn: ${isHeroTurn}`);
+
+        this.lastGameState = gameState;
+        this.emitPlatformEvent("game_state", { gameState });
+
+        if (isHeroTurn) {
+            this.emitPlatformEvent("action_required", { 
+                windowHandle, 
+                gameState,
+                availableActions,
+            });
+        }
+
+        return gameState;
+    } catch (error) {
+        console.error(`[GGClubAdapter] [${windowHandle}] Erreur critique getGameState:`, error);
+        throw error;
     }
-
-    if (diff.changedRegions.includes('communityCardsRegion')) {
-      tasks.push(this.detectCommunityCards(windowHandle));
-    } else {
-      tasks.push(Promise.resolve(this.lastGameState?.communityCards || []));
-    }
-
-    if (diff.changedRegions.includes('potRegion')) {
-      tasks.push(this.detectPot(windowHandle));
-    } else {
-      tasks.push(Promise.resolve(this.lastGameState?.potSize || 0));
-    }
-
-    // Players et actions toujours recalculés (changent fréquemment)
-    tasks.push(this.detectPlayers(windowHandle));
-    tasks.push(this.detectBlinds(windowHandle));
-    tasks.push(this.isHeroTurn(windowHandle));
-    tasks.push(this.detectAvailableActions(windowHandle));
-
-    const [
-      heroCards,
-      communityCards,
-      potSize,
-      players,
-      blinds,
-      isHeroTurn,
-      availableActions,
-    ] = await Promise.all(tasks);
-
-    console.log(`[GGClubAdapter] === ANALYSE ÉTAT TABLE [${windowHandle}] ===`);
-    console.log(`[GGClubAdapter] > Hero Cards: ${JSON.stringify(heroCards)}`);
-    console.log(`[GGClubAdapter] > Community: ${JSON.stringify(communityCards)}`);
-    console.log(`[GGClubAdapter] > Pot Size: ${potSize}`);
-    console.log(`[GGClubAdapter] > Players: ${players.length} détectés`);
-    console.log(`[GGClubAdapter] > Hero Turn: ${isHeroTurn}`);
-    console.log(`[GGClubAdapter] > Actions: ${JSON.stringify(availableActions)}`);
-
-    const heroPlayer = players.find(p => p.position === this.findHeroPosition(players));
-    const currentStreet = this.determineStreet(communityCards.length);
-    const facingBet = this.calculateFacingBet(players, heroPlayer?.position || 0);
-
-    const gameState: GameTableState = {
-      tableId: `ggclub_${windowHandle}`,
-      windowHandle,
-      heroCards,
-      communityCards,
-      potSize,
-      heroStack: heroPlayer?.stack || 0,
-      heroPosition: heroPlayer?.position || 0,
-      players,
-      isHeroTurn,
-      currentStreet,
-      facingBet,
-      blindLevel: blinds,
-      availableActions,
-      betSliderRegion: this.screenLayout.betSliderRegion,
-      timestamp: Date.now(),
-    };
-
-    // Cache last state
-    this.lastGameState = gameState;
-
-    console.log(`[GGClubAdapter] === ÉTAT FINAL EMIS [${windowHandle}] ===`);
-    console.log(JSON.stringify(gameState, null, 2));
-
-    this.emitPlatformEvent("game_state", { gameState });
-
-    if (isHeroTurn) {
-      this.emitPlatformEvent("action_required", { 
-        windowHandle, 
-        gameState,
-        availableActions,
-      });
-    }
-
-    return gameState;
   }
 
   private findHeroPosition(players: DetectedPlayer[]): number {
