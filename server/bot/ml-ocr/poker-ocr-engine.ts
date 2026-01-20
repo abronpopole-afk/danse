@@ -69,33 +69,25 @@ export class PokerOCREngine {
   }
 
   async initialize(): Promise<void> {
-    console.log('[PokerOCREngine] initialize() called');
-    if (this.initialized) {
-      console.log('[PokerOCREngine] Already initialized');
-      return;
-    }
+    if (this.initialized) return;
 
     try {
-      console.log('[PokerOCREngine] Starting CardClassifier initialization...');
       await this.cardClassifier.initialize();
-      console.log('[PokerOCREngine] CardClassifier initialization completed');
-      this.initialized = true;
-      console.log('[PokerOCREngine] ✅ Initialized with ML primary and weights loaded');
     } catch (e) {
-      console.error('[PokerOCREngine] ❌ CardClassifier initialization failed:', e);
-      this.initialized = true; // Still mark as initialized to avoid infinite loops
+      console.warn('[PokerOCREngine] CardClassifier initialization failed:', e);
     }
 
     if (this.config.collectTrainingData) {
       try {
-        console.log('[PokerOCREngine] Initializing DataCollector...');
         this.dataCollector = await getDataCollector();
-        console.log('[PokerOCREngine] DataCollector initialized');
       } catch (e) {
         console.warn('[PokerOCREngine] DataCollector not available:', e);
         this.dataCollector = null;
       }
     }
+
+    this.initialized = true;
+    console.log('[PokerOCREngine] Initialized with ML primary');
   }
 
   async recognizeCards(

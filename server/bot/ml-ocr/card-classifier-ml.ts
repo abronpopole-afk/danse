@@ -69,46 +69,44 @@ export class CardClassifier {
   }
 
   async initialize(): Promise<void> {
-    console.log('[CardClassifier] initialize() called');
-    if (this.initialized) {
-      console.log('[CardClassifier] Already initialized');
-      return;
-    }
+    if (this.initialized) return;
     
     try {
-      console.log('[CardClassifier] Creating networks...');
       // Lazy create networks
       this.rankNetwork = this.createRankNetwork();
       this.suitNetwork = this.createSuitNetwork();
       this.digitNetwork = this.createDigitNetwork();
-      console.log('[CardClassifier] Networks created');
       
       const { promises: fs } = await import('fs');
       const path = await import('path');
       
       const weightsPath = path.join(process.cwd(), 'server/bot/ml-ocr/weights');
-      console.log(`[CardClassifier] Looking for weights in: ${weightsPath}`);
       
-      const files = ['rank-weights.json', 'suit-weights.json', 'digit-weights.json'];
-      const networks = [this.rankNetwork, this.suitNetwork, this.digitNetwork];
-      const names = ['Rank', 'Suit', 'Digit'];
-
-      for (let i = 0; i < files.length; i++) {
-        const filePath = path.join(weightsPath, files[i]);
-        try {
-          console.log(`[CardClassifier] Loading ${names[i]} weights from ${filePath}...`);
-          const weights = await fs.readFile(filePath, 'utf-8');
-          networks[i]!.importWeights(weights);
-          console.log(`[CardClassifier] ✅ ${names[i]} weights loaded successfully (${weights.length} bytes)`);
-        } catch (err: any) {
-          console.error(`[CardClassifier] ❌ ${names[i]} weights NOT found or invalid at ${filePath}: ${err.message}`);
-        }
+      try {
+        const rankWeights = await fs.readFile(path.join(weightsPath, 'rank-weights.json'), 'utf-8');
+        this.rankNetwork.importWeights(rankWeights);
+      } catch {
+        console.log('[CardClassifier] No rank weights found, using random initialization');
+      }
+      
+      try {
+        const suitWeights = await fs.readFile(path.join(weightsPath, 'suit-weights.json'), 'utf-8');
+        this.suitNetwork.importWeights(suitWeights);
+      } catch {
+        console.log('[CardClassifier] No suit weights found, using random initialization');
+      }
+      
+      try {
+        const digitWeights = await fs.readFile(path.join(weightsPath, 'digit-weights.json'), 'utf-8');
+        this.digitNetwork.importWeights(digitWeights);
+      } catch {
+        console.log('[CardClassifier] No digit weights found, using random initialization');
       }
       
       this.initialized = true;
-      console.log('[CardClassifier] ✅ ML Card Classifier fully initialized');
+      console.log('[CardClassifier] ML Card Classifier initialized');
     } catch (error) {
-      console.error('[CardClassifier] ❌ Initialization error:', error);
+      console.error('[CardClassifier] Initialization error:', error);
       this.initialized = true;
     }
   }

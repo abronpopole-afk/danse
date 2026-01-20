@@ -257,24 +257,19 @@ export class GGClubAdapter extends PlatformAdapter {
   private async initializeCardClassifier(): Promise<void> {
     if (this.enableML) {
       try {
-        console.log("[GGClubAdapter] Initializing PokerOCREngine instance...");
         this.pokerOCREngine = await getPokerOCREngine({
           useMLPrimary: true,
           confidenceThreshold: 0.75,
           collectTrainingData: true,
         });
-        
         if (this.pokerOCREngine) {
-          console.log("[GGClubAdapter] PokerOCREngine instance obtained, triggering explicit initialization...");
-          // ensure it's fully initialized
-          await this.pokerOCREngine.initialize();
-          console.log("[GGClubAdapter] ✅ ML PokerOCREngine explicit initialization completed");
+          console.log("[GGClubAdapter] ML PokerOCREngine initialized successfully");
         } else {
-          console.warn("[GGClubAdapter] ❌ ML PokerOCREngine factory returned null, using fallback OCR");
+          console.log("[GGClubAdapter] ML PokerOCREngine not available, using fallback OCR");
           this.enableML = false;
         }
       } catch (error) {
-        console.error("[GGClubAdapter] ❌ Failed to initialize ML PokerOCREngine:", error);
+        console.error("[GGClubAdapter] Failed to initialize ML PokerOCREngine:", error);
         this.enableML = false;
         this.pokerOCREngine = null;
       }
@@ -527,21 +522,12 @@ export class GGClubAdapter extends PlatformAdapter {
         const lowerProcess = (window.processName || "").toLowerCase();
         const lowerTitle = (window.title || "").toLowerCase();
 
-        // 1. FILTRE DE PROCESSUS - Assouplissement pour Windows
-        const isClubGG = lowerProcess.includes("clubgg") || 
-                        lowerProcess.includes("poker") || 
-                        lowerProcess.includes("game") ||
-                        lowerTitle.includes("clubgg");
+        // 1. FILTRE DE PROCESSUS STRICT
+        // Seul clubgg.exe est autorisé comme source de tables de poker pour cet adaptateur
+        const isClubGG = lowerProcess.includes("clubgg.exe");
         
-        if (!isClubGG && !lowerTitle.includes("table")) {
-          // On logge quand même pour debug si c'est une fenêtre de taille table
-          if (window.width >= 500 && window.height >= 400) {
-            logger.debug("GGClubAdapter", "Fenêtre de taille table ignorée (process mismatch)", { 
-              title: window.title, 
-              process: window.processName 
-            });
-          }
-          continue;
+        if (!isClubGG) {
+          continue; // On ignore totalement tout ce qui n'est pas clubgg.exe
         }
 
         // 2. FILTRE DE TITRE STRICT (Exclusions)
@@ -579,12 +565,10 @@ export class GGClubAdapter extends PlatformAdapter {
           logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
             title: window.title,
             process: (window as any).processName || "unknown",
-            size: `${window.width}x${window.height}`,
-            handle: window.handle
+            size: `${window.width}x${window.height}`
           });
           
           this.activeWindows.set(window.windowId, window);
-          logger.info("GGClubAdapter", `Émission platformEvent table_detected pour ${window.title}`);
           this.emitPlatformEvent("table_detected", { window });
         } else {
           // On enregistre quand même la fenêtre comme traitée mais on ne l'émet pas comme table
@@ -629,55 +613,49 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectTableWindows(): Promise<TableWindow[]> {
+    // logger.debug("GGClubAdapter", "Détection des fenêtres GGClub...");
+
     if (!IS_WINDOWS || !windowManager) {
+      /* logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
+        IS_WINDOWS,
+        windowManagerLoaded: !!windowManager,
+        platform: process.platform
+      }); */
       return [];
     }
 
-    try {
-      const windows = windowManager.getWindows();
-      const results: TableWindow[] = [];
-
-      for (const win of windows) {
-        const title = win.getTitle();
-        if (!title) continue;
-
-        const bounds = win.getBounds();
-        const lowerTitle = title.toLowerCase();
-        
-        // Critères GGClub
-        const isGG = lowerTitle.includes("clubgg") || 
-                    lowerTitle.includes("poker") || 
-                    lowerTitle.includes("hold'em") || 
-                    lowerTitle.includes("plo");
-        
-        const isTableSize = bounds.width >= 500 && bounds.height >= 400;
-
-        if (isGG && isTableSize) {
-          const windowInfo: TableWindow = {
-            handle: win.getHandle(),
-            title: title,
-            x: bounds.x,
-            y: bounds.y,
-            width: bounds.width,
-            height: bounds.height,
-            windowId: `win_${win.getHandle()}`,
-            isActive: true,
-            isMinimized: false
-          };
-          results.push(windowInfo);
-        }
-      }
-
-      // S'assurer que les modules sont chargés pour la suite
-      if (!robot || !screenshotDesktop) {
-        await loadNativeModules();
-      }
-
-      return results;
-    } catch (error) {
-      logger.error("GGClubAdapter", "Error detecting windows", { error });
-      return [];
+    // S'assurer que les modules sont chargés
+    if (!robot || !screenshotDesktop) {
+      await loadNativeModules();
     }
+
+        const ggclubWindows = await this.scanForGGClubWindows();
+    
+    const results: TableWindow[] = ggclubWindows.map(win => ({
+      windowId: `ggclub_${win.handle}`,
+      handle: win.handle,
+      title: win.title,
+      x: win.x,
+      y: win.y,
+      width: win.width,
+      height: win.height,
+      isActive: win.isActive,
+      isMinimized: win.isMinimized,
+    }));
+
+    for (const table of results) {
+      this.emitPlatformEvent("table_detected", { window: table });
+    }
+
+    /*
+    if (results.length > 0) {
+      logger.session("GGClubAdapter", `🎰 ${results.length} table(s) détectée(s)`, {
+        tables: results.map(t => ({ title: t.title, handle: t.handle }))
+      });
+    }
+    */
+
+    return results;
   }
 
   private async scanForGGClubWindows(): Promise<GGClubWindowInfo[]> {

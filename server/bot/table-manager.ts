@@ -145,13 +145,10 @@ export class TableSession extends EventEmitter {
     this.startHeartbeat();
     this.emitTableEvent("connected", { tableId: this.tableState.id });
 
-    // Mise à jour forcé du statut en base de données
-    await storage.updatePokerTable(this.tableState.id, { status: "playing" });
-
     await storage.createActionLog({
       tableId: this.tableState.id,
       logType: "info",
-      message: `Table ${this.tableState.tableName} démarrée et statut mis à jour en base`,
+      message: `Table ${this.tableState.tableName} démarrée`,
       metadata: { stakes: this.tableState.stakes },
     });
   }
@@ -571,17 +568,8 @@ export class MultiTableManager extends EventEmitter {
     tableName: string;
     stakes: string;
   }): Promise<TableSession> {
-    logger.info("MultiTableManager", "➕ addTable called", { config, sessionId: this.sessionId });
-
     if (this.tables.size >= this.maxTables) {
       throw new Error(`Maximum de ${this.maxTables} tables atteint`);
-    }
-
-    // Vérifier si la table existe déjà
-    const existingTable = Array.from(this.tables.values()).find(t => t.getState().tableIdentifier === config.tableIdentifier);
-    if (existingTable) {
-      logger.info("MultiTableManager", "Table déjà managée", { tableId: existingTable.getId() });
-      return existingTable;
     }
 
     const pokerTable = await storage.createPokerTable({
@@ -591,8 +579,6 @@ export class MultiTableManager extends EventEmitter {
       stakes: config.stakes,
       status: "waiting",
     });
-
-    logger.info("MultiTableManager", "✅ Table créée en base de données", { id: pokerTable.id, sessionId: pokerTable.sessionId });
 
     const session = new TableSession({
       id: pokerTable.id,

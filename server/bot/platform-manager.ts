@@ -167,48 +167,16 @@ export class PlatformManager extends EventEmitter {
   private async handleTableDetected(data: { window: TableWindow }): Promise<void> {
     const { window } = data;
 
-    logger.info("PlatformManager", "📥 handleTableDetected", { 
-      handle: window.handle, 
-      title: window.title,
-      windowId: window.windowId
-    });
-
     if (this.managedTables.has(window.handle)) {
-      logger.debug("PlatformManager", "Table déjà managée", { handle: window.handle });
       return;
     }
 
     try {
       const tableManager = getTableManager();
-      
-      const activeSession = await storage.getActiveBotSession();
-      if (activeSession) {
-        tableManager.setSessionId(activeSession.id);
-        logger.info("PlatformManager", "Liaison de la table à la session active", { sessionId: activeSession.id });
-      } else {
-        logger.warning("PlatformManager", "⚠️ Aucune session de bot active trouvée pour lier la table");
-      }
-
       const tableSession = await tableManager.addTable({
         tableIdentifier: window.windowId,
         tableName: window.title,
         stakes: this.extractStakesFromTitle(window.title),
-      });
-
-      // DÉMARRAGE FORCÉ ET ENREGISTREMENT DB
-      await tableSession.start();
-      
-      // Forcer la mise à jour de la table avec le sessionId actuel si possible
-      if (activeSession) {
-        await storage.updatePokerTable(tableSession.getId(), { 
-          sessionId: activeSession.id,
-          status: "playing"
-        });
-      }
-
-      logger.info("PlatformManager", "🚀 Table démarrée et synchronisée avec la session", { 
-        tableId: tableSession.getId(),
-        sessionId: tableManager.getSessionId()
       });
 
       const managedTable: ManagedTable = {
@@ -615,19 +583,16 @@ export class PlatformManager extends EventEmitter {
 
   private async scanForNewTables(): Promise<void> {
     if (!this.adapter || this.status !== "running") {
+      logger.debug("PlatformManager", "Scan tables ignoré", { 
+        hasAdapter: !!this.adapter, 
+        status: this.status 
+      });
       return;
     }
 
     try {
-      const windows = await this.adapter.detectTableWindows();
-      
-      // Sur certains systèmes, detectTableWindows ne déclenche pas d'événements
-      // On s'assure de traiter les fenêtres retournées ici
-      if (windows && windows.length > 0) {
-        for (const window of windows) {
-          await this.handleTableDetected({ window });
-        }
-      }
+      logger.debug("PlatformManager", "🔍 Scan des fenêtres de poker...");
+      await this.adapter.detectTableWindows();
     } catch (error) {
       logger.error("PlatformManager", "Erreur scan tables", { error: String(error) });
     }
