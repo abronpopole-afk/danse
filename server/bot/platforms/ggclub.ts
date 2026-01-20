@@ -1048,6 +1048,17 @@ export class GGClubAdapter extends PlatformAdapter {
       }
 
       this.lastGameState = gameTableState;
+
+      // LOG CRUCIAL POUR LE DEBUG UTILISATEUR
+      logger.info("GGClubAdapter", `[PlatformManager] Événement plateforme | DATA: ${JSON.stringify({
+        type: "game_state",
+        tableId: gameTableState.tableId,
+        street: gameTableState.currentStreet,
+        heroTurn: gameTableState.isHeroTurn,
+        pot: gameTableState.potSize,
+        heroCards: gameTableState.heroCards.map(c => `${c.rank}${c.suit[0]}`)
+      })}`);
+
       return gameTableState;
     } catch (error) {
       logger.error("GGClubAdapter", "Error getting game state", { error: String(error) });
