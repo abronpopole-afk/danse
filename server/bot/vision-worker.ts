@@ -64,15 +64,16 @@ export class VisionWorker {
     if (!adapter) return null;
 
     try {
+      console.log(`[VisionWorker] [${windowHandle}] Appel de adapter.getGameState...`);
       const state = await adapter.getGameState(windowHandle);
       if (state) {
-        console.log(`[VisionWorker] SUCCESS: Game state detected for ${windowHandle}`);
+        console.log(`[VisionWorker] [${windowHandle}] SUCCESS: Game state detected`);
       } else {
-        console.log(`[VisionWorker] WARNING: No game state for ${windowHandle}`);
+        console.log(`[VisionWorker] [${windowHandle}] WARNING: No game state returned`);
       }
       return state;
     } catch (error) {
-      console.error(`[VisionWorker] Error detecting table state for ${windowHandle}:`, error);
+      console.error(`[VisionWorker] [${windowHandle}] Error detecting table state:`, error);
       return null;
     }
   }

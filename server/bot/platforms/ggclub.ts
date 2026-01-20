@@ -958,53 +958,69 @@ export class GGClubAdapter extends PlatformAdapter {
     }
   }
 
-  private async performScreenCapture(windowHandle: number): Promise<Buffer> {
-    await this.addRandomDelay(20);
-
+  private async captureScreen(windowHandle: number): Promise<Buffer> {
+    logger.debug("GGClubAdapter", `[${windowHandle}] captureScreen - tentative`);
     if (screenshotDesktop) {
       try {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
         if (window) {
+          logger.info("GGClubAdapter", `[${windowHandle}] Capture de la fenêtre spécifique: ${window.title}`);
           // Capture specific window if available
           const imgBuffer = await screenshotDesktop({
             screen: window.title, // Use window title for targeting
             format: 'png',
           });
+          logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie pour ${window.title} (${imgBuffer.length} bytes)`);
           return imgBuffer;
         }
 
+        logger.warning("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée, capture de l'écran principal en fallback`);
         // Fallback to capturing the primary screen if window is not found or specified
         const imgBuffer = await screenshotDesktop({ format: 'png' });
         return imgBuffer;
       } catch (error) {
-        console.error("Screen capture error:", error);
+        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture écran`, { error: String(error) });
         // Return empty buffer on error to prevent further issues
         return Buffer.alloc(0);
       }
     }
 
+    logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop non disponible`);
     // Return an empty buffer if screenshot-desktop is not available
     return Buffer.alloc(0);
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
+    logger.info("GGClubAdapter", `[${windowHandle}] getGameState - Début de l'analyse`);
     const tableId = `ggclub_${windowHandle}`;
     const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
     if (!table) {
+      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows`);
       throw new Error(`Table with handle ${windowHandle} not found`);
     }
 
     try {
+      logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
       const screenshot = await this.captureScreen(windowHandle);
+      
+      if (!screenshot || screenshot.length === 0) {
+        logger.error("GGClubAdapter", `[${windowHandle}] Capture d'écran ÉCHOUÉE ou vide`);
+        throw new Error("Screenshot capture failed or returned empty buffer");
+      }
+      
+      logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie (${screenshot.length} octets). Initialisation OCR Pipeline...`);
+      
       const { initializeOCRPipeline } = await import("../ocr-pipeline/ocr-pipeline");
       const ocrPipeline = await initializeOCRPipeline();
       
-      // Crucial: Set the frame size for proper scaling of regions
-      // This fixes the issue where regions don't match the window size
+      logger.info("GGClubAdapter", `[${windowHandle}] OCR Pipeline initialisé. Configuration taille frame: ${table.width}x${table.height}`);
       ocrPipeline.setFrameSize(table.width, table.height);
       
       const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
+      logger.info("GGClubAdapter", `[${windowHandle}] Frame poussée au pipeline. Extraction de l'état...`);
+      
       const state = await ocrPipeline.extractTableState(frame);
+      logger.info("GGClubAdapter", `[${windowHandle}] État extrait du pipeline OCR`, { state });
       
       // Map extracted state to GameTableState
       const gameTableState: GameTableState = {
