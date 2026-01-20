@@ -49,7 +49,7 @@ async function buildAll() {
   // Always exclude native/optional modules
   const nativeModules = [
     'onnxruntime-node',
-    // 'robotjs', // Exclude robotjs from build since we use a mock on non-Windows
+    'robotjs',
     'screenshot-desktop',
     'node-window-manager',
     'sharp',
