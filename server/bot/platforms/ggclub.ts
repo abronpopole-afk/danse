@@ -305,17 +305,17 @@ export class GGClubAdapter extends PlatformAdapter {
   private getDefaultScreenLayout(): GGClubScreenLayout {
     return {
       heroCardsRegion: [
-        { x: 380, y: 450, width: 120, height: 80 }, // Card 1 region (wider)
-        { x: 440, y: 450, width: 120, height: 80 }  // Card 2 region (wider)
+        { x: 410, y: 455, width: 45, height: 65 }, // Card 1 - Rank/Suit area
+        { x: 455, y: 455, width: 45, height: 65 }  // Card 2 - Rank/Suit area
       ],
-      communityCardsRegion: [{ x: 250, y: 270, width: 380, height: 110 }],
-      potRegion: { x: 370, y: 220, width: 140, height: 50 },
-      actionButtonsRegion: { x: 480, y: 510, width: 420, height: 100 },
-      betSliderRegion: { x: 480, y: 470, width: 340, height: 40 },
+      communityCardsRegion: [{ x: 280, y: 275, width: 340, height: 80 }],
+      potRegion: { x: 400, y: 225, width: 100, height: 40 },
+      actionButtonsRegion: { x: 500, y: 520, width: 380, height: 70 },
+      betSliderRegion: { x: 500, y: 485, width: 300, height: 30 },
       playerSeats: this.generatePlayerSeatRegions(9),
       dealerButtonRegion: { x: 0, y: 0, width: 40, height: 40 },
-      chatRegion: { x: 10, y: 400, width: 220, height: 160 },
-      timerRegion: { x: 390, y: 190, width: 100, height: 40 },
+      chatRegion: { x: 10, y: 410, width: 200, height: 150 },
+      timerRegion: { x: 420, y: 195, width: 80, height: 35 },
     };
   }
 
@@ -1056,6 +1056,9 @@ export class GGClubAdapter extends PlatformAdapter {
 
     // Cache last state
     this.lastGameState = gameState;
+
+    console.log(`[GGClubAdapter] === ÉTAT FINAL EMIS [${windowHandle}] ===`);
+    console.log(JSON.stringify(gameState, null, 2));
 
     this.emitPlatformEvent("game_state", { gameState });
 
