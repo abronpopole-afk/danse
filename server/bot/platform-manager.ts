@@ -207,7 +207,9 @@ export class PlatformManager extends EventEmitter {
 
       this.managedTables.set(window.handle, managedTable);
 
+      // Force status to playing to ensure polling triggers OCR
       await tableSession.start();
+      tableSession.updateState({ status: "playing" });
 
       await storage.createActionLog({
         tableId: tableSession.getId(),
