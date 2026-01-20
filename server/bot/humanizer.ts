@@ -222,6 +222,9 @@ export class Humanizer {
     endY: number,
     duration: number
   ): BezierPoint[] {
+    // If we're on a platform that doesn't support mouse movements (like Replit/Linux)
+    // we still generate the path for simulation/debug purposes, but the actual 
+    // robotjs call will be skipped in the platform adapter.
     if (!this.settings.enableBezierMouse) {
       return [
         { x: startX, y: startY, timestamp: 0 },
