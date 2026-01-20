@@ -572,8 +572,21 @@ export class MultiTableManager extends EventEmitter {
       throw new Error(`Maximum de ${this.maxTables} tables atteint`);
     }
 
+    // Get session ID - use stored or fallback to active session
+    let sessionId = this.sessionId;
+    if (!sessionId) {
+      const activeSession = await storage.getActiveBotSession();
+      sessionId = activeSession?.id ?? null;
+      if (activeSession?.id) {
+        console.log(`[TableManager] ⚠️ sessionId was undefined, using active session: ${activeSession.id}`);
+        this.sessionId = activeSession.id;
+      }
+    }
+
+    console.log(`[TableManager] Adding table: ${config.tableName} with sessionId: ${sessionId}`);
+
     const pokerTable = await storage.createPokerTable({
-      sessionId: this.sessionId ?? null,
+      sessionId,
       tableIdentifier: config.tableIdentifier,
       tableName: config.tableName,
       stakes: config.stakes,
