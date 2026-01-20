@@ -73,15 +73,12 @@ async function loadNativeModules(): Promise<void> {
     }
 
     try {
-      const robotModule = await loadNativeModule<any>("robotjs");
-      robot = robotModule?.default || robotModule;
+      robot = await loadNativeModule<any>("robotjs");
       if (robot) {
-        logger.info("GGClubAdapter", "✓ robotjs chargé (Windows)");
-      } else {
-        throw new Error("Module loaded but no default export");
+        logger.info("GGClubAdapter", "✓ robotjs chargé (ou wrapper simulé)");
       }
     } catch (e) {
-      logger.error("GGClubAdapter", "❌ robotjs ÉCHEC (Attendu sur Replit/Linux)", { error: String(e) });
+      logger.error("GGClubAdapter", "❌ robotjs ÉCHEC (Inattendu avec wrapper)", { error: String(e) });
     }
 
     try {

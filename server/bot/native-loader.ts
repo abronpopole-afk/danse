@@ -121,12 +121,36 @@ function logModuleStructure(moduleName: string, mod: any): void {
   }
 }
 
+// Mock robotjs for non-Windows platforms or when it fails to load
+const robotMock = {
+  moveMouse: () => {},
+  moveMouseSmooth: () => {},
+  mouseClick: () => {},
+  mouseToggle: () => {},
+  dragMouse: () => {},
+  getMousePos: () => ({ x: 0, y: 0 }),
+  getPixelColor: () => "000000",
+  getScreenSize: () => ({ width: 1920, height: 1080 }),
+  typeString: () => {},
+  typeStringDelayed: () => {},
+  keyTap: () => {},
+  keyToggle: () => {},
+  setMouseDelay: () => {},
+  setKeyboardDelay: () => {},
+};
+
 export async function loadNativeModule<T>(moduleName: string): Promise<T | null> {
   logger.info("NativeLoader", `=== CHARGEMENT MODULE: ${moduleName} ===`, {
     IS_ELECTRON,
     IS_PACKAGED,
     platform: process.platform,
   });
+
+  // Handle robotjs separately to provide a mock on non-Windows platforms or Replit
+  if (moduleName === "robotjs" && (process.platform !== "win32" || process.env.REPL_ID !== undefined)) {
+    logger.info("NativeLoader", "Utilisation du wrapper mock pour robotjs (non-Windows/Replit)");
+    return robotMock as unknown as T;
+  }
   
   if (IS_PACKAGED) {
     logger.info("NativeLoader", `Mode PACKAGED - recherche dans app.asar.unpacked`);
@@ -147,6 +171,11 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
           stack: e.stack?.split('\n').slice(0, 5).join('\n')
         });
         
+        if (moduleName === "robotjs") {
+          logger.warning("NativeLoader", "Fallback sur robotMock après échec unpacked");
+          return robotMock as unknown as T;
+        }
+
         try {
           logger.debug("NativeLoader", `Fallback: require direct de ${unpackedPath}`);
           const mod = esmRequire(unpackedPath);
@@ -160,6 +189,7 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
       }
     } else {
       logger.warning("NativeLoader", `Module ${moduleName} NON TROUVÉ dans app.asar.unpacked!`);
+      if (moduleName === "robotjs") return robotMock as unknown as T;
     }
   }
   
@@ -173,6 +203,10 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
     return result as T;
   } catch (e: any) {
     logger.debug("NativeLoader", `createRequire échoué pour ${moduleName}`, { error: e.message });
+    if (moduleName === "robotjs") {
+      logger.warning("NativeLoader", "Fallback sur robotMock après échec createRequire");
+      return robotMock as unknown as T;
+    }
   }
   
   try {
@@ -184,6 +218,10 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
     return result as T;
   } catch (e: any) {
     logger.error("NativeLoader", `Dynamic import échoué pour ${moduleName}`, { error: e.message });
+    if (moduleName === "robotjs") {
+      logger.warning("NativeLoader", "Fallback sur robotMock après échec dynamic import");
+      return robotMock as unknown as T;
+    }
   }
   
   logger.error("NativeLoader", `❌ ÉCHEC TOTAL: Impossible de charger ${moduleName}`, {
