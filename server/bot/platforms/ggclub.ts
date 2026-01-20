@@ -1079,30 +1079,33 @@ export class GGClubAdapter extends PlatformAdapter {
       logger.info("GGClubAdapter", `[${windowHandle}] Frame poussée au pipeline. Extraction de l'état...`);
       
       const state = await ocrPipeline.extractTableState(frame);
-      logger.info("GGClubAdapter", `[${windowHandle}] État brut extrait du pipeline OCR`, { 
-        potText: state.potSize,
-        actions: state.availableActions,
-        heroCards: state.heroCards
+      const structuredState = GameStateDetector.detect({
+        ...state,
+        isHeroTurn,
+        availableActions: buttons,
+        currentStreet: (state.communityCards?.length === 0 || !state.communityCards) ? "preflop" : 
+                      state.communityCards?.length === 3 ? "flop" :
+                      state.communityCards?.length === 4 ? "turn" :
+                      state.communityCards?.length === 5 ? "river" : "unknown",
       });
-      
+
+      logger.info("GGClubAdapter", `[${windowHandle}] État structuré détecté`, { structuredState });
+
       // Map extracted state to GameTableState
       const gameTableState: GameTableState = {
         tableId: table.windowId,
         windowHandle: table.handle,
         heroCards: (state.heroCards || []).map(c => parseCardNotation(c)),
         communityCards: (state.communityCards || []).map(c => parseCardNotation(c)),
-        potSize: state.potSize || 0,
+        potSize: structuredState.potSize || 0,
         heroStack: state.heroStack || 0,
-        heroPosition: 0, // Default for now
+        heroPosition: 0, 
         players: state.playersData ? (state.playersData as any[]) : [], 
-        isHeroTurn: isHeroTurn, // Utilise notre signal fiable de l'étape 1
-        currentStreet: (state.communityCards?.length === 0 || !state.communityCards) ? "preflop" : 
-                      state.communityCards?.length === 3 ? "flop" :
-                      state.communityCards?.length === 4 ? "turn" :
-                      state.communityCards?.length === 5 ? "river" : "unknown",
+        isHeroTurn: structuredState.heroToAct,
+        currentStreet: structuredState.street || "unknown",
         facingBet: 0,
-        blindLevel: { smallBlind: 1, bigBlind: 2 }, // Default for now
-        availableActions: buttons, // Utilise les boutons détectés à l'étape 1
+        blindLevel: { smallBlind: 1, bigBlind: 2 }, 
+        availableActions: buttons,
         timestamp: Date.now()
       };
 
