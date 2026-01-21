@@ -1,0 +1,57 @@
+ 1. Le bot détecte bien les fenêtres GGClub
+On voit clairement :
+- Détection répétée de la fenêtre "coucou"
+- Bounds cohérents
+- reason: "valid_poker_table"
+- Le PlatformManager reçoit bien les événements table_detected
+Donc la détection de fenêtre fonctionne.
+
+🔥 2. Le Game State Detector est bel et bienTu as dans les logs :
+[INFO] [GGClubAdapter] [undefined] getGameState - Début de l'analyse
+[ERROR] [GGClubAdapter] [undefined] Table non trouvée dans activeWindows
+
+
+➡️ Donc oui, tu as un game state detector.
+Il s’appelle getGameState() et il tourne en boucle.
+Mais…
+
+🚨 3. Le Game State Detector échoue systématiquement
+Chaque appel à getGameState() échoue avec :
+Table non trouvée dans activeWindows
+
+
+Ce message est très révélateur.
+Cela signifie :
+❌ Le Game State Detector ne retrouve pas la table qu’il est censé analyser
+Même si la fenêtre est détectée par le scanner, elle n’est pas présente dans activeWindows au moment où getGameState() s’exécute.
+Donc :
+- La détection de fenêtre fonctionne
+- L’ajout de table dans la session fonctionne
+- Mais la synchronisation entre les deux ne fonctionne pas
+
+🎯 4. Le bug exact : windowId = "ggclub_undefined"
+Dans les logs :
+windowId: "ggclub_undefined"
+
+
+Ça, c’est un smoking gun.
+Ça veut dire :
+👉 Le handle natif de la fenêtre n’est pas récupéré
+Donc :
+- La table est ajoutée avec un ID invalide
+- activeWindows ne peut pas la retrouver
+- getGameState() ne peut pas la matcher
+- Le bot ne peut pas analyser l’état du jeu
+- Le bot ne peut pas jouer
+C’est la cause racine.
+
+🧠 5. Pourquoi le handle est undefined ?
+Plusieurs possibilités :
+1️⃣ node-window-manager ne renvoie pas de handle en mode packaged
+Très probable.
+2️⃣ Tu utilises window.title comme identifiant
+Mais GGClub ouvre plusieurs fenêtres "ClubGG" → collisions.
+3️⃣ Le code qui mappe la fenêtre détectée vers une table stockée est cassé
+Exemple :
+- la détection utilise getWindows()
+- mais getGameState() utilise une autre source (ex: cache interne)

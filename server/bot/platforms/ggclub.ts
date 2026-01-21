@@ -645,6 +645,22 @@ export class GGClubAdapter extends PlatformAdapter {
 
         const ggclubWindows = await this.scanForGGClubWindows();
     
+    // Update activeWindows map with new data
+    for (const win of ggclubWindows) {
+      const windowId = `ggclub_${win.handle}`;
+      this.activeWindows.set(windowId, {
+        windowId,
+        handle: win.handle,
+        title: win.title,
+        x: win.x,
+        y: win.y,
+        width: win.width,
+        height: win.height,
+        isActive: win.isActive,
+        isMinimized: win.isMinimized
+      });
+    }
+    
     const results: TableWindow[] = ggclubWindows.map(win => ({
       windowId: `ggclub_${win.handle}`,
       handle: win.handle,
@@ -814,7 +830,7 @@ export class GGClubAdapter extends PlatformAdapter {
               bounds 
             });
             results.push({
-              handle: win.handle,
+              handle: win.handle || win.processId || Math.floor(Math.random() * 1000000),
               title: title,
               x: bounds.x,
               y: bounds.y,
@@ -1001,9 +1017,12 @@ export class GGClubAdapter extends PlatformAdapter {
   async getGameState(windowHandle: number): Promise<GameTableState> {
     logger.info("GGClubAdapter", `[${windowHandle}] getGameState - Début de l'analyse`);
     const tableId = `ggclub_${windowHandle}`;
-    const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
+    const table = this.activeWindows.get(tableId) || 
+                  this.activeWindows.get(String(windowHandle)) ||
+                  Array.from(this.activeWindows.values()).find(w => w.handle === windowHandle);
+    
     if (!table) {
-      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows`);
+      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows. Handles dispos: ${Array.from(this.activeWindows.keys())}`);
       throw new Error(`Table with handle ${windowHandle} not found`);
     }
 
