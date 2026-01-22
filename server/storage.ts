@@ -120,10 +120,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBotSession(session: InsertBotSession): Promise<BotSession> {
-    logger.info('[Storage]', 'Création nouvelle session bot', { 
-      userId: session.userId,
-      platform: session.platform 
-    });
+    logger.info('[Storage]', 'Création nouvelle session bot');
     const result = await this.db.insert(this.schema.botSessions).values(session).returning();
     logger.session('[Storage]', '✅ Session bot créée', { 
       sessionId: result[0].id,
@@ -227,7 +224,7 @@ export class DatabaseStorage implements IStorage {
     logger.info('[Storage]', '✅ Tables récupérées', { 
       sessionId,
       tableCount: tables.length,
-      tables: tables.map(t => ({ id: t.id, name: t.tableName, status: t.status }))
+      tables: tables.map((t: PokerTable) => ({ id: t.id, name: t.tableName, status: t.status }))
     });
     return tables;
   }
