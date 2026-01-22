@@ -694,6 +694,7 @@ export class GGClubAdapter extends PlatformAdapter {
     if (IS_WINDOWS && windowManager) {
       try {
         const windows = windowManager.getWindows();
+        const activeWindow = typeof windowManager.getActiveWindow === 'function' ? windowManager.getActiveWindow() : null;
         logger.info("GGClubAdapter", `Scan de ${windows.length} fenêtres système...`);
 
         // Log TOUTES les fenêtres pour debug avec plus de détails
@@ -2595,7 +2596,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
         if (targetWindow) {
           // Check if the window is already active to avoid unnecessary actions
-          const activeWindow = windowManager.windowManager.getActiveWindow();
+          const activeWindow = typeof windowManager.getActiveWindow === 'function' ? windowManager.getActiveWindow() : (windowManager.windowManager && typeof windowManager.windowManager.getActiveWindow === 'function' ? windowManager.windowManager.getActiveWindow() : null);
           if (activeWindow && activeWindow.id === windowHandle) {
             console.log(`[GGClubAdapter] Window ${windowHandle} is already focused.`);
             return;
