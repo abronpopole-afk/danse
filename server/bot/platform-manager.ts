@@ -190,11 +190,12 @@ export class PlatformManager extends EventEmitter {
 
   private async handleTableDetected(data: { window: TableWindow }): Promise<void> {
     const { window } = data;
-    logger.info("PlatformManager", `Traitement table détectée: ${window.title} (${window.handle})`);
+    const cleanHandle = Math.abs(window.handle);
+    logger.info("PlatformManager", `Traitement table détectée: ${window.title} (${cleanHandle})`);
 
     // Check if window handle or windowId is already managed
-    if (this.managedTables.has(window.handle)) {
-      logger.debug("PlatformManager", "Table avec ce handle déjà gérée", { handle: window.handle });
+    if (this.managedTables.has(cleanHandle)) {
+      logger.debug("PlatformManager", "Table avec ce handle déjà gérée", { handle: cleanHandle });
       return;
     }
 
@@ -203,7 +204,7 @@ export class PlatformManager extends EventEmitter {
       if (managed.windowId === window.windowId) {
         logger.debug("PlatformManager", "Table avec cet ID déjà gérée", { windowId: window.windowId });
         // Update handle mapping if it changed but ID is same
-        this.managedTables.set(window.handle, managed);
+        this.managedTables.set(cleanHandle, managed);
         return;
       }
     }
@@ -217,7 +218,7 @@ export class PlatformManager extends EventEmitter {
       });
 
       const managedTable: ManagedTable = {
-        windowHandle: window.handle,
+        windowHandle: cleanHandle,
         windowId: window.windowId,
         tableSession,
         isProcessingAction: false,
@@ -225,7 +226,7 @@ export class PlatformManager extends EventEmitter {
         actionQueue: [],
       };
 
-      this.managedTables.set(window.handle, managedTable);
+      this.managedTables.set(cleanHandle, managedTable);
 
       // Force status to playing to ensure polling triggers OCR
       await tableSession.start();
@@ -235,10 +236,10 @@ export class PlatformManager extends EventEmitter {
         tableId: tableSession.getId(),
         logType: "info",
         message: `Table détectée: ${window.title}`,
-        metadata: { windowHandle: window.handle },
+        metadata: { windowHandle: cleanHandle },
       });
 
-      this.emit("tableAdded", { windowHandle: window.handle, tableId: tableSession.getId() });
+      this.emit("tableAdded", { windowHandle: cleanHandle, tableId: tableSession.getId() });
     } catch (error) {
       console.error("Error handling table detection:", error);
       this.emit("error", { message: "Failed to add detected table", error });

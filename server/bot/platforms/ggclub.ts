@@ -525,12 +525,13 @@ export class GGClubAdapter extends PlatformAdapter {
         }
 
         for (const window of windows) {
-          // Create a unique stable window ID using handle if available, or title+position as fallback
-          const stableWindowId = window.windowId && window.windowId !== "ggclub_undefined" 
-            ? window.windowId 
-            : `ggclub_${window.handle || (window.title + "_" + window.x + "_" + window.y).replace(/\s+/g, "_")}`;
+            // Create a unique stable window ID using handle if available, or title+position as fallback
+            const cleanHandle = Math.abs(window.handle);
+            const stableWindowId = window.windowId && window.windowId !== "ggclub_undefined" 
+              ? window.windowId 
+              : `ggclub_${cleanHandle || (window.title + "_" + window.x + "_" + window.y).replace(/\s+/g, "_")}`;
 
-          if (!this.activeWindows.has(stableWindowId)) {
+            if (!this.activeWindows.has(stableWindowId)) {
             const lowerProcess = (window.processName || "").toLowerCase();
             const lowerTitle = (window.title || "").toLowerCase();
 
@@ -581,11 +582,11 @@ export class GGClubAdapter extends PlatformAdapter {
             logger.session("GGClubAdapter", "🎰 VRAIE TABLE DÉTECTÉE", {
               title: window.title,
               windowId: stableWindowId,
-              handle: window.handle,
+              handle: cleanHandle,
               size: `${window.width}x${window.height}`
             });
             
-            const updatedWindow = { ...window, windowId: stableWindowId };
+            const updatedWindow = { ...window, windowId: stableWindowId, handle: cleanHandle };
             this.activeWindows.set(stableWindowId, updatedWindow);
             this.emitPlatformEvent("table_detected", { window: updatedWindow });
           }
