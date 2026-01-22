@@ -7,6 +7,7 @@
 
 import * as ort from 'onnxruntime-node';
 import { preprocessForOCR } from '../image-processing';
+import { logger } from '../../logger';
 
 export interface ONNXOCRConfig {
   modelPath: string;
@@ -94,20 +95,20 @@ export class ONNXOCREngine {
 
     // Prétraitement image
     const preprocessed = this.preprocessImage(imageBuffer, width, height);
-    console.log(`[ONNXOCREngine] 🧪 Prétraitement terminé: ${preprocessed.length} pixels normalisés`);
+    logger.info("ONNXOCREngine", `🧪 Image preprocessed: size=${width}x${height} -> float32 array`);
 
     // Créer tensor ONNX
     const inputTensor = new ort.Tensor('float32', preprocessed, [1, 1, height, width]);
 
     try {
       // Inférence
-      console.log(`[ONNXOCREngine] 🧠 Lancement de l'inférence ONNX...`);
+      logger.info("ONNXOCREngine", `🧠 Running ONNX inference...`);
       const feeds = { [this.session.inputNames[0]]: inputTensor };
       const results = await this.session.run(feeds);
 
       // Décoder output
       const outputData = results[this.session.outputNames[0]].data as Float32Array;
-      console.log(`[ONNXOCREngine] 📥 Output ONNX reçu: ${outputData.length} floats`);
+      logger.info("ONNXOCREngine", `📥 ONNX output received: ${outputData.length} floats`);
       
       const decoded = this.decodeOutput(outputData, type);
       const latency = Date.now() - startTime;

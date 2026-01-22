@@ -893,15 +893,17 @@ export class GGClubAdapter extends PlatformAdapter {
     try {
       const { getDXGICapture } = await import("../dxgi-capture");
       const dxgi = getDXGICapture();
+      logger.info("GGClubAdapter", `[${windowHandle}] 🛰️ Trying DXGI capture...`);
       const buffer = await dxgi.captureScreen(windowHandle);
       
       if (buffer && buffer.length > 0) {
+        logger.info("GGClubAdapter", `[${windowHandle}] ✅ DXGI Success: ${buffer.length} bytes`);
         this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
         this.antiDetectionMonitor.recordScreenCapture();
         return buffer;
       }
     } catch (error) {
-      console.log(`[Capture] DXGI capture not available for ${windowHandle}`);
+      logger.debug("GGClubAdapter", `[${windowHandle}] DXGI not available`);
     }
 
     // Fallback 1: robotjs + window bounds
@@ -915,10 +917,10 @@ export class GGClubAdapter extends PlatformAdapter {
         const bounds = window.getBounds();
         // PROTECTION MÉMOIRE: Vérifier les bounds avant capture
         if (bounds.width > 2000 || bounds.height > 2000) {
-          logger.error("GGClubAdapter", `🚨 robotjs: Bounds invalides détectés (${bounds.width}x${bounds.height}). Skip capture.`);
+          logger.error("GGClubAdapter", `🚨 robotjs: AVOIDED OOM - Full screen bounds detected (${bounds.width}x${bounds.height})`);
           throw new Error("Invalid window bounds");
         }
-        logger.info("GGClubAdapter", `[${windowHandle}] Capture robotjs sur bounds:`, bounds);
+        logger.info("GGClubAdapter", `[${windowHandle}] 🤖 Trying robotjs capture: ${bounds.width}x${bounds.height} at (${bounds.x},${bounds.y})`);
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
         
         if (bitmap && bitmap.image) {
@@ -1191,20 +1193,20 @@ export class GGClubAdapter extends PlatformAdapter {
       throw new Error(`Table with handle ${cleanHandle} not found`);
     }
 
-    logger.info("GGClubAdapter", `[${cleanHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
+    logger.info("GGClubAdapter", `[${cleanHandle}] 📋 TABLE_INFO: "${table.title}" Dimensions=${table.width}x${table.height} Position=(${table.x},${table.y})`);
 
     // LOG DE SÉCURITÉ : Si les dimensions de la fenêtre enregistrée sont suspectes
     if (table.width > 2000 || table.height > 2000) {
-      logger.warning("GGClubAdapter", `[${cleanHandle}] Dimensions de table suspectes: ${table.width}x${table.height}. Tentative de rafraîchissement des bounds.`);
+      logger.warning("GGClubAdapter", `[${cleanHandle}] ⚠️ Dimensions suspectes detected: ${table.width}x${table.height}. Refreshing bounds via windowManager.`);
       const { windowManager } = require("node-window-manager");
       const win = windowManager.getWindows().find((w: any) => Math.abs(w.handle) === cleanHandle);
       if (win) {
         const bounds = win.getBounds();
+        logger.info("GGClubAdapter", `[${cleanHandle}] 🔄 Old bounds: ${table.width}x${table.height} -> New bounds: ${bounds.width}x${bounds.height}`);
         table.width = bounds.width;
         table.height = bounds.height;
         table.x = bounds.x;
         table.y = bounds.y;
-        logger.info("GGClubAdapter", `[${cleanHandle}] Bounds rafraîchis: ${table.width}x${table.height}`);
       }
     }
 
@@ -1240,7 +1242,7 @@ export class GGClubAdapter extends PlatformAdapter {
       // LOG D'ÉTAT INITIAL
       logger.info("GGClubAdapter", `[${cleanHandle}] État de activeWindows: ${this.activeWindows.has(tableId)}`);
       
-      logger.info("GGClubAdapter", `[${cleanHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
+      logger.info("GGClubAdapter", `[${cleanHandle}] Tentative de capture d'écran...`);
       const screenshot = await this.captureScreen(cleanHandle);
       
       if (!screenshot || screenshot.length === 0) {
@@ -1248,15 +1250,18 @@ export class GGClubAdapter extends PlatformAdapter {
         throw new Error("Screenshot capture failed or returned empty buffer");
       }
       
+      logger.info("GGClubAdapter", `[${windowHandle}] 📦 CAPTURE_RESULT: size=${screenshot.length} bytes`);
+
       // VÉRIFICATION FINALE DES DIMENSIONS DU BUFFER VS DIMENSIONS ATTENDUES
       const expectedSize = table.width * table.height * 4;
       if (screenshot.length !== expectedSize) {
-        logger.error("GGClubAdapter", `[${windowHandle}] 🚨 TAILLE BUFFER INCOHÉRENTE: reçu ${screenshot.length} bytes, attendu ${expectedSize} (pour ${table.width}x${table.height})`);
+        logger.warning("GGClubAdapter", `[${windowHandle}] ⚠️ BUFFER_MISMATCH: Received ${screenshot.length}b, Expected ${expectedSize}b (Diff: ${screenshot.length - expectedSize}b)`);
         
         // Si le buffer est un PNG (89504e47...), il n'a pas été décodé
         if (screenshot.length > 8 && screenshot.slice(0, 4).toString('hex') === '89504e47') {
-          logger.error("GGClubAdapter", `[${windowHandle}] Le buffer est au format PNG. Décodage forcé.`);
+          logger.info("GGClubAdapter", `[${windowHandle}] 🛠️ PNG detected. Force decoding...`);
           const decoded = await this.decodePngToRgba(screenshot);
+          logger.info("GGClubAdapter", `[${windowHandle}] ✅ Decoded PNG to RGBA: ${decoded.length} bytes`);
           // On injecte le buffer décodé dans le cache pour éviter de reboucler infiniment
           this.lastScreenCaptures.set(windowHandle, { buffer: decoded, timestamp: Date.now() });
           return this.getGameState(windowHandle); 
@@ -1287,28 +1292,28 @@ export class GGClubAdapter extends PlatformAdapter {
         });
       }
 
-      logger.info("GGClubAdapter", `[${windowHandle}] 🚀 Initialisation du pipeline OCR...`);
+      logger.info("GGClubAdapter", `[${windowHandle}] 🚀 INITIALIZING OCR PIPELINE...`);
       const { initializeOCRPipeline } = await import("../ocr-pipeline/ocr-pipeline");
       const ocrPipeline = await initializeOCRPipeline();
       
-      logger.info("GGClubAdapter", `[${windowHandle}] Config pipeline: ${table.width}x${table.height}`);
+      logger.info("GGClubAdapter", `[${windowHandle}] 📐 PIPELINE_CONFIG: target=${table.width}x${table.height}`);
       ocrPipeline.setFrameSize(table.width, table.height);
       
       const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
-      logger.info("GGClubAdapter", `[${windowHandle}] Frame injectée. Extraction de l'état de la table...`);
+      logger.info("GGClubAdapter", `[${windowHandle}] 🖼️ Frame pushed to pipeline buffer.`);
       
       let state: any = { potSize: 0, heroCards: [], communityCards: [], playersData: [] };
       try {
-        logger.info("GGClubAdapter", `[${windowHandle}] Appel de ocrPipeline.extractTableState...`);
+        logger.info("GGClubAdapter", `[${windowHandle}] 🔍 RUNNING EXTRACTION...`);
         const result = await ocrPipeline.extractTableState(frame);
         if (result) {
           state = { ...state, ...result };
-          logger.info("GGClubAdapter", `[${windowHandle}] ✅ ocrPipeline.extractTableState a retourné un résultat`);
+          logger.info("GGClubAdapter", `[${windowHandle}] ✅ EXTRACTION_SUCCESS`);
         } else {
-          logger.warn("GGClubAdapter", `[${windowHandle}] ⚠️ ocrPipeline.extractTableState a retourné null/undefined`);
+          logger.warn("GGClubAdapter", `[${windowHandle}] ⚠️ EXTRACTION_EMPTY`);
         }
       } catch (ocrError) {
-        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Erreur attrapée DIRECTEMENT autour de l'appel: ${String(ocrError)}`);
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ EXTRACTION_CRASH: ${String(ocrError)}`);
       }
       
       logger.info("GGClubAdapter", `[${windowHandle}] 📊 OCR PIPELINE RESULTS:`, { 
