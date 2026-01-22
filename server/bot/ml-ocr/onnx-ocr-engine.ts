@@ -73,7 +73,7 @@ export class ONNXOCREngine {
       this.initialized = true;
       console.log('[ONNXOCREngine] Initialized with', this.session.inputNames);
     } catch (error) {
-      console.warn('[ONNXOCREngine] Failed to load ONNX model:', error);
+      console.error('[ONNXOCREngine] ❌ CRITICAL: Failed to load ONNX model at ' + this.config.modelPath, error);
       console.warn('[ONNXOCREngine] Falling back to other OCR methods');
       this.initialized = false;
     }

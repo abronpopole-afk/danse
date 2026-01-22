@@ -1236,7 +1236,19 @@ export class GGClubAdapter extends PlatformAdapter {
       const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
       logger.info("GGClubAdapter", `[${windowHandle}] Frame injectée. Extraction de l'état de la table...`);
       
-      const state = await ocrPipeline.extractTableState(frame);
+      let state;
+      try {
+        state = await ocrPipeline.extractTableState(frame);
+      } catch (ocrError) {
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Erreur critique dans extractTableState: ${String(ocrError)}`);
+        // Fallback state minimal pour éviter le crash de la boucle de traitement
+        state = {
+          potSize: 0,
+          heroCards: [],
+          communityCards: [],
+          playersData: []
+        };
+      }
       
       logger.info("GGClubAdapter", `[${windowHandle}] 📊 OCR PIPELINE RESULTS:`, { 
         pot: state.potSize, 
