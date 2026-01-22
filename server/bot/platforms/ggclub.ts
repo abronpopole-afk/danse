@@ -1069,7 +1069,7 @@ export class GGClubAdapter extends PlatformAdapter {
           idatData.push(chunkData);
         }
         
-        offset += 12 + chunkLength + 4; // 4 (length) + 4 (type) + data + 4 (crc)
+        offset += 12 + chunkLength; // 4 (length) + 4 (type) + data + 4 (crc)
       }
       
       if (idatData.length === 0) {
