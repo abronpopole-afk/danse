@@ -312,23 +312,27 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private getDefaultScreenLayout(): GGClubScreenLayout {
+    // Coordonnées relatives (0.0 à 1.0) basées sur une résolution de référence de 880x600
+    const refW = 880;
+    const refH = 600;
+
     return {
       heroCardsRegion: [
-        { x: 410, y: 450, width: 50, height: 75 }, // Zone Rang/Couleur Carte 1
-        { x: 460, y: 450, width: 50, height: 75 }  // Zone Rang/Couleur Carte 2
+        { x: 410 / refW, y: 450 / refH, width: 50 / refW, height: 75 / refH },
+        { x: 460 / refW, y: 450 / refH, width: 50 / refW, height: 75 / refH }
       ],
-      communityCardsRegion: [{ x: 280, y: 270, width: 340, height: 90 }],
-      potRegion: { x: 390, y: 220, width: 120, height: 50 },
-      actionButtonsRegion: { x: 480, y: 510, width: 400, height: 80 },
-      betSliderRegion: { x: 480, y: 470, width: 320, height: 40 },
-      playerSeats: this.generatePlayerSeatRegions(9),
-      dealerButtonRegion: { x: 0, y: 0, width: 40, height: 40 },
-      chatRegion: { x: 10, y: 400, width: 220, height: 160 },
-      timerRegion: { x: 400, y: 190, width: 100, height: 40 },
+      communityCardsRegion: [{ x: 280 / refW, y: 270 / refH, width: 340 / refW, height: 90 / refH }],
+      potRegion: { x: 390 / refW, y: 220 / refH, width: 120 / refW, height: 50 / refH },
+      actionButtonsRegion: { x: 480 / refW, y: 510 / refH, width: 400 / refW, height: 80 / refH },
+      betSliderRegion: { x: 480 / refW, y: 470 / refH, width: 320 / refW, height: 40 / refH },
+      playerSeats: this.generatePlayerSeatRegions(9, refW, refH),
+      dealerButtonRegion: { x: 440 / refW, y: 200 / refH, width: 40 / refW, height: 40 / refH },
+      chatRegion: { x: 10 / refW, y: 400 / refH, width: 220 / refW, height: 160 / refH },
+      timerRegion: { x: 400 / refW, y: 190 / refH, width: 100 / refW, height: 40 / refH },
     };
   }
 
-  private generatePlayerSeatRegions(maxPlayers: number): ScreenRegion[] {
+  private generatePlayerSeatRegions(maxPlayers: number, refW: number, refH: number): ScreenRegion[] {
     const regions: ScreenRegion[] = [];
     const centerX = 440;
     const centerY = 300;
@@ -337,9 +341,9 @@ export class GGClubAdapter extends PlatformAdapter {
 
     for (let i = 0; i < maxPlayers; i++) {
       const angle = (2 * Math.PI * i) / maxPlayers - Math.PI / 2;
-      const x = centerX + radiusX * Math.cos(angle) - 60;
-      const y = centerY + radiusY * Math.sin(angle) - 40;
-      regions.push({ x: Math.round(x), y: Math.round(y), width: 120, height: 80 });
+      const x = (centerX + radiusX * Math.cos(angle) - 60) / refW;
+      const y = (centerY + radiusY * Math.sin(angle) - 40) / refH;
+      regions.push({ x, y, width: 120 / refW, height: 80 / refH });
     }
 
     return regions;
@@ -1031,35 +1035,30 @@ export class GGClubAdapter extends PlatformAdapter {
     logger.info("GGClubAdapter", `[${cleanHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
 
     // MISE À JOUR DYNAMIQUE DU SCALING DES RÉGIONS
-    if (this.activeCalibration) {
-      const scaled = this.calibrationManager.scaleRegionsForWindow(
-        this.activeCalibration,
-        table.width,
-        table.height
-      );
-      this.scaledRegions.set(cleanHandle, scaled);
-      
-      // Mise à jour de screenLayout pour utiliser les régions scalées
-      this.screenLayout = {
-        heroCardsRegion: [
-          { ...scaled.heroCards, width: scaled.heroCards.width / 2 },
-          { ...scaled.heroCards, x: scaled.heroCards.x + scaled.heroCards.width / 2, width: scaled.heroCards.width / 2 }
-        ],
-        communityCardsRegion: [scaled.communityCards],
-        potRegion: scaled.pot,
-        actionButtonsRegion: scaled.actionButtons,
-        betSliderRegion: scaled.betSlider,
-        playerSeats: scaled.playerSeats,
-        dealerButtonRegion: scaled.dealerButton,
-        chatRegion: scaled.chat,
-        timerRegion: scaled.timer
-      };
+    const baseLayout = this.getDefaultScreenLayout();
+    const scale = (region: ScreenRegion) => ({
+      x: Math.round(region.x * table.width),
+      y: Math.round(region.y * table.height),
+      width: Math.round(region.width * table.width),
+      height: Math.round(region.height * table.height),
+    });
 
-      logger.info("GGClubAdapter", `[${cleanHandle}] Régions recalculées pour taille ${table.width}x${table.height}`, {
-        potRegion: this.screenLayout.potRegion,
-        heroCards: this.screenLayout.heroCardsRegion[0]
-      });
-    }
+    this.screenLayout = {
+      heroCardsRegion: baseLayout.heroCardsRegion.map(r => scale(r as ScreenRegion)),
+      communityCardsRegion: baseLayout.communityCardsRegion.map(r => scale(r as ScreenRegion)),
+      potRegion: scale(baseLayout.potRegion),
+      actionButtonsRegion: scale(baseLayout.actionButtonsRegion),
+      betSliderRegion: scale(baseLayout.betSliderRegion),
+      playerSeats: baseLayout.playerSeats.map(r => scale(r)),
+      dealerButtonRegion: scale(baseLayout.dealerButtonRegion),
+      chatRegion: scale(baseLayout.chatRegion),
+      timerRegion: scale(baseLayout.timerRegion),
+    };
+
+    logger.info("📐 RESPONSIVE SYSTEM", `[${cleanHandle}] Régions scalées pour ${table.width}x${table.height}`, {
+      pot: this.screenLayout.potRegion,
+      hero: this.screenLayout.heroCardsRegion[0]
+    });
 
     try {
       logger.info("GGClubAdapter", `[${cleanHandle}] === DÉBUT ANALYSE TABLE ===`);

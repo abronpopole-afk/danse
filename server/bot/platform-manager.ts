@@ -425,8 +425,7 @@ export class PlatformManager extends EventEmitter {
     if (!this.adapter || !this.config) return;
 
     if (this.schedulerStarted) return;
-    this.schedulerStarted = true;
-
+    
     // Lancer le scan initial immédiatement
     logger.info("PlatformManager", "🚀 Lancement du scan initial des tables...");
     this.scanForNewTables().catch(err => {
@@ -482,13 +481,11 @@ export class PlatformManager extends EventEmitter {
     });
 
     // Démarrer l'event loop si pas déjà fait
-    if (!this.schedulerStarted) {
-      this.schedulerStarted = true;
-      scheduler.start().catch(error => {
-        console.error("Task scheduler error:", error);
-        this.schedulerStarted = false;
-      });
-    }
+    this.schedulerStarted = true;
+    scheduler.start().catch(error => {
+      console.error("Task scheduler error:", error);
+      this.schedulerStarted = false;
+    });
   }
 
   private async pollAllGameStatesThrottled(): Promise<void> {
