@@ -1004,32 +1004,37 @@ export class GGClubAdapter extends PlatformAdapter {
       try {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
         if (window) {
-          logger.info("GGClubAdapter", `[${windowHandle}] Capture de la fenêtre: ${window.title}`);
+          logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture pour la fenêtre: ${window.title} (${window.width}x${window.height})`);
           
           const pngBuffer = await screenshotDesktop({
             screen: window.title,
             format: 'png',
           });
           
-          logger.info("GGClubAdapter", `[${windowHandle}] PNG reçu (${pngBuffer.length} bytes), décodage...`);
+          if (!pngBuffer || pngBuffer.length === 0) {
+            logger.error("GGClubAdapter", `[${windowHandle}] Capture retournée vide pour: ${window.title}`);
+            return Buffer.alloc(0);
+          }
+
+          logger.info("GGClubAdapter", `[${windowHandle}] PNG reçu (${pngBuffer.length} bytes), signature: ${pngBuffer.slice(0, 8).toString('hex')}`);
           
           try {
             // Décoder PNG en RGBA
             const rgbaBuffer = await this.decodePngToRgba(pngBuffer);
-            logger.info("GGClubAdapter", `[${windowHandle}] RGBA décodé (${rgbaBuffer.length} bytes)`);
+            logger.info("GGClubAdapter", `[${windowHandle}] RGBA décodé avec succès (${rgbaBuffer.length} bytes)`);
             return rgbaBuffer;
           } catch (decodeError) {
-            logger.warn("GGClubAdapter", `[${windowHandle}] Décodage PNG échoué, retourner PNG brut pour traitement alternatif`);
-            // Si le décodage fail, retourner quand même le PNG - le pipeline va le gérer
+            logger.error("GGClubAdapter", `[${windowHandle}] Décodage PNG échoué: ${String(decodeError)}`);
+            // Si le décodage fail, retourner quand même le PNG - le pipeline va le gérer (ou crasher plus loin, mais on a le log)
             return pngBuffer;
           }
         }
 
-        logger.warning("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée`);
+        logger.warning("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée dans activeWindows (handles dispos: ${Array.from(this.activeWindows.keys()).join(', ')})`);
         const imgBuffer = await screenshotDesktop({ format: 'png' });
         return imgBuffer;
       } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture`, { error: String(error) });
+        logger.error("GGClubAdapter", `[${windowHandle}] Erreur critique lors de la capture/décodage`, { error: String(error) });
         return Buffer.alloc(0);
       }
     }
@@ -1039,22 +1044,22 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private async decodePngToRgba(pngBuffer: Buffer): Promise<Buffer> {
+    logger.debug("GGClubAdapter", `decodePngToRgba - Début du traitement (${pngBuffer.length} bytes)`);
     try {
-      // Parser PNG pour extraire dimensions + pixel data
-      // Format PNG simple: 8 byte signature + chunks
+      if (pngBuffer.length < 24) throw new Error(`Buffer PNG trop petit (${pngBuffer.length} bytes)`);
       
-      if (pngBuffer.length < 24) throw new Error('PNG buffer too small');
-      if (pngBuffer[0] !== 0x89 || pngBuffer[1] !== 0x50 || pngBuffer[2] !== 0x4E || pngBuffer[3] !== 0x47) {
-        throw new Error('Invalid PNG signature');
+      const signature = pngBuffer.slice(0, 8).toString('hex');
+      if (signature !== '89504e470d0a1a0a') {
+        throw new Error(`Signature PNG invalide: ${signature}`);
       }
       
       // Lire IHDR chunk (width/height)
       const width = pngBuffer.readUInt32BE(16);
       const height = pngBuffer.readUInt32BE(20);
       const bitDepth = pngBuffer[24];
-      const colorType = pngBuffer[25]; // 6 = RGBA
+      const colorType = pngBuffer[25]; // 6 = RGBA, 2 = RGB
       
-      logger.debug("GGClubAdapter", `PNG: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
+      logger.info("GGClubAdapter", `PNG IHDR: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
       
       // Trouver chunk IDAT (image data compressé)
       let offset = 8; // Après signature
@@ -1065,76 +1070,84 @@ export class GGClubAdapter extends PlatformAdapter {
         const chunkType = pngBuffer.toString('ascii', offset + 4, offset + 8);
         
         if (chunkType === 'IDAT') {
+          logger.debug("GGClubAdapter", `Chunk IDAT trouvé: offset=${offset}, length=${chunkLength}`);
           const chunkData = pngBuffer.slice(offset + 8, offset + 8 + chunkLength);
           idatData.push(chunkData);
+        } else if (chunkType === 'IEND') {
+          logger.debug("GGClubAdapter", `Chunk IEND trouvé à offset=${offset}`);
+          break;
         }
         
-        offset += 12 + chunkLength; // 4 (length) + 4 (type) + data + 4 (crc)
+        offset += 12 + chunkLength;
       }
       
       if (idatData.length === 0) {
-        throw new Error('No IDAT chunk found');
+        throw new Error('Aucun chunk IDAT trouvé dans le PNG');
       }
       
-      // Combiner tous les IDAT chunks
       const compressedData = Buffer.concat(idatData);
+      logger.info("GGClubAdapter", `Données compressées IDAT concaténées: ${compressedData.length} bytes`);
       
       // Décompresser avec zlib
       const zlib = require('zlib');
       const pixelData = await new Promise<Buffer>((resolve, reject) => {
         zlib.inflate(compressedData, (err: any, result: Buffer) => {
-          if (err) reject(err);
-          else resolve(result);
+          if (err) {
+            logger.error("GGClubAdapter", `Erreur zlib.inflate: ${err.message}`);
+            reject(err);
+          } else {
+            resolve(result);
+          }
         });
       });
       
-      logger.debug("GGClubAdapter", `Décompressé: ${pixelData.length} bytes`);
+      logger.info("GGClubAdapter", `Données décompressées: ${pixelData.length} bytes (attendu environ ${width * height * (colorType === 6 ? 4 : 3)})`);
       
-      // Convertir pixel data en RGBA
-      // PNG pixel data = scanlines avec filtres
-      const bytesPerPixel = (colorType === 6 ? 4 : colorType === 2 ? 3 : 1);
       const rgbaBuffer = Buffer.alloc(width * height * 4);
-      
       let pixelIdx = 0;
       let rgbaIdx = 0;
       
       for (let y = 0; y < height; y++) {
-        const filterType = pixelData[pixelIdx++]; // Ignorer pour simplifier le filtrage PNG
+        // PNG pixel data = scanlines avec byte de filtre au début de chaque ligne
+        if (pixelIdx >= pixelData.length) {
+          logger.error("GGClubAdapter", `Fin de buffer inattendue à la ligne ${y}`);
+          break;
+        }
+        const filterType = pixelData[pixelIdx++];
         
         for (let x = 0; x < width; x++) {
           if (colorType === 6) {
             // RGBA
-            const r = pixelData[pixelIdx++];
-            const g = pixelData[pixelIdx++];
-            const b = pixelData[pixelIdx++];
-            const a = pixelData[pixelIdx++];
-            rgbaBuffer[rgbaIdx++] = r;
-            rgbaBuffer[rgbaIdx++] = g;
-            rgbaBuffer[rgbaIdx++] = b;
-            rgbaBuffer[rgbaIdx++] = a;
+            if (pixelIdx + 3 < pixelData.length) {
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+            }
           } else if (colorType === 2) {
             // RGB
-            const r = pixelData[pixelIdx++];
-            const g = pixelData[pixelIdx++];
-            const b = pixelData[pixelIdx++];
-            rgbaBuffer[rgbaIdx++] = r;
-            rgbaBuffer[rgbaIdx++] = g;
-            rgbaBuffer[rgbaIdx++] = b;
-            rgbaBuffer[rgbaIdx++] = 255;
+            if (pixelIdx + 2 < pixelData.length) {
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = 255; // Alpha opaque
+            }
           } else {
-            // Greyscale ou autre
-            const gray = pixelData[pixelIdx++];
-            rgbaBuffer[rgbaIdx++] = gray;
-            rgbaBuffer[rgbaIdx++] = gray;
-            rgbaBuffer[rgbaIdx++] = gray;
-            rgbaBuffer[rgbaIdx++] = 255;
+            // Greyscale
+            if (pixelIdx < pixelData.length) {
+              const gray = pixelData[pixelIdx++];
+              rgbaBuffer[rgbaIdx++] = gray;
+              rgbaBuffer[rgbaIdx++] = gray;
+              rgbaBuffer[rgbaIdx++] = gray;
+              rgbaBuffer[rgbaIdx++] = 255;
+            }
           }
         }
       }
       
       return rgbaBuffer;
     } catch (error) {
-      logger.error("GGClubAdapter", `PNG decode error`, { error: String(error) });
+      logger.error("GGClubAdapter", `Échec du décodage PNG: ${String(error)}`);
       throw error;
     }
   }
