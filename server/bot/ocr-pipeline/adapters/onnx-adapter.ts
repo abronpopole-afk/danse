@@ -135,7 +135,11 @@ export class OnnxAdapter extends OCRAdapter {
         const r = buffer[offset];
         const g = buffer[offset + 1];
         const b = buffer[offset + 2];
-        tensor[i] = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+        const gray = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+        
+        if (i < tensor.length) {
+          tensor[i] = gray;
+        }
       }
     }
     

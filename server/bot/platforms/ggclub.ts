@@ -521,9 +521,14 @@ export class GGClubAdapter extends PlatformAdapter {
 
         // Gestion des fenêtres fermées
         for (const [windowId, existingWindow] of this.activeWindows) {
-          const stillExists = windows.some(w => w.windowId === windowId);
+          const cleanId = windowId.startsWith('ggclub_') ? windowId : `ggclub_${windowId}`;
+          const stillExists = windows.some(w => {
+            const wId = `ggclub_${Math.abs(w.handle)}`;
+            return wId === cleanId || w.windowId === windowId;
+          });
+          
           if (!stillExists) {
-            logger.info("GGClubAdapter", "🚪 Table fermée", { windowId, handle: existingWindow.handle });
+            logger.info("GGClubAdapter", "🚪 Table fermée ou perdue", { windowId, handle: existingWindow.handle });
             this.activeWindows.delete(windowId);
             this.emitPlatformEvent("table_closed", { windowId, handle: existingWindow.handle });
           }
