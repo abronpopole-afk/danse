@@ -1236,18 +1236,18 @@ export class GGClubAdapter extends PlatformAdapter {
       const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
       logger.info("GGClubAdapter", `[${windowHandle}] Frame injectée. Extraction de l'état de la table...`);
       
-      let state;
+      let state: any = { potSize: 0, heroCards: [], communityCards: [], playersData: [] };
       try {
-        state = await ocrPipeline.extractTableState(frame);
+        logger.info("GGClubAdapter", `[${windowHandle}] Appel de ocrPipeline.extractTableState...`);
+        const result = await ocrPipeline.extractTableState(frame);
+        if (result) {
+          state = { ...state, ...result };
+          logger.info("GGClubAdapter", `[${windowHandle}] ✅ ocrPipeline.extractTableState a retourné un résultat`);
+        } else {
+          logger.warn("GGClubAdapter", `[${windowHandle}] ⚠️ ocrPipeline.extractTableState a retourné null/undefined`);
+        }
       } catch (ocrError) {
-        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Erreur critique dans extractTableState: ${String(ocrError)}`);
-        // Fallback state minimal pour éviter le crash de la boucle de traitement
-        state = {
-          potSize: 0,
-          heroCards: [],
-          communityCards: [],
-          playersData: []
-        };
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Erreur attrapée DIRECTEMENT autour de l'appel: ${String(ocrError)}`);
       }
       
       logger.info("GGClubAdapter", `[${windowHandle}] 📊 OCR PIPELINE RESULTS:`, { 

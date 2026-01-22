@@ -192,39 +192,48 @@ export class OCRPipeline {
     console.log('[OCRPipeline] ====== EXTRACTION ÉTAT TABLE ======');
     console.log(`[OCRPipeline] Frame: ${frame.width}x${frame.height}, id: ${frame.id}`);
     
-    const startTime = Date.now();
-    const results = await this.processRegions(frame);
-    console.log(`[OCRPipeline] ${results.length} régions traitées en ${Date.now() - startTime}ms`);
-    
-    const state: Partial<PokerTableState> = {
-      timestamp: Date.now(),
-    };
+    try {
+      const startTime = Date.now();
+      const results = await this.processRegions(frame);
+      console.log(`[OCRPipeline] ${results.length} régions traitées en ${Date.now() - startTime}ms`);
+      
+      const state: Partial<PokerTableState> = {
+        timestamp: Date.now(),
+      };
 
-    for (const result of results) {
-      if (!result.result) continue;
+      for (const result of results) {
+        if (!result.result) continue;
 
-      switch (result.regionType) {
-        case 'cards':
-          state.heroCards = this.parseCards(result.result.text);
-          break;
-        case 'community_cards':
-          state.communityCards = this.parseCards(result.result.text);
-          break;
-        case 'pot':
-          state.potSize = this.parseCurrency(result.result.text);
-          break;
-        case 'player_stack':
-          if (result.regionId === 'hero_stack') {
-            state.heroStack = this.parseCurrency(result.result.text);
+        try {
+          switch (result.regionType) {
+            case 'cards':
+              state.heroCards = this.parseCards(result.result.text);
+              break;
+            case 'community_cards':
+              state.communityCards = this.parseCards(result.result.text);
+              break;
+            case 'pot':
+              state.potSize = this.parseCurrency(result.result.text);
+              break;
+            case 'player_stack':
+              if (result.regionId === 'hero_stack') {
+                state.heroStack = this.parseCurrency(result.result.text);
+              }
+              break;
+            case 'action_buttons':
+              state.availableActions = this.parseActions(result.result.text);
+              break;
           }
-          break;
-        case 'action_buttons':
-          state.availableActions = this.parseActions(result.result.text);
-          break;
+        } catch (innerError) {
+          console.error(`[OCRPipeline] Error parsing result for ${result.regionId}:`, innerError);
+        }
       }
-    }
 
-    return state;
+      return state;
+    } catch (criticalError) {
+      console.error('[OCRPipeline] ❌ CRITICAL ERROR in extractTableState:', criticalError);
+      return { timestamp: Date.now() };
+    }
   }
 
   private parseCards(text: string): string[] {
