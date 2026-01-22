@@ -118,9 +118,16 @@ export class OnnxAdapter extends OCRAdapter {
     const croppedBuffer = Buffer.alloc(width * height * bytesPerPixel);
     
     for (let row = 0; row < height; row++) {
-      const srcOffset = (y + row) * rowStride + x * bytesPerPixel;
+      const srcRow = y + row;
+      const srcOffset = srcRow * rowStride + x * bytesPerPixel;
       const dstOffset = row * width * bytesPerPixel;
-      frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + width * bytesPerPixel);
+      
+      const copyLen = width * bytesPerPixel;
+      if (srcOffset + copyLen <= frame.data.length && dstOffset + copyLen <= croppedBuffer.length) {
+        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + copyLen);
+      } else {
+        console.warn(`[OnnxAdapter] Crop out of bounds at row ${row}: srcOffset=${srcOffset}, dataLen=${frame.data.length}`);
+      }
     }
     
     return croppedBuffer;

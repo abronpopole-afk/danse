@@ -7,6 +7,7 @@
  * @author [Your Name/Organization]
  */
 
+import sharp from "sharp";
 import { GameStateDetector } from "../game-state-detector";
 import { 
   PlatformAdapter, 
