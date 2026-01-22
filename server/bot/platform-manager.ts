@@ -288,14 +288,11 @@ export class PlatformManager extends EventEmitter {
 
     try {
       managedTable.isProcessingAction = true;
-      logger.info("PlatformManager", `[ACTION] Calculation started for table ${data.windowHandle}`, { gameState: data.gameState });
 
       const { action, humanizedAction } = await this.calculateAction(
         data.gameState, 
         managedTable.tableSession
       );
-
-      logger.info("PlatformManager", `[ACTION] Calculation complete: ${action}`, { humanizedAction });
 
       managedTable.actionQueue.push({
         action,
@@ -447,7 +444,7 @@ export class PlatformManager extends EventEmitter {
       id: "action_processing",
       name: "Process Action Queues",
       priority: "critical",
-      intervalMs: 100, // Slightly slower for stability
+      intervalMs: 50,
       run: async () => {
         await this.processActionQueues();
       },
@@ -620,37 +617,6 @@ export class PlatformManager extends EventEmitter {
     scheduler.disableTask("game_state_poll");
     scheduler.disableTask("action_processing");
     scheduler.disableTask("health_check");
-  }
-
-  private async processActionQueues(): Promise<void> {
-    for (const managedTable of this.managedTables.values()) {
-      if (managedTable.actionQueue.length === 0) continue;
-
-      const queuedAction = managedTable.actionQueue[0];
-      const now = Date.now();
-      
-      // Delay based on humanized delay
-      const delayElapsed = now - queuedAction.timestamp;
-
-      if (delayElapsed >= queuedAction.humanizedAction.delay) {
-        managedTable.actionQueue.shift();
-        
-        logger.info("PlatformManager", `[ACTION] Executing ${queuedAction.action} on table ${managedTable.windowHandle}`);
-        
-        const success = await this.adapter?.executeAction(
-          managedTable.windowHandle,
-          queuedAction.action,
-          queuedAction.amount
-        );
-
-        if (success) {
-          await managedTable.tableSession.executeAction(queuedAction.action);
-          managedTable.lastActionTime = now;
-        }
-        
-        managedTable.isProcessingAction = false;
-      }
-    }
   }
 
   private async scanForNewTables(): Promise<void> {

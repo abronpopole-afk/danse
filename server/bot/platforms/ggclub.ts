@@ -867,46 +867,6 @@ export class GGClubAdapter extends PlatformAdapter {
     }
   }
 
-  async executeAction(windowHandle: number, action: string, amount?: number): Promise<boolean> {
-    logger.info("GGClubAdapter", `[${windowHandle}] executeAction: ${action} ${amount || ""}`);
-    if (!IS_WINDOWS || !robot) {
-      logger.warning("GGClubAdapter", "RobotJS non disponible, action simulée");
-      return true;
-    }
-
-    try {
-      const regions = this.scaledRegions.get(windowHandle);
-      if (!regions) {
-        logger.error("GGClubAdapter", "Régions non trouvées pour l'action");
-        return false;
-      }
-
-      // Logique de clic réelle sur les boutons Fold/Call/Raise
-      const actionLower = action.toLowerCase();
-      let targetRegion = null;
-
-      if (actionLower.includes("fold")) targetRegion = regions.foldButton || regions.actionButtons;
-      else if (actionLower.includes("call") || actionLower.includes("check")) targetRegion = regions.callButton || regions.actionButtons;
-      else if (actionLower.includes("raise") || actionLower.includes("bet")) targetRegion = regions.raiseButton || regions.actionButtons;
-
-      if (targetRegion && robot) {
-        const clickX = targetRegion.x + Math.floor(targetRegion.width / 2);
-        const clickY = targetRegion.y + Math.floor(targetRegion.height / 2);
-        
-        logger.info("GGClubAdapter", `[${windowHandle}] Clicking at ${clickX}, ${clickY} for ${action}`);
-        
-        // Simuler un mouvement de souris humain si configuré
-        robot.mouseClick();
-      }
-
-      logger.info("GGClubAdapter", `[${windowHandle}] Exécution de ${action} terminée`);
-      return true;
-    } catch (error) {
-      logger.error("GGClubAdapter", "Erreur lors de l'exécution de l'action", { error: String(error) });
-      return false;
-    }
-  }
-
   async captureScreen(windowHandle: number): Promise<Buffer> {
     const cachedCapture = this.lastScreenCaptures.get(windowHandle);
     const now = Date.now();
