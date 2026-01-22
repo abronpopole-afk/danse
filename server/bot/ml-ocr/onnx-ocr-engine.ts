@@ -90,23 +90,29 @@ export class ONNXOCREngine {
     }
 
     const startTime = Date.now();
+    console.log(`[ONNXOCREngine] 🔍 Début reconnaissance type=${type}, dimensions=${width}x${height}, buffer=${imageBuffer.length} bytes`);
 
     // Prétraitement image
     const preprocessed = this.preprocessImage(imageBuffer, width, height);
+    console.log(`[ONNXOCREngine] 🧪 Prétraitement terminé: ${preprocessed.length} pixels normalisés`);
 
     // Créer tensor ONNX
     const inputTensor = new ort.Tensor('float32', preprocessed, [1, 1, height, width]);
 
     try {
       // Inférence
+      console.log(`[ONNXOCREngine] 🧠 Lancement de l'inférence ONNX...`);
       const feeds = { [this.session.inputNames[0]]: inputTensor };
       const results = await this.session.run(feeds);
 
       // Décoder output
       const outputData = results[this.session.outputNames[0]].data as Float32Array;
+      console.log(`[ONNXOCREngine] 📥 Output ONNX reçu: ${outputData.length} floats`);
+      
       const decoded = this.decodeOutput(outputData, type);
-
       const latency = Date.now() - startTime;
+
+      console.log(`[ONNXOCREngine] ✅ Résultat: "${decoded.text}" (conf: ${(decoded.confidence * 100).toFixed(1)}%) en ${latency}ms`);
 
       // Stats
       this.stats.totalInferences++;

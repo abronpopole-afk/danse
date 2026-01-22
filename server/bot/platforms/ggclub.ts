@@ -1205,18 +1205,19 @@ export class GGClubAdapter extends PlatformAdapter {
       const screenshot = await this.captureScreen(cleanHandle);
       
       if (!screenshot || screenshot.length === 0) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Capture d'écran ÉCHOUÉE ou vide`);
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Capture d'écran ÉCHOUÉE (buffer vide)`);
         throw new Error("Screenshot capture failed or returned empty buffer");
       }
-      logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie: ${screenshot.length} octets`);
+      logger.info("GGClubAdapter", `[${windowHandle}] ✅ Capture réussie: ${screenshot.length} octets`);
       
       // ÉTAPE 1 (priorité absolue): SIGNAL VISUEL FIABLE
+      logger.info("GGClubAdapter", `[${windowHandle}] Analyse des actions disponibles...`);
       const buttons = await this.detectAvailableActions(windowHandle);
       const isHeroTurn = buttons.length > 0;
-      logger.info("GGClubAdapter", `[${windowHandle}] Hero Turn Détecté (Visuel): ${isHeroTurn}`, { buttons });
+      logger.info("GGClubAdapter", `[${windowHandle}] 📢 Hero Turn Détecté: ${isHeroTurn}`, { buttons: buttons.map(b => b.type) });
 
       if (isHeroTurn) {
-        logger.info("GAME", "Hero to act detected", { tableId, windowHandle });
+        logger.info("GAME", "🎯 Hero to act detected", { tableId, windowHandle });
         this.emit('hero_turn', { 
           tableId, 
           windowHandle, 
@@ -1225,24 +1226,23 @@ export class GGClubAdapter extends PlatformAdapter {
         });
       }
 
-      logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie (${screenshot.length} octets). Initialisation OCR Pipeline...`);
-      
+      logger.info("GGClubAdapter", `[${windowHandle}] 🚀 Initialisation du pipeline OCR...`);
       const { initializeOCRPipeline } = await import("../ocr-pipeline/ocr-pipeline");
       const ocrPipeline = await initializeOCRPipeline();
       
-      logger.info("GGClubAdapter", `[${windowHandle}] OCR Pipeline initialisé. Configuration taille frame: ${table.width}x${table.height}`);
+      logger.info("GGClubAdapter", `[${windowHandle}] Config pipeline: ${table.width}x${table.height}`);
       ocrPipeline.setFrameSize(table.width, table.height);
       
       const frame = ocrPipeline.pushFrame(screenshot, table.width, table.height, 'rgba');
-      logger.info("GGClubAdapter", `[${windowHandle}] Frame poussée au pipeline. Extraction de l'état...`);
+      logger.info("GGClubAdapter", `[${windowHandle}] Frame injectée. Extraction de l'état de la table...`);
       
       const state = await ocrPipeline.extractTableState(frame);
       
-      // LOG DE DÉBUG POUR VOIR CE QUE LE PIPELINE RETOURNE RÉELLEMENT
-      logger.info("GGClubAdapter", `[${windowHandle}] Pipeline OCR brut:`, { 
+      logger.info("GGClubAdapter", `[${windowHandle}] 📊 OCR PIPELINE RESULTS:`, { 
         pot: state.potSize, 
         heroCards: state.heroCards,
-        community: state.communityCards 
+        community: state.communityCards,
+        players: state.playersData?.length || 0
       });
 
       const structuredState = GameStateDetector.detect({
