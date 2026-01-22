@@ -169,7 +169,7 @@ export class OnnxAdapter extends OCRAdapter {
       try {
         // Support both ESM and CJS imports
         const ort = this.onnxRuntime.default || this.onnxRuntime;
-        this.session = await ort.InferenceSession.create('./attached_assets/poker_ocr_model.onnx');
+        this.session = await ort.InferenceSession.create('./server/bot/ml-ocr/models/poker-ocr-v1.onnx');
         console.log('[OnnxAdapter] ONNX model loaded successfully');
       } catch (error) {
         console.error('[OnnxAdapter] Failed to load ONNX model:', error);
