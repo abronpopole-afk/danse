@@ -125,9 +125,27 @@ export class TableSession extends EventEmitter {
   }
 
   updateState(updates: Partial<TableState>): void {
+    const oldStatus = this.tableState.status;
     this.tableState = { ...this.tableState, ...updates };
     this.emit("stateChange", this.tableState);
     this.emitTableEvent("state_update", this.tableState);
+
+    // Persist state changes to database
+    const dbUpdates: any = {};
+    if (updates.status) dbUpdates.status = updates.status;
+    if (updates.heroPosition !== undefined) dbUpdates.heroPosition = updates.heroPosition;
+    if (updates.heroStack !== undefined) dbUpdates.heroStack = updates.heroStack;
+    if (updates.currentPot !== undefined) dbUpdates.currentPot = updates.currentPot;
+    if (updates.heroCards) dbUpdates.heroCards = updates.heroCards;
+    if (updates.communityCards) dbUpdates.communityCards = updates.communityCards;
+    if (updates.currentStreet) dbUpdates.currentStreet = updates.currentStreet;
+    if (updates.players) dbUpdates.playersData = updates.players;
+
+    if (Object.keys(dbUpdates).length > 0) {
+      storage.updatePokerTable(this.tableState.id, dbUpdates).catch(err => {
+        console.error(`[TableSession] Failed to persist state to DB for table ${this.tableState.id}:`, err);
+      });
+    }
   }
 
   private emitTableEvent(type: TableEvent["type"], data: any): void {
