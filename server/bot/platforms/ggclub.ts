@@ -592,7 +592,12 @@ export class GGClubAdapter extends PlatformAdapter {
             });
             
             const updatedWindow = { ...window, windowId: stableWindowId, handle: cleanHandle };
+            // Ensure handle is correctly mapped and persistent
             this.activeWindows.set(stableWindowId, updatedWindow);
+            if (cleanHandle) {
+                // Also map by handle-based ID for lookup safety
+                this.activeWindows.set(`ggclub_${cleanHandle}`, updatedWindow);
+            }
             this.emitPlatformEvent("table_detected", { window: updatedWindow });
           }
         }

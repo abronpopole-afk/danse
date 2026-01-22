@@ -127,10 +127,16 @@ export class OnnxAdapter extends OCRAdapter {
 
   private bufferToTensor(buffer: Buffer, width: number, height: number): Float32Array {
     const tensor = new Float32Array(width * height);
+    const bytesPerPixel = buffer.length / (width * height);
     
-    for (let i = 0; i < buffer.length; i += 4) {
-      const gray = (buffer[i] * 0.299 + buffer[i + 1] * 0.587 + buffer[i + 2] * 0.114) / 255;
-      tensor[i / 4] = gray;
+    for (let i = 0; i < width * height; i++) {
+      const offset = i * bytesPerPixel;
+      if (offset + 2 < buffer.length) {
+        const r = buffer[offset];
+        const g = buffer[offset + 1];
+        const b = buffer[offset + 2];
+        tensor[i] = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+      }
     }
     
     return tensor;
