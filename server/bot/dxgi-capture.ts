@@ -102,8 +102,21 @@ class DXGICaptureImpl implements DXGICapture {
 
     try {
       const screenshotDesktop = require('screenshot-desktop');
-      const screenshot = await screenshotDesktop({ format: 'png' });
-      return screenshot;
+      const pngBuffer = await screenshotDesktop({ format: 'png' });
+      
+      // Décoder le PNG en RGBA brut car le reste du pipeline (ONNX) attend du brut
+      try {
+        const { PNG } = require('pngjs');
+        return new Promise((resolve, reject) => {
+          new PNG().parse(pngBuffer, (error: any, data: any) => {
+            if (error) reject(error);
+            else resolve(data.data);
+          });
+        });
+      } catch (decodeError) {
+        console.warn('[DXGI] PNG decoding failed, returning raw PNG as last resort:', decodeError);
+        return pngBuffer;
+      }
     } catch {
       return Buffer.alloc(0);
     }
