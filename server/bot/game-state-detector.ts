@@ -1,3 +1,5 @@
+import { logger } from "../logger";
+
 export interface GameState {
   handId: string | null;
   heroHasCards: boolean;
@@ -13,6 +15,13 @@ export interface GameState {
 
 export class GameStateDetector {
   static detect(rawState: any): GameState {
+    const tableId = rawState.tableId || 'unknown';
+    logger.info("GameStateDetector", `Traitement de l'état pour la table ${tableId}`, {
+      isHeroTurn: rawState.isHeroTurn,
+      heroCards: rawState.heroCards?.length,
+      potSize: rawState.potSize
+    });
+
     const availableActions = rawState.availableActions || [];
     const actions = {
       fold: availableActions.some((a: any) => a.type === 'fold'),
@@ -25,8 +34,8 @@ export class GameStateDetector {
       heroHasCards: (rawState.heroCards && rawState.heroCards.length > 0) || false,
       heroToAct: rawState.isHeroTurn || false,
       availableActions: actions,
-      potSize: rawState.potSize,
-      street: rawState.currentStreet,
+      potSize: rawState.potSize || 0,
+      street: rawState.currentStreet || 'unknown',
     };
   }
 }

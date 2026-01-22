@@ -627,14 +627,14 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async detectTableWindows(): Promise<TableWindow[]> {
-    // logger.debug("GGClubAdapter", "Détection des fenêtres GGClub...");
+    logger.info("GGClubAdapter", "Détection des fenêtres GGClub en cours...");
 
     if (!IS_WINDOWS || !windowManager) {
-      /* logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
+      logger.info("GGClubAdapter", "ℹ️ Mode développement/Linux - scan non disponible", {
         IS_WINDOWS,
         windowManagerLoaded: !!windowManager,
         platform: process.platform
-      }); */
+      });
       return [];
     }
 
@@ -694,9 +694,7 @@ export class GGClubAdapter extends PlatformAdapter {
     if (IS_WINDOWS && windowManager) {
       try {
         const windows = windowManager.getWindows();
-        const activeWindow = windowManager.getActiveWindow();
-
-        // logger.info("GGClubAdapter", `🔍 Scan de ${windows.length} fenêtres Windows...`);
+        logger.info("GGClubAdapter", `Scan de ${windows.length} fenêtres système...`);
 
         // Log TOUTES les fenêtres pour debug avec plus de détails
         const allTitles: any[] = [];
@@ -823,14 +821,10 @@ export class GGClubAdapter extends PlatformAdapter {
           }
 
           if (isMatch) {
-            logger.session("GGClubAdapter", `🎯 Fenêtre MATCH: "${title}"`, { 
-              handle: win.handle, 
-              reason: matchReason,
-              process: processName,
-              bounds 
-            });
+            const finalHandle = win.handle || win.processId || Math.floor(Math.random() * 1000000);
+            logger.info("GGClubAdapter", `🎯 Table MATCHÉE: "${title}" (Handle: ${finalHandle})`);
             results.push({
-              handle: win.handle || win.processId || Math.floor(Math.random() * 1000000),
+              handle: finalHandle,
               title: title,
               x: bounds.x,
               y: bounds.y,
@@ -1015,16 +1009,20 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
-    logger.info("GGClubAdapter", `[${windowHandle}] getGameState - Début de l'analyse`);
     const tableId = `ggclub_${windowHandle}`;
+    logger.info("GGClubAdapter", `[${windowHandle}] getGameState - Début de l'analyse pour ${tableId}`);
+    
     const table = this.activeWindows.get(tableId) || 
                   this.activeWindows.get(String(windowHandle)) ||
                   Array.from(this.activeWindows.values()).find(w => w.handle === windowHandle);
     
     if (!table) {
-      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows. Handles dispos: ${Array.from(this.activeWindows.keys())}`);
+      const handles = Array.from(this.activeWindows.keys());
+      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows. Handles dispos: ${handles.join(", ")}`);
       throw new Error(`Table with handle ${windowHandle} not found`);
     }
+
+    logger.info("GGClubAdapter", `[${windowHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
 
     // MISE À JOUR DYNAMIQUE DU SCALING DES RÉGIONS
     if (this.activeCalibration) {
@@ -1058,6 +1056,11 @@ export class GGClubAdapter extends PlatformAdapter {
     }
 
     try {
+      logger.info("GGClubAdapter", `[${windowHandle}] === DÉBUT ANALYSE TABLE ===`);
+      
+      // LOG D'ÉTAT INITIAL
+      logger.info("GGClubAdapter", `[${windowHandle}] État de activeWindows: ${this.activeWindows.has(`ggclub_${windowHandle}`)}`);
+      
       logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
       const screenshot = await this.captureScreen(windowHandle);
       
@@ -1065,17 +1068,15 @@ export class GGClubAdapter extends PlatformAdapter {
         logger.error("GGClubAdapter", `[${windowHandle}] Capture d'écran ÉCHOUÉE ou vide`);
         throw new Error("Screenshot capture failed or returned empty buffer");
       }
+      logger.info("GGClubAdapter", `[${windowHandle}] Capture réussie: ${screenshot.length} octets`);
       
       // ÉTAPE 1 (priorité absolue): SIGNAL VISUEL FIABLE
-      // Les boutons Fold / Call / Raise sont visibles et actifs
       const buttons = await this.detectAvailableActions(windowHandle);
       const isHeroTurn = buttons.length > 0;
+      logger.info("GGClubAdapter", `[${windowHandle}] Hero Turn Détecté (Visuel): ${isHeroTurn}`, { buttons });
 
       if (isHeroTurn) {
-        // ÉTAPE 2: LOG ET ÉVÉNEMENT
         logger.info("GAME", "Hero to act detected", { tableId, windowHandle });
-        
-        // On émet l'événement pour que le système (TableManager/Storage) mette à jour poker_tables et status=playing
         this.emit('hero_turn', { 
           tableId, 
           windowHandle, 

@@ -190,6 +190,7 @@ export class PlatformManager extends EventEmitter {
 
   private async handleTableDetected(data: { window: TableWindow }): Promise<void> {
     const { window } = data;
+    logger.info("PlatformManager", `Traitement table détectée: ${window.title} (${window.handle})`);
 
     // Check if window handle or windowId is already managed
     if (this.managedTables.has(window.handle)) {
@@ -415,6 +416,15 @@ export class PlatformManager extends EventEmitter {
   private startPolling(): void {
     if (!this.adapter || !this.config) return;
 
+    if (this.schedulerStarted) return;
+    this.schedulerStarted = true;
+
+    // Lancer le scan initial immédiatement
+    logger.info("PlatformManager", "🚀 Lancement du scan initial des tables...");
+    this.scanForNewTables().catch(err => {
+      logger.error("PlatformManager", "Échec du scan initial", { error: String(err) });
+    });
+
     const scheduler = getTaskScheduler();
 
     // Tâche 1: Scan des nouvelles tables (priorité normale, toutes les 5s)
@@ -474,23 +484,23 @@ export class PlatformManager extends EventEmitter {
   }
 
   private async pollAllGameStatesThrottled(): Promise<void> {
-    if (!this.adapter || this.status !== "running") return;
+    if (!this.adapter || this.status !== "running") {
+      if (this.status !== "running") {
+        logger.debug("PlatformManager", `Polling ignoré: status=${this.status}`);
+      }
+      return;
+    }
 
     const tables = Array.from(this.managedTables.values());
-    const tableManager = getTableManager();
-
-    const safeModeManager = getSafeModeManager();
-    const tableLimit = safeModeManager.shouldReduceTables();
-
-    // Récupérer les tables prioritaires en premier
-    let prioritizedTables = tableManager.getPrioritizedTables()
-      .map(session => tables.find(t => t.tableSession.getId() === session.getId()))
-      .filter(Boolean) as ManagedTable[];
-
-    // Limiter le nombre de tables en mode conservateur
-    if (tableLimit.reduce) {
-      prioritizedTables = prioritizedTables.slice(0, tableLimit.maxTables);
+    if (tables.length === 0) {
+      logger.debug("PlatformManager", "Aucune table gérée pour le polling");
+      return;
     }
+
+    const tableManager = getTableManager();
+    const prioritizedTables = tables; // Simplified for now to ensure all tables are polled
+
+    logger.info("PlatformManager", `Analyse en cours pour ${prioritizedTables.length} table(s)`);
 
     // Poll par batch de 6 tables max simultanément
     const batchSize = 6;
@@ -499,12 +509,19 @@ export class PlatformManager extends EventEmitter {
 
       await Promise.all(batch.map(async (managedTable) => {
         try {
+          logger.info("PlatformManager", `[${managedTable.windowHandle}] Appel getGameState...`);
           const gameState = await this.adapter!.getGameState(managedTable.windowHandle);
 
           if (!gameState || !this.validateGameState(gameState)) {
+            logger.warning("PlatformManager", `[${managedTable.windowHandle}] GameState invalide ou incomplet`);
             managedTable.tableSession.incrementError();
             return;
           }
+
+          logger.info("PlatformManager", `[${managedTable.windowHandle}] GameState reçu`, { 
+            street: gameState.currentStreet,
+            heroTurn: gameState.isHeroTurn 
+          });
 
           // Vérifier la confiance de l'état détecté
           const stateConfidenceResult = await this.validateStateConfidence(
@@ -513,7 +530,7 @@ export class PlatformManager extends EventEmitter {
           );
 
           if (!stateConfidenceResult.proceed) {
-            console.warn(`[PlatformManager] Low confidence for window ${managedTable.windowHandle}: ${stateConfidenceResult.reason}`);
+            logger.warning("PlatformManager", `[${managedTable.windowHandle}] Confiance trop faible: ${stateConfidenceResult.reason}`);
             managedTable.tableSession.incrementError();
             return;
           }
@@ -521,7 +538,11 @@ export class PlatformManager extends EventEmitter {
           managedTable.lastGameState = gameState;
           this.updateTableSession(managedTable, gameState);
           managedTable.tableSession.resetErrors();
+          
+          // Émettre l'événement pour le frontend
+          this.emit("gameState", gameState);
         } catch (error) {
+          logger.error("PlatformManager", `[${managedTable.windowHandle}] Erreur lors du polling`, { error: String(error) });
           managedTable.tableSession.incrementError();
         }
       }));
@@ -621,7 +642,7 @@ export class PlatformManager extends EventEmitter {
 
   private async scanForNewTables(): Promise<void> {
     if (!this.adapter || this.status !== "running") {
-      logger.debug("PlatformManager", "Scan tables ignoré", { 
+      logger.info("PlatformManager", "Scan tables ignoré", { 
         hasAdapter: !!this.adapter, 
         status: this.status 
       });
@@ -629,10 +650,19 @@ export class PlatformManager extends EventEmitter {
     }
 
     try {
-      logger.debug("PlatformManager", "🔍 Scan des fenêtres de poker...");
-      await this.adapter.detectTableWindows();
+      logger.info("PlatformManager", "🔍 Lancement du scan des fenêtres...");
+      const tables = await this.adapter.detectTableWindows();
+      logger.info("PlatformManager", `Scan terminé: ${tables.length} table(s) trouvée(s)`);
+      
+      // Synchronisation manuelle au cas où l'événement n'est pas traité assez vite
+      for (const table of tables) {
+        if (!this.managedTables.has(table.handle)) {
+          logger.info("PlatformManager", `Nouvelle table détectée via scan: ${table.title} (${table.handle})`);
+          await this.handleTableDetected({ window: table });
+        }
+      }
     } catch (error) {
-      logger.error("PlatformManager", "Erreur scan tables", { error: String(error) });
+      logger.error("PlatformManager", "Erreur lors du scan des tables", { error: String(error) });
     }
   }
 
