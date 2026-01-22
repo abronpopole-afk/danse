@@ -97,9 +97,9 @@ export class FallbackManager {
           }
         } catch (error) {
           lastError = error as Error;
-          console.warn(
-            `[FallbackManager] ${adapter.getName()} failed (attempt ${retry + 1}):`,
-            error
+          console.error(
+            `[FallbackManager] ❌ ${adapter.getName()} failed (attempt ${retry + 1}):`,
+            error instanceof Error ? { message: error.message, stack: error.stack } : error
           );
 
           if (retry < this.config.maxRetries) {

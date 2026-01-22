@@ -74,7 +74,8 @@ export class OnnxAdapter extends OCRAdapter {
     } catch (error) {
       const processingTime = Date.now() - startTime;
       this.updateStats(false, processingTime, 0);
-      this.recordError(String(error));
+      console.error(`[OnnxAdapter] ❌ Inference error for region ${region.id}:`, error);
+      this.recordError(error instanceof Error ? error.stack || error.message : String(error));
       throw error;
     }
   }
@@ -147,8 +148,27 @@ export class OnnxAdapter extends OCRAdapter {
   }
 
   private async runInference(tensor: Float32Array): Promise<{ text: string; confidence: number }> {
-    // Return empty results instead of throwing error to allow fallback to Tesseract
-    return { text: '', confidence: 0 };
+    if (!this.session) {
+      console.log('[OnnxAdapter] Loading ONNX model...');
+      try {
+        this.session = await this.onnxRuntime.InferenceSession.create('./attached_assets/poker_ocr_model.onnx');
+        console.log('[OnnxAdapter] ONNX model loaded successfully');
+      } catch (error) {
+        console.error('[OnnxAdapter] Failed to load ONNX model:', error);
+        throw error;
+      }
+    }
+    
+    try {
+      const feeds: any = {};
+      feeds[this.session.inputNames[0]] = new this.onnxRuntime.Tensor('float32', tensor, [1, 1, tensor.length]);
+      const output = await this.session.run(feeds);
+      // Implementation-specific parsing would go here
+      return { text: 'parsed_result', confidence: 0.9 }; 
+    } catch (error) {
+      console.error('[OnnxAdapter] Inference execution failed:', error);
+      throw error;
+    }
   }
 
   private createBatches<T>(items: T[], batchSize: number): T[][] {

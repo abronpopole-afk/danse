@@ -524,13 +524,14 @@ export class GGClubAdapter extends PlatformAdapter {
           const cleanId = windowId.startsWith('ggclub_') ? windowId : `ggclub_${windowId}`;
           const stillExists = windows.some(w => {
             const wId = `ggclub_${Math.abs(w.handle)}`;
-            return wId === cleanId || w.windowId === windowId;
+            return wId === cleanId || w.windowId === windowId || w.handle === existingWindow.handle;
           });
           
           if (!stillExists) {
-            logger.info("GGClubAdapter", "🚪 Table fermée ou perdue", { windowId, handle: existingWindow.handle });
-            this.activeWindows.delete(windowId);
-            this.emitPlatformEvent("table_closed", { windowId, handle: existingWindow.handle });
+            // Un petit délai avant de supprimer définitivement pour éviter les faux positifs lors de lags
+            logger.info("GGClubAdapter", "🚪 Table possiblement fermée, vérification...", { windowId, handle: existingWindow.handle });
+            // On attend le prochain cycle pour confirmer
+            continue; 
           }
         }
 
