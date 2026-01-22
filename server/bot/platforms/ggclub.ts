@@ -1102,6 +1102,14 @@ export class GGClubAdapter extends PlatformAdapter {
       logger.info("GGClubAdapter", `[${windowHandle}] Frame poussée au pipeline. Extraction de l'état...`);
       
       const state = await ocrPipeline.extractTableState(frame);
+      
+      // LOG DE DÉBUG POUR VOIR CE QUE LE PIPELINE RETOURNE RÉELLEMENT
+      logger.info("GGClubAdapter", `[${windowHandle}] Pipeline OCR brut:`, { 
+        pot: state.potSize, 
+        heroCards: state.heroCards,
+        community: state.communityCards 
+      });
+
       const structuredState = GameStateDetector.detect({
         ...state,
         isHeroTurn,
@@ -1456,15 +1464,7 @@ export class GGClubAdapter extends PlatformAdapter {
     console.log(`[GGClubAdapter] [${windowHandle}] detectPot - début`);
     try {
       const screenBuffer = await this.captureScreen(windowHandle);
-      if (screenBuffer.length === 0) {
-        console.log(`[GGClubAdapter] [${windowHandle}] detectPot - buffer vide`);
-        return 0; 
-      }
-
-      // Guard: validate buffer before processing
-      if (!this.validateImageBuffer(screenBuffer)) {
-        return 0;
-      }
+      if (screenBuffer.length === 0) return 0;
 
       const region = this.screenLayout.potRegion;
       const window = this.activeWindows.get(`ggclub_${windowHandle}`);
@@ -1473,38 +1473,13 @@ export class GGClubAdapter extends PlatformAdapter {
       const imageWidth = window.width || 880;
       const imageHeight = window.height || 600;
 
-      // Use ML OCR Engine (better than Tesseract)
-      if (this.pokerOCREngine) {
-        try {
-          const potBuffer = this.extractRegionBuffer(screenBuffer, imageWidth, imageHeight, region);
-          if (!this.validateImageBuffer(potBuffer)) {
-            return 0;
-          }
-          
-          const potResult = await this.pokerOCREngine.recognizeValue(
-            potBuffer,
-            region.width,
-            region.height,
-            'pot'
-          );
-
-          if (potResult.confidence > 0.3) { // Lowered from 0.5
-            const parsed = this.parseAmount(potResult.rawText);
-            if (parsed > 0) {
-              logger.debug("GGClubAdapter", "Pot detected via ML", { value: parsed, confidence: potResult.confidence });
-              return parsed;
-            }
-          }
-        } catch (error) {
-          logger.debug("GGClubAdapter", "ML OCR pot detection failed", { error: String(error) });
-        }
-      }
-
-      // Fallback: try alternative preprocessing if ML confidence is low
-      const altResult = await this.performOCRWithAlternativePreprocessing(screenBuffer, region, window);
-      const altParsed = this.parseAmount(altResult.text);
-      if (altParsed > 0) {
-        return altParsed;
+      // Force une nouvelle capture et un nouveau traitement sans cache
+      const ocrResult = await this.performOCR(screenBuffer, region, imageWidth, imageHeight);
+      const parsed = this.parseAmount(ocrResult.text);
+      
+      if (parsed > 0) {
+        logger.info("GGClubAdapter", `[${windowHandle}] Pot détecté: ${parsed}`);
+        return parsed;
       }
 
       return 0;

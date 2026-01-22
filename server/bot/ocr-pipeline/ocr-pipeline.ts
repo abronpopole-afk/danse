@@ -31,7 +31,7 @@ const DEFAULT_CONFIG: OCRPipelineConfig = {
   frameBufferSize: 30,
   diffThreshold: 0.05,
   useMockAdapter: false,
-  enableCaching: true,
+  enableCaching: false,
   cacheMaxSize: 100,
   cacheTTLMs: 5000,
 };

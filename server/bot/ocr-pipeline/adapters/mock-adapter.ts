@@ -110,7 +110,7 @@ export class MockAdapterFactory implements OCRAdapterFactory {
   }
 
   async isAvailable(): Promise<boolean> {
-    return true;
+    return false; // Désactivé pour forcer les vrais adaptateurs
   }
 
   getPriority(): number {
