@@ -152,6 +152,9 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
     return robotMock as unknown as T;
   }
   
+  // Extra fallback: in some packaged environments, robotjs might be available 
+  // but fails normal resolution. We try to be more aggressive if we are on Windows.
+  
   if (IS_PACKAGED) {
     logger.info("NativeLoader", `Mode PACKAGED - recherche dans app.asar.unpacked`);
     const unpackedPath = getUnpackedModulePath(moduleName);
@@ -189,6 +192,15 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
       }
     } else {
       logger.warning("NativeLoader", `Module ${moduleName} NON TROUVÉ dans app.asar.unpacked!`);
+      
+      // Attempt direct require as last resort for packaged robotjs
+      if (moduleName === "robotjs" && process.platform === 'win32') {
+        try {
+          const mod = esmRequire("robotjs");
+          if (mod) return extractDefaultExport(mod) as T;
+        } catch (e) {}
+      }
+
       if (moduleName === "robotjs") return robotMock as unknown as T;
     }
   }

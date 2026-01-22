@@ -64,7 +64,8 @@ async function loadNativeModules(): Promise<void> {
       if (screenshotDesktop) {
         logger.info("GGClubAdapter", "✓ screenshot-desktop chargé (Windows)");
       } else {
-        throw new Error("Module loaded but no default export");
+        // Fallback simple si pas de default
+        screenshotDesktop = screenshotModule;
       }
     } catch (e) {
       logger.error("GGClubAdapter", "❌ screenshot-desktop ÉCHEC", { error: String(e) });
