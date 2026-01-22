@@ -54,6 +54,7 @@ export class PlatformManager extends EventEmitter {
   private config: PlatformManagerConfig | null = null;
   private status: PlatformManagerStatus = "idle";
   private managedTables: Map<number, ManagedTable> = new Map();
+  private pendingHandles: Set<number> = new Set();
   private isProcessing: boolean = false;
   private schedulerStarted: boolean = false;
 
@@ -193,9 +194,9 @@ export class PlatformManager extends EventEmitter {
     const cleanHandle = Math.abs(window.handle);
     logger.info("PlatformManager", `Traitement table détectée: ${window.title} (${cleanHandle})`);
 
-    // Check if window handle or windowId is already managed
-    if (this.managedTables.has(cleanHandle)) {
-      logger.debug("PlatformManager", "Table avec ce handle déjà gérée", { handle: cleanHandle });
+    // Check if window handle or windowId is already managed OR pending
+    if (this.managedTables.has(cleanHandle) || this.pendingHandles.has(cleanHandle)) {
+      logger.debug("PlatformManager", "Table avec ce handle déjà gérée ou en cours d'ajout", { handle: cleanHandle });
       return;
     }
 
@@ -208,6 +209,9 @@ export class PlatformManager extends EventEmitter {
         return;
       }
     }
+
+    // Atomic guard: mark as pending
+    this.pendingHandles.add(cleanHandle);
 
     try {
       const tableManager = getTableManager();
@@ -243,6 +247,9 @@ export class PlatformManager extends EventEmitter {
     } catch (error) {
       console.error("Error handling table detection:", error);
       this.emit("error", { message: "Failed to add detected table", error });
+    } finally {
+      // Remove from pending once complete or failed
+      this.pendingHandles.delete(cleanHandle);
     }
   }
 
