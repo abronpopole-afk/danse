@@ -10,7 +10,7 @@ import { preprocessForOCR } from '../image-processing';
 
 export interface ONNXOCRConfig {
   modelPath: string;
-  confidence threshold: number;
+  confidenceThreshold: number;
   batchSize: number;
   useGPU: boolean;
 }

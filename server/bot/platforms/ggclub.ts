@@ -913,6 +913,11 @@ export class GGClubAdapter extends PlatformAdapter {
       
       if (window) {
         const bounds = window.getBounds();
+        // PROTECTION MÉMOIRE: Vérifier les bounds avant capture
+        if (bounds.width > 2000 || bounds.height > 2000) {
+          logger.error("GGClubAdapter", `🚨 robotjs: Bounds invalides détectés (${bounds.width}x${bounds.height}). Skip capture.`);
+          throw new Error("Invalid window bounds");
+        }
         logger.info("GGClubAdapter", `[${windowHandle}] Capture robotjs sur bounds:`, bounds);
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
         
@@ -1075,7 +1080,6 @@ export class GGClubAdapter extends PlatformAdapter {
       logger.info("GGClubAdapter", `PNG IHDR: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
       
       // PROTECTION MÉMOIRE: Si la capture est trop grande (> 2000px), on refuse de la traiter
-      // car le bot cherche une fenêtre de ~566x420
       if (width > 2000 || height > 2000) {
         logger.error("GGClubAdapter", `🚨 CAPTURE ÉCRAN ENTIER DÉTECTÉE (${width}x${height}). Refus pour éviter OOM.`);
         throw new Error(`Capture trop grande: ${width}x${height}. Le bot doit capturer uniquement la fenêtre.`);
@@ -1189,6 +1193,21 @@ export class GGClubAdapter extends PlatformAdapter {
 
     logger.info("GGClubAdapter", `[${cleanHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
 
+    // LOG DE SÉCURITÉ : Si les dimensions de la fenêtre enregistrée sont suspectes
+    if (table.width > 2000 || table.height > 2000) {
+      logger.warning("GGClubAdapter", `[${cleanHandle}] Dimensions de table suspectes: ${table.width}x${table.height}. Tentative de rafraîchissement des bounds.`);
+      const { windowManager } = require("node-window-manager");
+      const win = windowManager.getWindows().find((w: any) => Math.abs(w.handle) === cleanHandle);
+      if (win) {
+        const bounds = win.getBounds();
+        table.width = bounds.width;
+        table.height = bounds.height;
+        table.x = bounds.x;
+        table.y = bounds.y;
+        logger.info("GGClubAdapter", `[${cleanHandle}] Bounds rafraîchis: ${table.width}x${table.height}`);
+      }
+    }
+
     // MISE À JOUR DYNAMIQUE DU SCALING DES RÉGIONS
     const baseLayout = this.getDefaultScreenLayout();
     const scale = (region: ScreenRegion) => ({
@@ -1228,6 +1247,28 @@ export class GGClubAdapter extends PlatformAdapter {
         logger.error("GGClubAdapter", `[${windowHandle}] ❌ Capture d'écran ÉCHOUÉE (buffer vide)`);
         throw new Error("Screenshot capture failed or returned empty buffer");
       }
+      
+      // VÉRIFICATION FINALE DES DIMENSIONS DU BUFFER VS DIMENSIONS ATTENDUES
+      const expectedSize = table.width * table.height * 4;
+      if (screenshot.length !== expectedSize) {
+        logger.error("GGClubAdapter", `[${windowHandle}] 🚨 TAILLE BUFFER INCOHÉRENTE: reçu ${screenshot.length} bytes, attendu ${expectedSize} (pour ${table.width}x${table.height})`);
+        
+        // Si le buffer est un PNG (89504e47...), il n'a pas été décodé
+        if (screenshot.length > 8 && screenshot.slice(0, 4).toString('hex') === '89504e47') {
+          logger.error("GGClubAdapter", `[${windowHandle}] Le buffer est au format PNG. Décodage forcé.`);
+          const decoded = await this.decodePngToRgba(screenshot);
+          // On injecte le buffer décodé dans le cache pour éviter de reboucler infiniment
+          this.lastScreenCaptures.set(windowHandle, { buffer: decoded, timestamp: Date.now() });
+          return this.getGameState(windowHandle); 
+        }
+        
+        // Si c'est un plein écran (> 2000px) non détecté avant
+        if (screenshot.length > 2000 * 2000 * 4) {
+           logger.error("GGClubAdapter", `[${windowHandle}] 🚨 CAPTURE PLEIN ÉCRAN DÉTECTÉE DANS GETGAMESTATE. Abandon pour éviter crash.`);
+           throw new Error("Full screen capture detected in state detection");
+        }
+      }
+
       logger.info("GGClubAdapter", `[${windowHandle}] ✅ Capture réussie: ${screenshot.length} octets`);
       
       // ÉTAPE 1 (priorité absolue): SIGNAL VISUEL FIABLE
