@@ -139,10 +139,10 @@ export class TableSession extends EventEmitter {
     if (updates.heroCards) dbUpdates.heroCards = updates.heroCards;
     if (updates.communityCards) dbUpdates.communityCards = updates.communityCards;
     if (updates.currentStreet) dbUpdates.currentStreet = updates.currentStreet;
-    if (updates.players) dbUpdates.playersData = updates.players;
+    if (updates.players) dbUpdates.playersData = JSON.parse(JSON.stringify(updates.players));
 
     if (Object.keys(dbUpdates).length > 0) {
-      storage.updatePokerTable(this.tableState.id, dbUpdates).catch(err => {
+      storage.updatePokerTable(this.tableState.id, dbUpdates).catch((err: any) => {
         console.error(`[TableSession] Failed to persist state to DB for table ${this.tableState.id}:`, err);
       });
     }

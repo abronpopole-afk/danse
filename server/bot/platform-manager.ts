@@ -244,7 +244,7 @@ export class PlatformManager extends EventEmitter {
       });
 
       this.emit("tableAdded", { windowHandle: cleanHandle, tableId: tableSession.getId() });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error handling table detection:", error);
       this.emit("error", { message: "Failed to add detected table", error });
     } finally {
