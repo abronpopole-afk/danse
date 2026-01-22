@@ -1,0 +1,123 @@
+ Le bot capture l’écran
+Et là, on voit un truc très important :
+PNG IHDR: 2560x1600
+
+
+👉 La capture d’écran n’est PAS la table.
+👉 C’est tout l’écran (2560×1600), pas la fenêtre GGClub.
+Donc :
+- Le bot croit capturer la table
+- Mais il capture l’écran entier
+- Puis il applique des zones OCR pré-calculées pour 566×420
+- Sur une image de 2560×1600
+➡️ Toutes les zones OCR tombent dans le vide.
+➡️ Le bot ne détecte rien.
+➡️ Le pipeline OCR tourne dans le vide.
+
+✔ Le bot lance l’OCR
+Initialisation du pipeline OCR...
+extractTableState...
+
+
+Mais aucun résultat OCR n’apparaît :
+- pas de cartes détectées
+- pas de boutons détectés
+- pas de pot
+- pas de stacks
+- pas de joueur actif
+➡️ L’OCR tourne mais ne renvoie rien.
+
+✔ Le bot boucle en analyse
+Il refait :
+- capture
+- decode PNG
+- OCR
+- analyse
+- rien détecté
+- recommence
+➡️ Il tourne en boucle sans jamais trouver un état valide.
+
+🔥 2. Pourquoi l’app CRASH ?
+Voici la cause exacte, sans détour :
+❌ Le bot capture l’écran entier au lieu de capturer la fenêtre GGClub.
+Et ensuite :
+❌ Il applique des zones OCR scalées pour 566×420 sur une image 2560×1600.
+Résultat :
+- les buffers explosent
+- les allocations mémoire deviennent énormes
+- l’OCR reçoit des zones invalides
+- le pipeline se retrouve avec des coordonnées hors limites
+- les threads OCR saturent
+- l’app finit par crasher (overflow / out-of-memory / segmentation fault)
+C’est exactement ce que montrent les logs :
+🔍 Indice 1 :
+PNG IHDR: 2560x1600
+
+
+→ capture incorrecte
+🔍 Indice 2 :
+Régions scalées pour 566x420
+
+
+→ zones OCR calculées pour une petite fenêtre
+🔍 Indice 3 :
+Aucun log OCR de cartes, boutons, stacks
+→ OCR reçoit du bruit
+🔍 Indice 4 :
+L’app crash après plusieurs cycles
+→ surcharge mémoire
+
+🎯 3. La cause racine (root cause)
+👉 Le bot ne capture pas la bonne fenêtre.
+Il devrait capturer :
+566x420
+
+
+Mais il capture :
+2560x1600
+
+
+Donc :
+- Le moteur de vision ne voit pas la table
+- Le pipeline OCR explose
+- L’app finit par crasher
+
+🛠️ 4. Comment corriger le crash
+✔ Solution 1 — Forcer la capture de la fenêtre (la vraie)
+Dans screenshot-desktop, il faut utiliser :
+- windowId
+- ou handle
+- ou bounds exacts
+Actuellement, il capture l’écran entier, pas la fenêtre.
+
+✔ Solution 2 — Désactiver le “responsive scaling”
+Ton système de scaling est en train de casser l’OCR.
+
+✔ Solution 3 — Redimensionner automatiquement la fenêtre GGClub
+Toujours à 880×600.
+
+✔ Solution 4 — Installer robotjs natif
+Le wrapper simulé peut casser les clics et les captures.
+
+🧠 5. Résumé final
+✔ Les logs disent :
+- Le bot démarre
+- Il détecte la table
+- Il capture l’écran entier
+- Il applique des zones OCR incorrectes
+- L’OCR tourne dans le vide
+- Le pipeline sature
+- L’app crash
+❌ Pourquoi ça crash ?
+Parce que la capture d’écran ne correspond pas à la fenêtre, ce qui provoque :
+- erreurs de dimensions
+- surcharge mémoire
+- crash du pipeline OCR
+
+Pipou, si tu veux, je peux :
+- analyser la fonction captureScreen()
+- te dire exactement comment corriger la capture
+- t’écrire le code pour capturer la fenêtre GGClub correctement
+- t’aider à désactiver le scaling
+- t’aider à stabiliser l’OCR
+Tu veux qu’on corrige la capture d’écran ensemble ?

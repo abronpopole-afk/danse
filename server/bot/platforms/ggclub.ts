@@ -904,38 +904,51 @@ export class GGClubAdapter extends PlatformAdapter {
       console.log(`[Capture] DXGI capture not available for ${windowHandle}`);
     }
 
+    // Fallback 1: robotjs + window bounds
     try {
       const robot = require("robotjs");
       const { windowManager } = require("node-window-manager");
       const windows = windowManager.getWindows();
-      const window = windows.find((w: any) => w.handle === windowHandle);
+      const window = windows.find((w: any) => Math.abs(w.handle) === Math.abs(windowHandle));
       
       if (window) {
         const bounds = window.getBounds();
+        logger.info("GGClubAdapter", `[${windowHandle}] Capture robotjs sur bounds:`, bounds);
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
         
         if (bitmap && bitmap.image) {
-          const buffer = Buffer.from(bitmap.image);
-          this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
+          const rgbaBuffer = Buffer.from(bitmap.image);
+          this.lastScreenCaptures.set(windowHandle, { buffer: rgbaBuffer, timestamp: now });
           this.antiDetectionMonitor.recordScreenCapture();
-          return buffer;
+          return rgbaBuffer;
         }
       }
     } catch (error) {
-      // Silently fail fallback
+      logger.debug("GGClubAdapter", `[${windowHandle}] Fallback robotjs échoué`);
     }
 
-    // Second Fallback: screenshot-desktop
-    try {
-      const screenshot = require("screenshot-desktop");
-      const buffer = await screenshot({ format: 'png' });
-      if (buffer && buffer.length > 0) {
-        this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
-        this.antiDetectionMonitor.recordScreenCapture();
-        return buffer;
+    // Fallback 2: screenshot-desktop
+    if (screenshotDesktop) {
+      try {
+        const window = this.activeWindows.get(`ggclub_${windowHandle}`) || 
+                       Array.from(this.activeWindows.values()).find(w => Math.abs(w.handle) === Math.abs(windowHandle));
+        
+        if (window) {
+          logger.info("GGClubAdapter", `[${windowHandle}] Capture screenshot-desktop (window target): ${window.title}`);
+          const pngBuffer = await screenshotDesktop({
+            screen: window.title,
+            format: 'png',
+          });
+          
+          if (pngBuffer && pngBuffer.length > 0) {
+            const rgbaBuffer = await this.decodePngToRgba(pngBuffer);
+            this.lastScreenCaptures.set(windowHandle, { buffer: rgbaBuffer, timestamp: now });
+            return rgbaBuffer;
+          }
+        }
+      } catch (error) {
+        logger.error("GGClubAdapter", `[${windowHandle}] Fallback screenshot-desktop échoué`, { error: String(error) });
       }
-    } catch (error) {
-      // Silently fail fallback
     }
 
     return Buffer.alloc(0);
@@ -1061,6 +1074,13 @@ export class GGClubAdapter extends PlatformAdapter {
       
       logger.info("GGClubAdapter", `PNG IHDR: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
       
+      // PROTECTION MÉMOIRE: Si la capture est trop grande (> 2000px), on refuse de la traiter
+      // car le bot cherche une fenêtre de ~566x420
+      if (width > 2000 || height > 2000) {
+        logger.error("GGClubAdapter", `🚨 CAPTURE ÉCRAN ENTIER DÉTECTÉE (${width}x${height}). Refus pour éviter OOM.`);
+        throw new Error(`Capture trop grande: ${width}x${height}. Le bot doit capturer uniquement la fenêtre.`);
+      }
+
       // Trouver chunk IDAT (image data compressé)
       let offset = 8; // Après signature
       let idatData: Buffer[] = [];
