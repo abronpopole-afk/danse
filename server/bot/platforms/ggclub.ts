@@ -1763,53 +1763,45 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async isHeroTurn(windowHandle: number): Promise<boolean> {
+    const tableId = `ggclub_${windowHandle}`;
+    const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
     const screenBuffer = await this.captureScreen(windowHandle);
-    if (screenBuffer.length === 0) return false;
+    if (screenBuffer.length === 0 || !table) return false;
 
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-    const imageWidth = window?.width || 880;
-    const imageHeight = window?.height || 600;
+    const imageWidth = table.width || 880;
+    const imageHeight = table.height || 600;
 
-    // Check for hero card highlight
+    // 1. Détection par surbrillance dorée (Plus fiable que l'OCR)
     const hasHeroHighlight = await this.checkColorInRegion(
       screenBuffer,
-      Array.isArray(this.screenLayout.heroCardsRegion) ? this.screenLayout.heroCardsRegion[0] : this.screenLayout.heroCardsRegion, // Use first region
+      Array.isArray(this.screenLayout.heroCardsRegion) ? this.screenLayout.heroCardsRegion[0] : this.screenLayout.heroCardsRegion,
       GGCLUB_UI_COLORS.heroTurnHighlight,
       imageWidth,
       imageHeight
     );
 
-    // Check for visible action buttons
-    const hasActionButtons = await this.checkActionButtonsVisible(screenBuffer, imageWidth, imageHeight);
+    if (hasHeroHighlight) {
+      logger.info("GGClubAdapter", `[${windowHandle}] Hero Turn Détecté (Couleur Dorée)`);
+      return true;
+    }
 
-    // Check for active timer (if timer region is defined)
-    const hasTimer = this.screenLayout.timerRegion 
-      ? await this.checkTimerActive(screenBuffer, this.screenLayout.timerRegion, imageWidth, imageHeight)
-      : true; // Assume timer is active if region is not defined
-
-    return hasHeroHighlight || (hasActionButtons && hasTimer);
-  }
-
-  private async checkActionButtonsVisible(screenBuffer: Buffer, imageWidth: number, imageHeight: number): Promise<boolean> {
-    const region = this.screenLayout.actionButtonsRegion;
-    if (!region || region.width <= 0 || region.height <= 0) return false;
-
-    // Check for the presence of a known button, e.g., 'Fold'
-    const hasFoldButton = await this.checkColorInRegion(
-      screenBuffer, 
-      region, 
+    // 2. Détection par présence des boutons d'action (Fallback visuel)
+    const actionRegion = this.screenLayout.actionButtonsRegion;
+    const buttonColors = [
       GGCLUB_UI_COLORS.foldButton,
-      imageWidth,
-      imageHeight
-    );
+      GGCLUB_UI_COLORS.callButton,
+      GGCLUB_UI_COLORS.raiseButton
+    ];
 
-    return hasFoldButton;
-  }
+    for (const color of buttonColors) {
+      const isVisible = await this.checkColorInRegion(screenBuffer, actionRegion, color, imageWidth, imageHeight);
+      if (isVisible) {
+        logger.info("GGClubAdapter", `[${windowHandle}] Hero Turn Détecté (Boutons Visibles)`);
+        return true;
+      }
+    }
 
-  private async checkTimerActive(screenBuffer: Buffer, region: ScreenRegion, imageWidth: number, imageHeight: number): Promise<boolean> {
-    // More robust check: look for specific timer colors or patterns
-    // For now, a basic color check or just assume active if region exists
-    return this.checkColorInRegion(screenBuffer, region, { r: 255, g: 255, b: 255, tolerance: 50 }, imageWidth, imageHeight);
+    return false;
   }
 
   async detectAvailableActions(windowHandle: number): Promise<DetectedButton[]> {
@@ -1821,58 +1813,40 @@ export class GGClubAdapter extends PlatformAdapter {
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
     
-    logger.info("GGClubAdapter", `[${windowHandle}] Recherche boutons dans région: ${JSON.stringify(region)}`);
-
-    // OCR des boutons d'action
-    const ocrResult = await this.performOCR(screenBuffer, region, table.width, table.height);
-    logger.info("GGClubAdapter", `[${windowHandle}] OCR Boutons d'action résultat: "${ocrResult.text}"`);
-
-    const actionKeywords = [
-      { type: "fold", words: ["fold", "coucher", "f0ld"] },
-      { type: "check", words: ["check", "parole"] },
-      { type: "call", words: ["call", "suivre"] },
-      { type: "raise", words: ["raise", "relancer", "bet", "miser"] },
-      { type: "allin", words: ["all-in", "allin", "tapis"] }
+    // Fallback immédiat par couleur (Plus rapide et robuste que l'OCR pur)
+    const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature; keywords: string[] }> = [
+      { type: "fold", color: GGCLUB_UI_COLORS.foldButton, keywords: ["fold", "coucher", "f0ld"] },
+      { type: "call", color: GGCLUB_UI_COLORS.callButton, keywords: ["call", "suivre"] },
+      { type: "check", color: GGCLUB_UI_COLORS.checkButton, keywords: ["check", "parole"] },
+      { type: "raise", color: GGCLUB_UI_COLORS.raiseButton, keywords: ["raise", "relancer", "bet", "miser"] },
+      { type: "allin", color: GGCLUB_UI_COLORS.allInButton, keywords: ["all-in", "allin", "tapis"] },
     ];
 
-    const textLower = ocrResult.text.toLowerCase();
-    for (const action of actionKeywords) {
-      if (action.words.some(word => textLower.includes(word))) {
-        logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté: ${action.type}`);
-        buttons.push({
-          type: action.type as any,
-          region: region, // Pour simplifier on clique au centre de la zone d'action si trouvé
-          isEnabled: true
-        });
-      }
-    }
+    const buttonWidth = Math.round(region.width / 4);
+    for (let i = 0; i < buttonTypes.length; i++) {
+      const buttonDef = buttonTypes[i];
+      const buttonRegion: ScreenRegion = {
+        x: region.x + (i % 4) * (buttonWidth * 0.8), // Grille approximative
+        y: region.y,
+        width: buttonWidth,
+        height: region.height,
+      };
 
-    if (buttons.length === 0) {
-      logger.warning("GGClubAdapter", `[${windowHandle}] Aucun bouton détecté via OCR, tentative par couleur...`);
-      // Fallback par couleur si OCR échoue
-      const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature }> = [
-        { type: "fold", color: GGCLUB_UI_COLORS.foldButton },
-        { type: "call", color: GGCLUB_UI_COLORS.callButton },
-        { type: "check", color: GGCLUB_UI_COLORS.checkButton },
-        { type: "raise", color: GGCLUB_UI_COLORS.raiseButton },
-        { type: "allin", color: GGCLUB_UI_COLORS.allInButton },
-      ];
-
-      let xOffset = 0;
-      const buttonWidth = Math.round(region.width / 4);
-      for (const buttonDef of buttonTypes) {
-        const buttonRegion: ScreenRegion = {
-          x: region.x + xOffset,
-          y: region.y,
-          width: buttonWidth,
-          height: region.height,
-        };
-        const isVisible = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, table.width, table.height);
-        if (isVisible) {
-          logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur: ${buttonDef.type}`);
+      const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, table.width, table.height);
+      
+      if (isColorMatch) {
+        // Validation OCR seulement si la couleur matche (pour confirmer le texte)
+        const ocrResult = await this.performOCR(screenBuffer, buttonRegion, table.width, table.height);
+        const textLower = ocrResult.text.toLowerCase();
+        
+        if (buttonDef.keywords.some(word => textLower.includes(word)) || ocrResult.confidence > 0.1) {
+          logger.info("GGClubAdapter", `[${windowHandle}] Bouton confirmé: ${buttonDef.type}`);
+          buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
+        } else {
+          // Si couleur ok mais OCR illisible, on l'ajoute quand même en "guess"
+          logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur seulement: ${buttonDef.type}`);
           buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
         }
-        xOffset += buttonWidth;
       }
     }
 
