@@ -180,17 +180,33 @@ export class DatabaseStorage implements IStorage {
   async createPokerTable(table: InsertPokerTable): Promise<PokerTable> {
     // Idempotency check: look for existing table with same identifier and session
     if (table.tableIdentifier && table.sessionId) {
-      const existing = await this.db.select().from(this.schema.pokerTables)
-        .where(eq(this.schema.pokerTables.tableIdentifier, table.tableIdentifier))
-        .where(eq(this.schema.pokerTables.sessionId, table.sessionId))
-        .limit(1);
-      
-      if (existing[0]) {
-        logger.debug('[Storage]', 'Table déjà existante pour cette session, retour de l\'existant', { 
-          tableId: existing[0].id,
-          tableIdentifier: table.tableIdentifier 
-        });
-        return existing[0];
+      try {
+        const existing = await this.db.select().from(this.schema.pokerTables)
+          .where(eq(this.schema.pokerTables.tableIdentifier, table.tableIdentifier))
+          .where(eq(this.schema.pokerTables.sessionId, table.sessionId))
+          .limit(1);
+        
+        if (existing[0]) {
+          logger.debug('[Storage]', 'Table déjà existante pour cette session, retour de l\'existant', { 
+            tableId: existing[0].id,
+            tableIdentifier: table.tableIdentifier 
+          });
+          return existing[0];
+        }
+
+        const result = await this.db.insert(this.schema.pokerTables).values(table).returning();
+        return result[0];
+      } catch (error) {
+        // Handle race condition where record was inserted between check and insert
+        const existing = await this.db.select().from(this.schema.pokerTables)
+          .where(eq(this.schema.pokerTables.tableIdentifier, table.tableIdentifier))
+          .where(eq(this.schema.pokerTables.sessionId, table.sessionId))
+          .limit(1);
+        
+        if (existing[0]) {
+          return existing[0];
+        }
+        throw error;
       }
     }
 

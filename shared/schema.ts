@@ -46,6 +46,10 @@ export const pokerTables = pgTable("poker_tables", {
   currentStreet: text("current_street").default("preflop"),
   playersData: jsonb("players_data"),
   createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: sql`unique(${table.sessionId}, ${table.tableIdentifier})`
+  };
 });
 
 export const insertPokerTableSchema = createInsertSchema(pokerTables).omit({ id: true, createdAt: true });
