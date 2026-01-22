@@ -643,14 +643,16 @@ export class GGClubAdapter extends PlatformAdapter {
       await loadNativeModules();
     }
 
-        const ggclubWindows = await this.scanForGGClubWindows();
+    const ggclubWindows = await this.scanForGGClubWindows();
     
     // Update activeWindows map with new data
     for (const win of ggclubWindows) {
-      const windowId = `ggclub_${win.handle}`;
+      const cleanHandle = Math.abs(win.handle);
+      const windowId = `ggclub_${cleanHandle}`;
+      
       this.activeWindows.set(windowId, {
         windowId,
-        handle: win.handle,
+        handle: cleanHandle,
         title: win.title,
         x: win.x,
         y: win.y,
@@ -662,8 +664,8 @@ export class GGClubAdapter extends PlatformAdapter {
     }
     
     const results: TableWindow[] = ggclubWindows.map(win => ({
-      windowId: `ggclub_${win.handle}`,
-      handle: win.handle,
+      windowId: `ggclub_${Math.abs(win.handle)}`,
+      handle: Math.abs(win.handle),
       title: win.title,
       x: win.x,
       y: win.y,
@@ -1010,20 +1012,21 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
-    const tableId = `ggclub_${windowHandle}`;
-    logger.info("GGClubAdapter", `[${windowHandle}] getGameState - Début de l'analyse pour ${tableId}`);
+    const cleanHandle = Math.abs(windowHandle);
+    const tableId = `ggclub_${cleanHandle}`;
+    logger.info("GGClubAdapter", `[${cleanHandle}] getGameState - Début de l'analyse pour ${tableId}`);
     
     const table = this.activeWindows.get(tableId) || 
-                  this.activeWindows.get(String(windowHandle)) ||
-                  Array.from(this.activeWindows.values()).find(w => w.handle === windowHandle);
+                  this.activeWindows.get(String(cleanHandle)) ||
+                  Array.from(this.activeWindows.values()).find(w => Math.abs(w.handle) === cleanHandle);
     
     if (!table) {
       const handles = Array.from(this.activeWindows.keys());
-      logger.error("GGClubAdapter", `[${windowHandle}] Table non trouvée dans activeWindows. Handles dispos: ${handles.join(", ")}`);
-      throw new Error(`Table with handle ${windowHandle} not found`);
+      logger.error("GGClubAdapter", `[${cleanHandle}] Table non trouvée dans activeWindows. Handles dispos: ${handles.join(", ")}`);
+      throw new Error(`Table with handle ${cleanHandle} not found`);
     }
 
-    logger.info("GGClubAdapter", `[${windowHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
+    logger.info("GGClubAdapter", `[${cleanHandle}] Table trouvée: ${table.title} (${table.width}x${table.height})`);
 
     // MISE À JOUR DYNAMIQUE DU SCALING DES RÉGIONS
     if (this.activeCalibration) {
@@ -1032,7 +1035,7 @@ export class GGClubAdapter extends PlatformAdapter {
         table.width,
         table.height
       );
-      this.scaledRegions.set(windowHandle, scaled);
+      this.scaledRegions.set(cleanHandle, scaled);
       
       // Mise à jour de screenLayout pour utiliser les régions scalées
       this.screenLayout = {
@@ -1050,20 +1053,20 @@ export class GGClubAdapter extends PlatformAdapter {
         timerRegion: scaled.timer
       };
 
-      logger.info("GGClubAdapter", `[${windowHandle}] Régions recalculées pour taille ${table.width}x${table.height}`, {
+      logger.info("GGClubAdapter", `[${cleanHandle}] Régions recalculées pour taille ${table.width}x${table.height}`, {
         potRegion: this.screenLayout.potRegion,
         heroCards: this.screenLayout.heroCardsRegion[0]
       });
     }
 
     try {
-      logger.info("GGClubAdapter", `[${windowHandle}] === DÉBUT ANALYSE TABLE ===`);
+      logger.info("GGClubAdapter", `[${cleanHandle}] === DÉBUT ANALYSE TABLE ===`);
       
       // LOG D'ÉTAT INITIAL
-      logger.info("GGClubAdapter", `[${windowHandle}] État de activeWindows: ${this.activeWindows.has(`ggclub_${windowHandle}`)}`);
+      logger.info("GGClubAdapter", `[${cleanHandle}] État de activeWindows: ${this.activeWindows.has(tableId)}`);
       
-      logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
-      const screenshot = await this.captureScreen(windowHandle);
+      logger.info("GGClubAdapter", `[${cleanHandle}] Tentative de capture d'écran pour la table: ${table.title}`);
+      const screenshot = await this.captureScreen(cleanHandle);
       
       if (!screenshot || screenshot.length === 0) {
         logger.error("GGClubAdapter", `[${windowHandle}] Capture d'écran ÉCHOUÉE ou vide`);
