@@ -148,10 +148,21 @@ export class OnnxAdapter extends OCRAdapter {
   }
 
   private async runInference(tensor: Float32Array): Promise<{ text: string; confidence: number }> {
+    if (!this.onnxRuntime) {
+      console.log('[OnnxAdapter] Attempting late initialization of onnxRuntime...');
+      try {
+        this.onnxRuntime = await import('onnxruntime-node');
+      } catch (e) {
+        throw new Error('ONNX Runtime not initialized and late import failed');
+      }
+    }
+
     if (!this.session) {
       console.log('[OnnxAdapter] Loading ONNX model...');
       try {
-        this.session = await this.onnxRuntime.InferenceSession.create('./attached_assets/poker_ocr_model.onnx');
+        // Support both ESM and CJS imports
+        const ort = this.onnxRuntime.default || this.onnxRuntime;
+        this.session = await ort.InferenceSession.create('./attached_assets/poker_ocr_model.onnx');
         console.log('[OnnxAdapter] ONNX model loaded successfully');
       } catch (error) {
         console.error('[OnnxAdapter] Failed to load ONNX model:', error);
@@ -160,8 +171,9 @@ export class OnnxAdapter extends OCRAdapter {
     }
     
     try {
+      const ort = this.onnxRuntime.default || this.onnxRuntime;
       const feeds: any = {};
-      feeds[this.session.inputNames[0]] = new this.onnxRuntime.Tensor('float32', tensor, [1, 1, tensor.length]);
+      feeds[this.session.inputNames[0]] = new ort.Tensor('float32', tensor, [1, 1, tensor.length]);
       const output = await this.session.run(feeds);
       // Implementation-specific parsing would go here
       return { text: 'parsed_result', confidence: 0.9 }; 
