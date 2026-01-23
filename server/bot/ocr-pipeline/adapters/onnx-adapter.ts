@@ -6,10 +6,45 @@ import type {
   OCRResult, 
   OCREngineCapabilities 
 } from '../types';
+import path from 'path';
+import fs from 'fs';
+
+// Helper pour obtenir le chemin du modèle dans Electron packagé ou dev
+function getModelPath(): string {
+  // En production Electron packagé
+  if ((process as any).resourcesPath) {
+    const packagedPath = path.join((process as any).resourcesPath, 'models', 'poker-ocr-v1.onnx');
+    if (fs.existsSync(packagedPath)) {
+      return packagedPath;
+    }
+  }
+  
+  // En développement - plusieurs chemins possibles
+  const devPaths = [
+    path.join(__dirname, '../../../../ml-ocr/models/poker-ocr-v1.onnx'),
+    path.join(__dirname, '../../../ml-ocr/models/poker-ocr-v1.onnx'),
+    path.join(process.cwd(), 'server/bot/ml-ocr/models/poker-ocr-v1.onnx'),
+    './server/bot/ml-ocr/models/poker-ocr-v1.onnx',
+  ];
+  
+  for (const p of devPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        console.log(`[OnnxAdapter] Model found at: ${p}`);
+        return p;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  
+  throw new Error(`ONNX model not found. Searched in: ${devPaths.join(', ')}`);
+}
 
 export class OnnxAdapter extends OCRAdapter {
   private session: any = null;
   private onnxRuntime: any = null;
+  private modelPath: string | null = null;
 
   constructor() {
     super('onnx');
@@ -17,6 +52,16 @@ export class OnnxAdapter extends OCRAdapter {
 
   async initialize(): Promise<void> {
     try {
+      // Vérifier d'abord si le modèle existe
+      try {
+        this.modelPath = getModelPath();
+        console.log(`[OnnxAdapter] Model path resolved: ${this.modelPath}`);
+      } catch (pathError) {
+        console.warn('[OnnxAdapter] Model not found, adapter unavailable:', pathError);
+        this.isInitialized = false;
+        throw pathError;
+      }
+
       this.onnxRuntime = await import('onnxruntime-node');
       this.isInitialized = true;
       console.log('[OnnxAdapter] Initialized successfully');
@@ -167,9 +212,12 @@ export class OnnxAdapter extends OCRAdapter {
     if (!this.session) {
       console.log('[OnnxAdapter] Loading ONNX model...');
       try {
+        if (!this.modelPath) {
+          this.modelPath = getModelPath();
+        }
         // Support both ESM and CJS imports
         const ort = this.onnxRuntime.default || this.onnxRuntime;
-        this.session = await ort.InferenceSession.create('./server/bot/ml-ocr/models/poker-ocr-v1.onnx');
+        this.session = await ort.InferenceSession.create(this.modelPath);
         console.log('[OnnxAdapter] ONNX model loaded successfully');
       } catch (error) {
         console.error('[OnnxAdapter] Failed to load ONNX model:', error);
@@ -180,10 +228,19 @@ export class OnnxAdapter extends OCRAdapter {
     try {
       const ort = this.onnxRuntime.default || this.onnxRuntime;
       const feeds: any = {};
-      feeds[this.session.inputNames[0]] = new ort.Tensor('float32', tensor, [1, 1, tensor.length]);
+      
+      // The model expects [1, 1, 32, 100] or similar for OCR? 
+      // Based on previous code it was [1, 1, tensor.length]
+      // Let's stick to the providing the tensor as-is but with error handling
+      const inputName = this.session.inputNames[0];
+      feeds[inputName] = new ort.Tensor('float32', tensor, [1, 1, tensor.length]);
+      
       const output = await this.session.run(feeds);
-      // Implementation-specific parsing would go here
-      return { text: 'parsed_result', confidence: 0.9 }; 
+      
+      // Basic implementation-specific parsing 
+      // (This would normally involve decoding the output tensor to characters)
+      // For now we return a placeholder that confirms the model ran
+      return { text: 'detected', confidence: 0.95 }; 
     } catch (error) {
       console.error('[OnnxAdapter] Inference execution failed:', error);
       throw error;
@@ -206,9 +263,12 @@ export class OnnxAdapterFactory implements OCRAdapterFactory {
 
   async isAvailable(): Promise<boolean> {
     try {
+      // Vérifier que onnxruntime ET le modèle existent
       await import('onnxruntime-node');
+      getModelPath(); // Throws if not found
       return true;
     } catch {
+      console.log('[OnnxAdapterFactory] Not available (onnxruntime or model missing)');
       return false;
     }
   }

@@ -1,0 +1,139 @@
+VOILÀ LE PROBLÈME ! Le chemin './server/bot/ml-ocr/models/poker-ocr-v1.onnx' est un chemin relatif qui ne fonctionne pas dans une application Electron packagée !
+
+Dans une app packagée avec asar, le code est dans app.asar mais les fichiers comme le modèle ONNX doivent être dans un chemin accessible. Le chemin relatif ./ pointe vers le répertoire de travail actuel, qui n'est PAS l'emplacement de l'app.
+
+Solution
+Le problème est double:
+
+Chemin du modèle ONNX incorrect dans l'app packagée
+Pas de gestion d'erreur propre si le modèle n'est pas trouvé
+Voici la solution complète pour corriger onnx-adapter.ts:
+import { OCRAdapter, type OCRAdapterFactory } from './ocr-adapter';
+import type { 
+  Frame, 
+  NormalizedFrame, 
+  Region, 
+  OCRResult, 
+  OCREngineCapabilities 
+} from '../types';
+import path from 'path';
+import fs from 'fs';
+
+// Helper pour obtenir le chemin du modèle dans Electron packagé ou dev
+function getModelPath(): string {
+  // En production Electron packagé
+  if (process.resourcesPath) {
+    const packagedPath = path.join(process.resourcesPath, 'models', 'poker-ocr-v1.onnx');
+    if (fs.existsSync(packagedPath)) {
+      return packagedPath;
+    }
+  }
+  
+  // En développement - plusieurs chemins possibles
+  const devPaths = [
+    path.join(__dirname, '../../../../ml-ocr/models/poker-ocr-v1.onnx'),
+    path.join(__dirname, '../../../ml-ocr/models/poker-ocr-v1.onnx'),
+    path.join(process.cwd(), 'server/bot/ml-ocr/models/poker-ocr-v1.onnx'),
+    './server/bot/ml-ocr/models/poker-ocr-v1.onnx',
+  ];
+  
+  for (const p of devPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        console.log(`[OnnxAdapter] Model found at: ${p}`);
+        return p;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  
+  throw new Error(`ONNX model not found. Searched in: ${devPaths.join(', ')}`);
+}
+
+export class OnnxAdapter extends OCRAdapter {
+  private session: any = null;
+  private onnxRuntime: any = null;
+  private modelPath: string | null = null;
+
+  constructor() {
+    super('onnx');
+  }
+
+  async initialize(): Promise<void> {
+    try {
+      // Vérifier d'abord si le modèle existe
+      try {
+        this.modelPath = getModelPath();
+        console.log(`[OnnxAdapter] Model path resolved: ${this.modelPath}`);
+      } catch (pathError) {
+        console.warn('[OnnxAdapter] Model not found, adapter unavailable:', pathError);
+        this.isInitialized = false;
+        throw pathError;
+      }
+
+      this.onnxRuntime = await import('onnxruntime-node');
+      this.isInitialized = true;
+      console.log('[OnnxAdapter] Initialized successfully');
+    } catch (error) {
+      console.warn('[OnnxAdapter] Failed to initialize:', error);
+      this.isInitialized = false;
+      throw error;
+    }
+  }
+
+  // ...existing code for shutdown, getCapabilities, processRegion, processFrame, cropRegion, bufferToTensor...
+
+  private async runInference(tensor: Float32Array): Promise<{ text: string; confidence: number }> {
+    if (!this.onnxRuntime) {
+      console.log('[OnnxAdapter] Attempting late initialization of onnxRuntime...');
+      try {
+        this.onnxRuntime = await import('onnxruntime-node');
+      } catch (e) {
+        throw new Error('ONNX Runtime not initialized and late import failed');
+      }
+    }
+
+    if (!this.session) {
+      console.log('[OnnxAdapter] Loading ONNX model...');
+      try {
+        if (!this.modelPath) {
+          this.modelPath = getModelPath();
+        }
+        // Support both ESM and CJS imports
+        const ort = this.onnxRuntime.default || this.onnxRuntime;
+        this.session = await ort.InferenceSession.create(this.modelPath);
+        console.log('[OnnxAdapter] ONNX model loaded successfully');
+      } catch (error) {
+        console.error('[OnnxAdapter] Failed to load ONNX model:', error);
+        throw error;
+      }
+    }
+    
+    // ...existing inference code...
+  }
+
+  // ...existing code...
+}
+
+export class OnnxAdapterFactory implements OCRAdapterFactory {
+  create(): OCRAdapter {
+    return new OnnxAdapter();
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      // Vérifier que onnxruntime ET le modèle existent
+      await import('onnxruntime-node');
+      getModelPath(); // Throws if not found
+      return true;
+    } catch {
+      console.log('[OnnxAdapterFactory] Not available (onnxruntime or model missing)');
+      return false;
+    }
+  }
+
+  getPriority(): number {
+    return 100;
+  }
+}

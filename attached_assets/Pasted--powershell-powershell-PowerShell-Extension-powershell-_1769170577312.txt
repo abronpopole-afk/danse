@@ -1,0 +1,73 @@
+
+
+
+ powershell
+ powershell
+ PowerShell Extension
+ powershell
+ powershell
+ powershell
+CHAT
+ROBOTJS INSTALLATION ISSUES ON WINDOWS
+Searched for files matching onnx-adapter.ts
+Summarized conversation history
+
+Read onnx-adapter.ts, lines 100 to 220
+
+Maintenant je vois clairement le problème ! Le OnnxAdapter essaie de charger un modèle ONNX depuis './server/bot/ml-ocr/models/poker-ocr-v1.onnx' qui n'existe probablement pas. Vérifions aussi le MockAdapter qui devrait être le fallback :
+
+Searched for files and read model directory
+Le modèle existe. Vérifions le MockAdapter et regardons aussi comment le fallback est géré :
+
+Read mock-adapter and fallback-manager files
+Maintenant, je dois comprendre exactement où le crash se produit. Regardons la fonction extractTableState et processRegions plus en détail, et aussi vérifions le code qui définit les régions :
+
+Analyzed regex patterns and read files
+Maintenant je vois le problème potentiel. Regardons processRegions et le normalizeFrame :
+
+Read lines 160 to 180 and 110 to 130
+Maintenant, regardons la fonction normalizer.normalize() en détail puisque c'est là que le crash pourrait se produire :
+
+Read frame-normalizer.ts, lines 1 to 110
+
+Le problème est potentiellement dans toGrayscale. Vérifions si le nombre de pixels correspond :
+
+Read frame-normalizer.ts, lines 100 to 140
+
+Je vois maintenant. Le problème est que le code fait Buffer.alloc(pixels) où pixels = data.length / bytesPerPixel. Pour une image 566x420 en RGBA (4 bytes), on a 950880 bytes, ce qui donne 237720 pixels. Le grayscale devrait donc être de 237720 bytes.
+
+Mais attendez - le vrai crash pourrait être dans FallbackManager.processFrame. Vérifions si les adapters sont bien initialisés :
+
+Read fallback-manager.ts, lines 1 to 100
+
+Maintenant je comprends mieux le flux. Regardons ce qui se passe quand onnxruntime-node n'est pas disponible. Le problème est que le chargement du modèle ONNX utilise un chemin relatif qui peut ne pas exister dans l'app packagée:
+
+
+this.session = await ort.InferenceSession.create('./server/bot/ml-ocr/models/poker-ocr-v1.onnx');
+Mais aussi, l'import de onnxruntime-node peut échouer dans Electron packagé. Vérifions comment getGameState appelle le pipeline :
+
+Searched for regex and read file lines
+Je vois le problème maintenant ! Regardons la ligne 1268 de plus près - le code a un try/catch qui devrait logger EXTRACTION_CRASH mais le log dit que le crash se produit sans ce message. Cela signifie que le crash est dans le bloc try mais AVANT qu'il puisse être capturé.
+
+Regardons la fonction initializeOCRPipeline :
+
+Searched for regex and read code lines
+OK, maintenant je vois le problème potentiel ! L'initialisation enregistre OnnxAdapterFactory en premier (priorité 100) et MockAdapterFactory en fallback (priorité 10).
+
+Lors de fallbackManager.initialize(), il essaie d'initialiser l'OnnxAdapter qui tente d'importer onnxruntime-node. Si ça échoue, l'OnnxAdapter n'est pas ajouté, et le MockAdapter est le seul disponible.
+
+MAIS le problème est que si onnxruntime-node réussit à s'importer mais que le modèle ONNX n'existe pas au chemin spécifié, alors le crash se produit lors de l'appel à runInference().
+
+Regardons exactement le chemin utilisé et vérifions s'il est correct dans l'app packagée:
+
+Searched for regex poker-ocr-v1\.onnx|InferenceSession\.create, 8 results
+VOILÀ LE PROBLÈME ! Le chemin './server/bot/ml-ocr/models/poker-ocr-v1.onnx' est un chemin relatif qui ne fonctionne pas dans une application Electron packagée !
+
+Dans une app packagée avec asar, le code est dans app.asar mais les fichiers comme le modèle ONNX doivent être dans un chemin accessible. Le chemin relatif ./ pointe vers le répertoire de travail actuel, qui n'est PAS l'emplacement de l'app.
+
+Solution
+Le problème est double:
+
+Chemin du modèle ONNX incorrect dans l'app packagée
+Pas de gestion d'erreur propre si le modèle n'est pas trouvé
+Voici la solution complète pour corriger onnx-adapter.ts:
