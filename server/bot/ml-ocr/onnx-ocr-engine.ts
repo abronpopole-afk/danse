@@ -95,20 +95,20 @@ export class ONNXOCREngine {
 
     // Prétraitement image
     const preprocessed = this.preprocessImage(imageBuffer, width, height);
-    logger.info("ONNXOCREngine", `🧪 Image preprocessed: size=${width}x${height} -> float32 array`);
+    console.log(`[ONNXOCREngine] 🧪 Image preprocessed: size=${width}x${height} -> float32 array`);
 
     // Créer tensor ONNX
     const inputTensor = new ort.Tensor('float32', preprocessed, [1, 1, height, width]);
 
     try {
       // Inférence
-      logger.info("ONNXOCREngine", `🧠 Running ONNX inference...`);
+      console.log(`[ONNXOCREngine] 🧠 Running ONNX inference...`);
       const feeds = { [this.session.inputNames[0]]: inputTensor };
       const results = await this.session.run(feeds);
 
       // Décoder output
       const outputData = results[this.session.outputNames[0]].data as Float32Array;
-      logger.info("ONNXOCREngine", `📥 ONNX output received: ${outputData.length} floats`);
+      console.log(`[ONNXOCREngine] 📥 ONNX output received: ${outputData.length} floats`);
       
       const decoded = this.decodeOutput(outputData, type);
       const latency = Date.now() - startTime;

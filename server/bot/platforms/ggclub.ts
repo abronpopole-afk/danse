@@ -914,7 +914,19 @@ export class GGClubAdapter extends PlatformAdapter {
       const window = windows.find((w: any) => Math.abs(w.handle) === Math.abs(windowHandle));
       
       if (window) {
-        const bounds = window.getBounds();
+        let targetWindow = window;
+        const children = window.getWindows ? window.getWindows() : [];
+        const renderChild = children.find((c: any) => {
+          const b = c.getBounds();
+          return b.width > 500 && b.width < 1000 && b.height > 350 && b.height < 600;
+        });
+
+        if (renderChild) {
+          logger.info("GGClubAdapter", `[${windowHandle}] 🎯 Render child found for robotjs: ${renderChild.getTitle()} (${renderChild.handle})`);
+          targetWindow = renderChild;
+        }
+
+        const bounds = targetWindow.getBounds();
         // PROTECTION MÉMOIRE: Vérifier les bounds avant capture
         if (bounds.width > 2000 || bounds.height > 2000) {
           logger.error("GGClubAdapter", `🚨 robotjs: AVOIDED OOM - Full screen bounds detected (${bounds.width}x${bounds.height})`);
@@ -931,7 +943,7 @@ export class GGClubAdapter extends PlatformAdapter {
         }
       }
     } catch (error) {
-      logger.debug("GGClubAdapter", `[${windowHandle}] Fallback robotjs échoué`);
+      logger.debug("GGClubAdapter", `[${windowHandle}] Fallback robotjs failed: ${error}`);
     }
 
     // Fallback 2: screenshot-desktop
@@ -1222,15 +1234,15 @@ export class GGClubAdapter extends PlatformAdapter {
     });
 
     this.screenLayout = {
-      heroCardsRegion: baseLayout.heroCardsRegion.map(r => scale(r as ScreenRegion)),
-      communityCardsRegion: baseLayout.communityCardsRegion.map(r => scale(r as ScreenRegion)),
-      potRegion: scale(baseLayout.potRegion),
-      actionButtonsRegion: scale(baseLayout.actionButtonsRegion),
-      betSliderRegion: scale(baseLayout.betSliderRegion),
-      playerSeats: baseLayout.playerSeats.map(r => scale(r)),
-      dealerButtonRegion: scale(baseLayout.dealerButtonRegion),
-      chatRegion: scale(baseLayout.chatRegion),
-      timerRegion: scale(baseLayout.timerRegion),
+      heroCardsRegion: baseLayout.heroCardsRegion.map(r => scale(r as any)),
+      communityCardsRegion: baseLayout.communityCardsRegion.map(r => scale(r as any)),
+      potRegion: scale(baseLayout.potRegion as any),
+      actionButtonsRegion: scale(baseLayout.actionButtonsRegion as any),
+      betSliderRegion: scale(baseLayout.betSliderRegion as any),
+      playerSeats: baseLayout.playerSeats.map(r => scale(r as any)),
+      dealerButtonRegion: scale(baseLayout.dealerButtonRegion as any),
+      chatRegion: scale(baseLayout.chatRegion as any),
+      timerRegion: scale(baseLayout.timerRegion as any),
     };
 
     logger.info("📐 RESPONSIVE SYSTEM", `[${cleanHandle}] Régions scalées pour ${table.width}x${table.height}`, {

@@ -96,41 +96,50 @@ class DXGICaptureImpl implements DXGICapture {
       if (parentWindow) {
         // ESSAYER DE TROUVER LE BON HANDLE ENFANT (Qt5QWindowIcon, Chrome_WidgetWin_0, etc.)
         let targetHandle = parentWindow.handle;
+        let bounds = parentWindow.getBounds();
         
         try {
           // Sur GGClub, le rendu est souvent dans un enfant Qt ou CEF
-          // On peut lister les enfants si possible ou filtrer par taille
           const children = parentWindow.getWindows ? parentWindow.getWindows() : [];
+          console.log(`[DXGI] 🔍 Scanning ${children.length} children for handle ${parentWindow.handle}`);
+          
           const renderChild = children.find((c: any) => {
             const b = c.getBounds();
-            // Le rendu est généralement ~566x420 ou proche des dimensions parentes mais sans bordures
+            const title = c.getTitle ? c.getTitle() : "";
+            console.log(`[DXGI] Child: "${title}" ${b.width}x${b.height} at (${b.x},${b.y})`);
+            // Le rendu est généralement ~566x420 ou proche des dimensions parentes
             return b.width > 500 && b.width < 1000 && b.height > 350 && b.height < 600;
           });
 
           if (renderChild) {
-            console.log(`[DXGI] 🎯 Target child found: ${renderChild.title} (${renderChild.handle})`);
+            console.log(`[DXGI] 🎯 Target child found: "${renderChild.getTitle()}" (${renderChild.handle})`);
             targetHandle = renderChild.handle;
+            bounds = renderChild.getBounds();
           }
         } catch (childErr) {
           console.warn("[DXGI] Failed to scan children:", childErr);
         }
 
-        const bounds = parentWindow.getBounds();
         // PROTECTION: Pas de capture si les bounds sont délirants
         if (bounds.width > 2000 || bounds.height > 2000) {
            console.error(`[DXGI] 🚨 Capture blocked: Bounds too large (${bounds.width}x${bounds.height})`);
            return Buffer.alloc(0);
         }
 
-        console.log(`[DXGI] 🤖 RobotJS capture on: ${bounds.width}x${bounds.height}`);
+        console.log(`[DXGI] 🤖 RobotJS capture on handle ${targetHandle}: ${bounds.width}x${bounds.height} at (${bounds.x},${bounds.y})`);
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
+        
+        if (!bitmap || !bitmap.image) {
+          console.error(`[DXGI] ❌ RobotJS capture returned empty bitmap for handle ${targetHandle}`);
+          return Buffer.alloc(0);
+        }
+        
         return Buffer.from(bitmap.image);
       }
     } catch (err) {
       console.warn("[DXGI] RobotJS fallback failed:", err);
     }
 
-    // SI TOUT ÉCHOUE, PAS DE CAPTURE PLEIN ÉCRAN AUTOMATIQUE
     console.error("[DXGI] ❌ No valid window target found. Blocking full screen capture.");
     return Buffer.alloc(0);
   }
