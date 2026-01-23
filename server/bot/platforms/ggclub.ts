@@ -882,96 +882,59 @@ export class GGClubAdapter extends PlatformAdapter {
     }
   }
 
-  async captureScreen(windowHandle: number): Promise<Buffer> {
-    const cachedCapture = this.lastScreenCaptures.get(windowHandle);
-    const now = Date.now();
-
-    if (cachedCapture && (now - cachedCapture.timestamp) < this.screenCaptureInterval) {
-      return cachedCapture.buffer;
-    }
-
-    try {
-      const { getDXGICapture } = await import("../dxgi-capture");
-      const dxgi = getDXGICapture();
-      logger.info("GGClubAdapter", `[${windowHandle}] 🛰️ Trying DXGI capture...`);
-      const buffer = await dxgi.captureScreen(windowHandle);
-      
-      if (buffer && buffer.length > 0) {
-        logger.info("GGClubAdapter", `[${windowHandle}] ✅ DXGI Success: ${buffer.length} bytes`);
-        this.lastScreenCaptures.set(windowHandle, { buffer, timestamp: now });
-        this.antiDetectionMonitor.recordScreenCapture();
-        return buffer;
-      }
-    } catch (error) {
-      logger.debug("GGClubAdapter", `[${windowHandle}] DXGI not available`);
-    }
-
-    // Fallback 1: robotjs + window bounds
-    try {
-      const robot = require("robotjs");
-      const { windowManager } = require("node-window-manager");
-      const windows = windowManager.getWindows();
-      const window = windows.find((w: any) => Math.abs(w.handle) === Math.abs(windowHandle));
-      
-      if (window) {
-        let targetWindow = window;
-        const children = window.getWindows ? window.getWindows() : [];
-        const renderChild = children.find((c: any) => {
-          const b = c.getBounds();
-          return b.width > 500 && b.width < 1000 && b.height > 350 && b.height < 600;
-        });
-
-        if (renderChild) {
-          logger.info("GGClubAdapter", `[${windowHandle}] 🎯 Render child found for robotjs: ${renderChild.getTitle()} (${renderChild.handle})`);
-          targetWindow = renderChild;
-        }
-
-        const bounds = targetWindow.getBounds();
-        // PROTECTION MÉMOIRE: Vérifier les bounds avant capture
-        if (bounds.width > 2000 || bounds.height > 2000) {
-          logger.error("GGClubAdapter", `🚨 robotjs: AVOIDED OOM - Full screen bounds detected (${bounds.width}x${bounds.height})`);
-          throw new Error("Invalid window bounds");
-        }
-        logger.info("GGClubAdapter", `[${windowHandle}] 🤖 Trying robotjs capture: ${bounds.width}x${bounds.height} at (${bounds.x},${bounds.y})`);
-        const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
-        
-        if (bitmap && bitmap.image) {
-          const rgbaBuffer = Buffer.from(bitmap.image);
-          this.lastScreenCaptures.set(windowHandle, { buffer: rgbaBuffer, timestamp: now });
-          this.antiDetectionMonitor.recordScreenCapture();
-          return rgbaBuffer;
-        }
-      }
-    } catch (error) {
-      logger.debug("GGClubAdapter", `[${windowHandle}] Fallback robotjs failed: ${error}`);
-    }
-
-    // Fallback 2: screenshot-desktop
+  private async captureScreen(windowHandle: number): Promise<Buffer> {
+    logger.debug("GGClubAdapter", `[${windowHandle}] captureScreen - tentative`);
+    
     if (screenshotDesktop) {
       try {
-        const window = this.activeWindows.get(`ggclub_${windowHandle}`) || 
-                       Array.from(this.activeWindows.values()).find(w => Math.abs(w.handle) === Math.abs(windowHandle));
-        
-        if (window) {
-          logger.info("GGClubAdapter", `[${windowHandle}] 📸 Trying targeted screenshot-desktop: "${window.title}"`);
-          const pngBuffer = await screenshotDesktop({
-            screen: window.title,
-            format: 'png',
-          });
-          
-          if (pngBuffer && pngBuffer.length > 0) {
-            const rgbaBuffer = await this.decodePngToRgba(pngBuffer);
-            this.lastScreenCaptures.set(windowHandle, { buffer: rgbaBuffer, timestamp: now });
-            return rgbaBuffer;
-          }
-        } else {
-          logger.error("GGClubAdapter", `[${windowHandle}] ❌ Targeted capture failed: Window info missing. NO FULL SCREEN FALLBACK.`);
+        const window = this.activeWindows.get(`ggclub_${windowHandle}`);
+        if (!window) {
+          logger.error("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée`);
+          return Buffer.alloc(0);
         }
+
+        logger.info("GGClubAdapter", `[${windowHandle}] Capture écran entier puis crop vers fenêtre: ${window.title} (${window.width}x${window.height}) position (${window.x},${window.y})`);
+        
+        // 1. Capturer l'écran ENTIER
+        const fullScreenPng = await screenshotDesktop({ format: 'png' });
+        
+        if (!fullScreenPng || fullScreenPng.length === 0) {
+          logger.error("GGClubAdapter", `[${windowHandle}] Capture écran retournée vide`);
+          return Buffer.alloc(0);
+        }
+
+        logger.info("GGClubAdapter", `[${windowHandle}] PNG écran entier reçu (${fullScreenPng.length} bytes)`);
+        
+        // 2. Décoder PNG en RGBA
+        const fullRgbaBuffer = await this.decodePngToRgba(fullScreenPng);
+        
+        // 3. Extraire JUSTE la région de la fenêtre
+        // On récupère les dimensions réelles du PNG décodé
+        const pngWidth = fullScreenPng.readUInt32BE(16);
+        const pngHeight = fullScreenPng.readUInt32BE(20);
+        
+        logger.info("GGClubAdapter", `[${windowHandle}] Écran complet décodé: ${pngWidth}x${pngHeight}, crop vers fenêtre (${window.width}x${window.height})`);
+        
+        const croppedBuffer = this.cropRgbaRegion(
+          fullRgbaBuffer,
+          pngWidth,
+          pngHeight,
+          window.x,
+          window.y,
+          window.width,
+          window.height
+        );
+        
+        logger.info("GGClubAdapter", `[${windowHandle}] ✅ Capture réussie: ${croppedBuffer.length} octets (fenêtre ${window.width}x${window.height})`);
+        return croppedBuffer;
+        
       } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Targeted capture error`, { error: String(error) });
+        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture/crop`, { error: String(error) });
+        return Buffer.alloc(0);
       }
     }
 
+    logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop indisponible`);
     return Buffer.alloc(0);
   }
 
@@ -1031,72 +994,6 @@ export class GGClubAdapter extends PlatformAdapter {
     }
   }
 
-  private async captureScreen(windowHandle: number): Promise<Buffer> {
-    logger.debug("GGClubAdapter", `[${windowHandle}] captureScreen - tentative`);
-    
-    if (screenshotDesktop) {
-      try {
-        const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-        if (window) {
-          logger.info("GGClubAdapter", `[${windowHandle}] Tentative de capture pour la fenêtre: ${window.title} (${window.width}x${window.height})`);
-          
-          const pngBuffer = await screenshotDesktop({
-            screen: window.title,
-            format: 'png',
-          });
-          
-          if (!pngBuffer || pngBuffer.length === 0) {
-            logger.error("GGClubAdapter", `[${windowHandle}] Capture retournée vide pour: ${window.title}`);
-            return Buffer.alloc(0);
-          }
-
-          logger.info("GGClubAdapter", `[${windowHandle}] PNG reçu (${pngBuffer.length} bytes), signature: ${pngBuffer.slice(0, 8).toString('hex')}`);
-          
-          try {
-            // Décoder PNG en RGBA
-            const fullRgbaBuffer = await this.decodePngToRgba(pngBuffer);
-            
-            // CROP INTELLIGENT: Si on a les infos de la fenêtre, on extrait la zone
-            const pngWidth = pngBuffer.readUInt32BE(16);
-            const pngHeight = pngBuffer.readUInt32BE(20);
-            
-            if (pngWidth > window.width && pngHeight > window.height) {
-              logger.info("GGClubAdapter", `[${windowHandle}] ✂️ Cropping full screen capture to window: ${window.width}x${window.height} at (${window.x},${window.y})`);
-              const croppedBuffer = this.cropRgbaRegion(
-                fullRgbaBuffer,
-                pngWidth,
-                pngHeight,
-                window.x,
-                window.y,
-                window.width,
-                window.height
-              );
-              this.lastScreenCaptures.set(windowHandle, { buffer: croppedBuffer, timestamp: now });
-              return croppedBuffer;
-            }
-
-            logger.info("GGClubAdapter", `[${windowHandle}] RGBA décodé avec succès (${fullRgbaBuffer.length} bytes)`);
-            this.lastScreenCaptures.set(windowHandle, { buffer: fullRgbaBuffer, timestamp: now });
-            return fullRgbaBuffer;
-          } catch (decodeError) {
-            logger.error("GGClubAdapter", `[${windowHandle}] Décodage PNG échoué: ${String(decodeError)}`);
-            // Si le décodage fail, retourner quand même le PNG - le pipeline va le gérer (ou crasher plus loin, mais on a le log)
-            return pngBuffer;
-          }
-        }
-
-        logger.warning("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée dans activeWindows (handles dispos: ${Array.from(this.activeWindows.keys()).join(', ')})`);
-        logger.error("GGClubAdapter", `[${windowHandle}] ❌ CRITICAL: No window target. AVOIDED FULL SCREEN CAPTURE.`);
-        return Buffer.alloc(0);
-      } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Erreur critique lors de la capture/décodage`, { error: String(error) });
-        return Buffer.alloc(0);
-      }
-    }
-
-    logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop indisponible`);
-    return Buffer.alloc(0);
-  }
 
   private cropRgbaRegion(
     rgbaBuffer: Buffer,
