@@ -130,6 +130,10 @@ export class PlatformManager extends EventEmitter {
     return Array.from(this.managedTables.values());
   }
 
+  getStatus(): PlatformManagerStatus {
+    return this.status;
+  }
+
   private setupAdapterListeners(): void {
     if (!this.adapter) return;
 
@@ -298,6 +302,10 @@ export class PlatformManager extends EventEmitter {
     try {
       managedTable.isProcessingAction = true;
 
+      if (!managedTable.tableSession) {
+        throw new Error(`TableSession missing for window ${data.windowHandle}`);
+      }
+
       const { action, humanizedAction } = await this.calculateAction(
         data.gameState, 
         managedTable.tableSession
@@ -315,8 +323,12 @@ export class PlatformManager extends EventEmitter {
         action, 
         humanizedAction 
       });
-    } catch (error) {
-      console.error("Error handling action required:", error);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error("PlatformManager", `Error handling action required: ${errorMessage}`, {
+        windowHandle: data.windowHandle,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       managedTable.isProcessingAction = false;
     }
   }
@@ -857,22 +869,9 @@ export class PlatformManager extends EventEmitter {
     await tableManager.stopAll();
 
     this.managedTables.clear();
-    this.status = "idle";
-    this.emit("statusChange", this.status);
   }
 
-  getStatus(): PlatformManagerStatus {
-    return this.status;
-  }
-
-  getAdapter(): PlatformAdapter | null {
-    return this.adapter;
-  }
-
-  getManagedTables(): ManagedTable[] {
-    return Array.from(this.managedTables.values());
-  }
-
+  
   getTableByWindowHandle(windowHandle: number): ManagedTable | undefined {
     return this.managedTables.get(windowHandle);
   }

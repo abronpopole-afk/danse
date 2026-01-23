@@ -9,6 +9,48 @@ import type {
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
+// Helper pour charger onnxruntime-node depuis app.asar.unpacked en production
+async function loadOnnxRuntime(): Promise<any> {
+  const IS_PACKAGED = (process as any).resourcesPath !== undefined 
+    && !(process as any).resourcesPath?.includes('node_modules');
+  
+  if (IS_PACKAGED) {
+    const resourcesPath = (process as any).resourcesPath as string;
+    const unpackedPath = path.join(
+      resourcesPath, 
+      'app.asar.unpacked', 
+      'node_modules', 
+      'onnxruntime-node'
+    );
+    
+    console.log(`[OnnxAdapter] Loading onnxruntime-node from: ${unpackedPath}`);
+    
+    if (!fs.existsSync(unpackedPath)) {
+      throw new Error(`onnxruntime-node not found in unpacked modules: ${unpackedPath}`);
+    }
+    
+    // Charger depuis le chemin absolu
+    try {
+      const modulePath = require.resolve(path.join(unpackedPath, 'dist', 'index.js'));
+      return require(modulePath);
+    } catch (e) {
+      // Fallback au dossier racine si dist/index.js n'est pas le point d'entrée
+      try {
+        return require(unpackedPath);
+      } catch (e2) {
+        // En dernier recours, essayer l'import direct
+        return await import('onnxruntime-node');
+      }
+    }
+  }
+  
+  // En développement, utiliser l'import normal
+  return await import('onnxruntime-node');
+}
 
 // Helper pour obtenir le chemin des modèles dans Electron packagé ou dev
 function getModelPaths(): { det: string, rec: string, keys: string } {
@@ -17,14 +59,12 @@ function getModelPaths(): { det: string, rec: string, keys: string } {
   
   // Liste des chemins possibles à vérifier
   const possibleRoots = [
-    // AppData/Roaming (userData d'Electron)
-    path.join(os.homedir(), 'AppData', 'Roaming', 'GTO Poker Bot'),
     // process.resourcesPath pour Electron packagé
-    resourcesPath ? path.join(resourcesPath, '..') : '',
+    resourcesPath ? path.join(resourcesPath) : '',
     // process.cwd() pour le développement
     process.cwd(),
-    // Chemin relatif depuis __dirname
-    path.join(__dirname, '..', '..', '..', '..'),
+    // AppData/Roaming (userData d'Electron) - à utiliser en dernier
+    path.join(os.homedir(), 'AppData', 'Roaming', 'GTO Poker Bot'),
   ].filter(Boolean);
 
   for (const root of possibleRoots) {
@@ -68,17 +108,6 @@ export class OnnxAdapter extends OCRAdapter {
 
   async initialize(): Promise<void> {
     try {
-      // 🎯 SOLUTION DÉFINITIVE : Empêcher le chargement de onnxruntime-node sur Node v24+
-      // Les modules natifs peuvent faire crash Node.js (SEGFAULT) sans passer par le catch.
-      const nodeVersion = process.versions.node;
-      const majorVersion = parseInt(nodeVersion.split('.')[0]);
-      
-      if (majorVersion >= 24) {
-        console.warn(`[OnnxAdapter] Node.js version ${nodeVersion} detected. Disabling ONNX to prevent native crash.`);
-        this.isInitialized = false;
-        return;
-      }
-
       this.modelPaths = getModelPaths();
       
       // Vérifier l'existence des fichiers
@@ -86,7 +115,8 @@ export class OnnxAdapter extends OCRAdapter {
       if (!fs.existsSync(this.modelPaths.rec)) throw new Error(`Model not found: ${this.modelPaths.rec}`);
       if (!fs.existsSync(this.modelPaths.keys)) throw new Error(`Keys not found: ${this.modelPaths.keys}`);
 
-      this.onnxRuntime = await import('onnxruntime-node');
+      // ✅ CORRECTION: Utiliser le loader spécialisé pour Electron packagé
+      this.onnxRuntime = await loadOnnxRuntime();
       
       const ort = this.onnxRuntime.default || this.onnxRuntime;
       this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
@@ -95,7 +125,10 @@ export class OnnxAdapter extends OCRAdapter {
       this.isInitialized = true;
       console.log('[OnnxAdapter] Initialized successfully with PaddleOCR v5 models');
     } catch (error) {
-      console.warn('[OnnxAdapter] Failed to initialize:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : '';
+      console.warn(`[OnnxAdapter] Failed to initialize: ${errorMessage}`);
+      if (errorStack) console.warn(`[OnnxAdapter] Stack: ${errorStack}`);
       this.isInitialized = false;
       throw error;
     }
@@ -230,7 +263,7 @@ export class OnnxAdapter extends OCRAdapter {
     if (!this.onnxRuntime) {
       console.log('[OnnxAdapter] Attempting late initialization of onnxRuntime...');
       try {
-        this.onnxRuntime = await import('onnxruntime-node');
+        this.onnxRuntime = await loadOnnxRuntime();
       } catch (e) {
         throw new Error('ONNX Runtime not initialized and late import failed');
       }

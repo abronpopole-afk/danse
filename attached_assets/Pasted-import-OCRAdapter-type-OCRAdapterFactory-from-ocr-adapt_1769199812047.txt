@@ -1,0 +1,79 @@
+import { OCRAdapter, type OCRAdapterFactory } from './ocr-adapter';
+import type { 
+  Frame, 
+  NormalizedFrame, 
+  Region, 
+  OCRResult, 
+  OCREngineCapabilities 
+} from '../types';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+
+// Helper pour charger onnxruntime-node depuis app.asar.unpacked en production
+async function loadOnnxRuntime(): Promise<any> {
+  const IS_PACKAGED = (process as any).resourcesPath !== undefined 
+    && !(process as any).resourcesPath?.includes('node_modules');
+  
+  if (IS_PACKAGED) {
+    const resourcesPath = (process as any).resourcesPath as string;
+    const unpackedPath = path.join(
+      resourcesPath, 
+      'app.asar.unpacked', 
+      'node_modules', 
+      'onnxruntime-node'
+    );
+    
+    console.log(`[OnnxAdapter] Loading onnxruntime-node from: ${unpackedPath}`);
+    
+    if (!fs.existsSync(unpackedPath)) {
+      throw new Error(`onnxruntime-node not found in unpacked modules: ${unpackedPath}`);
+    }
+    
+    // Charger depuis le chemin absolu
+    const modulePath = require.resolve(path.join(unpackedPath, 'dist', 'index.js'));
+    return require(modulePath);
+  }
+  
+  // En développement, utiliser l'import normal
+  return await import('onnxruntime-node');
+}
+
+// ...existing code pour getModelPaths...
+
+export class OnnxAdapter extends OCRAdapter {
+  // ...existing code...
+
+  async initialize(): Promise<void> {
+    try {
+      // ...existing Node version check...
+      
+      this.modelPaths = getModelPaths();
+      
+      // Vérifier l'existence des fichiers
+      if (!fs.existsSync(this.modelPaths.det)) throw new Error(`Model not found: ${this.modelPaths.det}`);
+      if (!fs.existsSync(this.modelPaths.rec)) throw new Error(`Model not found: ${this.modelPaths.rec}`);
+      if (!fs.existsSync(this.modelPaths.keys)) throw new Error(`Keys not found: ${this.modelPaths.keys}`);
+
+      // ✅ CORRECTION: Utiliser le loader spécialisé
+      this.onnxRuntime = await loadOnnxRuntime();
+      
+      const ort = this.onnxRuntime.default || this.onnxRuntime;
+      this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
+      this.recSession = await ort.InferenceSession.create(this.modelPaths.rec);
+
+      this.isInitialized = true;
+      console.log('[OnnxAdapter] Initialized successfully with PaddleOCR v5 models');
+    } catch (error) {
+      // ✅ CORRECTION: Logger l'erreur complète
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : '';
+      console.warn(`[OnnxAdapter] Failed to initialize: ${errorMessage}`);
+      if (errorStack) console.warn(`[OnnxAdapter] Stack: ${errorStack}`);
+      this.isInitialized = false;
+      throw error;
+    }
+  }
+
+  // ...reste du code...
+}
