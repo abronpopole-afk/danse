@@ -1029,114 +1029,28 @@ export class GGClubAdapter extends PlatformAdapter {
   private async decodePngToRgba(pngBuffer: Buffer): Promise<Buffer> {
     logger.debug("GGClubAdapter", `decodePngToRgba - Début du traitement (${pngBuffer.length} bytes)`);
     try {
-      if (pngBuffer.length < 24) throw new Error(`Buffer PNG trop petit (${pngBuffer.length} bytes)`);
-      
-      const signature = pngBuffer.slice(0, 8).toString('hex');
-      if (signature !== '89504e470d0a1a0a') {
-        throw new Error(`Signature PNG invalide: ${signature}`);
-      }
-      
-      // Lire IHDR chunk (width/height)
-      const width = pngBuffer.readUInt32BE(16);
-      const height = pngBuffer.readUInt32BE(20);
-      const bitDepth = pngBuffer[24];
-      const colorType = pngBuffer[25]; // 6 = RGBA, 2 = RGB
-      
-      logger.info("GGClubAdapter", `PNG IHDR: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
-      
-      // Accepter toutes les tailles - le crop sera fait après
-      logger.info("GGClubAdapter", `📏 Décodage PNG: ${width}x${height}`);
-
-      // Trouver chunk IDAT (image data compressé)
-      let offset = 8; // Après signature
-      let idatData: Buffer[] = [];
-      
-      while (offset < pngBuffer.length - 12) {
-        const chunkLength = pngBuffer.readUInt32BE(offset);
-        const chunkType = pngBuffer.toString('ascii', offset + 4, offset + 8);
-        
-        if (chunkType === 'IDAT') {
-          logger.debug("GGClubAdapter", `Chunk IDAT trouvé: offset=${offset}, length=${chunkLength}`);
-          const chunkData = pngBuffer.slice(offset + 8, offset + 8 + chunkLength);
-          idatData.push(chunkData);
-        } else if (chunkType === 'IEND') {
-          logger.debug("GGClubAdapter", `Chunk IEND trouvé à offset=${offset}`);
-          break;
-        }
-        
-        offset += 12 + chunkLength;
-      }
-      
-      if (idatData.length === 0) {
-        throw new Error('Aucun chunk IDAT trouvé dans le PNG');
-      }
-      
-      const compressedData = Buffer.concat(idatData);
-      logger.info("GGClubAdapter", `Données compressées IDAT concaténées: ${compressedData.length} bytes`);
-      
-      // Décompresser avec zlib
-      const zlib = require('zlib');
-      const pixelData = await new Promise<Buffer>((resolve, reject) => {
-        zlib.inflate(compressedData, (err: any, result: Buffer) => {
-          if (err) {
-            logger.error("GGClubAdapter", `Erreur zlib.inflate: ${err.message}`);
-            reject(err);
-          } else {
-            resolve(result);
-          }
+      // Utiliser pngjs qui gère correctement TOUS les filtres PNG
+      const { PNG } = require('pngjs');
+      return new Promise<Buffer>((resolve, reject) => {
+        const png = new PNG();
+        png.on('parsed', function(this: any) {
+          // this.data contient les pixels RGBA correctement décodés
+          logger.info("GGClubAdapter", `✅ PNG décodé avec pngjs: ${this.width}x${this.height}, ${this.data.length} bytes RGBA`);
+          resolve(Buffer.from(this.data));
         });
+        png.on('error', (err: Error) => {
+          logger.error("GGClubAdapter", `❌ Erreur pngjs: ${err.message}`);
+          reject(err);
+        });
+        // Parser le buffer PNG
+        png.parse(pngBuffer);
       });
-      
-      logger.info("GGClubAdapter", `Données décompressées: ${pixelData.length} bytes (attendu environ ${width * height * (colorType === 6 ? 4 : 3)})`);
-      
-      const rgbaBuffer = Buffer.alloc(width * height * 4);
-      let pixelIdx = 0;
-      let rgbaIdx = 0;
-      
-      for (let y = 0; y < height; y++) {
-        // PNG pixel data = scanlines avec byte de filtre au début de chaque ligne
-        if (pixelIdx >= pixelData.length) {
-          logger.error("GGClubAdapter", `Fin de buffer inattendue à la ligne ${y}`);
-          break;
-        }
-        const filterType = pixelData[pixelIdx++];
-        
-        for (let x = 0; x < width; x++) {
-          if (colorType === 6) {
-            // RGBA
-            if (pixelIdx + 3 < pixelData.length) {
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-            }
-          } else if (colorType === 2) {
-            // RGB
-            if (pixelIdx + 2 < pixelData.length) {
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = 255; // Alpha opaque
-            }
-          } else {
-            // Greyscale
-            if (pixelIdx < pixelData.length) {
-              const gray = pixelData[pixelIdx++];
-              rgbaBuffer[rgbaIdx++] = gray;
-              rgbaBuffer[rgbaIdx++] = gray;
-              rgbaBuffer[rgbaIdx++] = gray;
-              rgbaBuffer[rgbaIdx++] = 255;
-            }
-          }
-        }
-      }
-      
-      return rgbaBuffer;
     } catch (error) {
       logger.error("GGClubAdapter", `Échec du décodage PNG: ${String(error)}`);
       throw error;
     }
   }
+
 
   async getGameState(windowHandle: number): Promise<GameTableState> {
     const cleanHandle = Math.abs(windowHandle);
