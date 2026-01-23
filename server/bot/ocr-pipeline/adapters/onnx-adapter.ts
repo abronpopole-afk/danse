@@ -68,6 +68,17 @@ export class OnnxAdapter extends OCRAdapter {
 
   async initialize(): Promise<void> {
     try {
+      // 🎯 SOLUTION DÉFINITIVE : Empêcher le chargement de onnxruntime-node sur Node v24+
+      // Les modules natifs peuvent faire crash Node.js (SEGFAULT) sans passer par le catch.
+      const nodeVersion = process.versions.node;
+      const majorVersion = parseInt(nodeVersion.split('.')[0]);
+      
+      if (majorVersion >= 24) {
+        console.warn(`[OnnxAdapter] Node.js version ${nodeVersion} detected. Disabling ONNX to prevent native crash.`);
+        this.isInitialized = false;
+        return;
+      }
+
       this.modelPaths = getModelPaths();
       
       // Vérifier l'existence des fichiers
@@ -278,6 +289,14 @@ export class OnnxAdapterFactory implements OCRAdapterFactory {
 
   async isAvailable(): Promise<boolean> {
     try {
+      // 🎯 SOLUTION DÉFINITIVE : Vérification de la version de Node
+      const nodeVersion = process.versions.node;
+      const majorVersion = parseInt(nodeVersion.split('.')[0]);
+      if (majorVersion >= 24) {
+        console.log(`[OnnxAdapterFactory] Not available: Node.js version ${nodeVersion} is incompatible with onnxruntime-node.`);
+        return false;
+      }
+
       // Vérifier que onnxruntime ET le modèle existent
       await import('onnxruntime-node');
       getModelPath(); // Throws if not found
