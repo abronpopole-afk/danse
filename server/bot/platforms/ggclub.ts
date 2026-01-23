@@ -1967,10 +1967,41 @@ export class GGClubAdapter extends PlatformAdapter {
     // 🔍 DEBUG: Log de la région des boutons
     logger.info("GGClubAdapter", `[${windowHandle}] 🔍 ACTION_REGION: x=${region.x}, y=${region.y}, w=${region.width}, h=${region.height}`);
     
-    // 🔍 DEBUG: Analyser les couleurs dominantes dans la région
-    const dominantColor = getDominantColorInRegion(screenBuffer, table.width, region);
-    logger.info("GGClubAdapter", `[${windowHandle}] 🎨 DOMINANT_COLOR in action region: R=${dominantColor.r}, G=${dominantColor.g}, B=${dominantColor.b}`);
+    // MÉTHODE 1: Détection par luminosité (MÉTHODE ROBUSTE FALLBACK)
+    let brightPixelCount = 0;
+    const imgW = table.width || 880;
+    const imgH = table.height || 600;
 
+    for (let y = Math.round(region.y); y < Math.round(region.y + region.height) && y < imgH; y++) {
+      for (let x = Math.round(region.x); x < Math.round(region.x + region.width) && x < imgW; x++) {
+        const offset = (y * imgW + x) * 4;
+        if (offset + 2 >= screenBuffer.length) continue;
+        const r = screenBuffer[offset];
+        const g = screenBuffer[offset + 1];
+        const b = screenBuffer[offset + 2];
+        
+        const brightness = (r + g + b) / 3;
+        if (brightness > 80) { // Seuil un peu plus bas pour être sûr
+          brightPixelCount++;
+        }
+      }
+    }
+    
+    const totalPixels = region.width * region.height;
+    const brightRatio = brightPixelCount / totalPixels;
+    
+    logger.info("GGClubAdapter", `[${windowHandle}] 🎯 Action region brightness: ${(brightRatio * 100).toFixed(1)}% bright pixels`);
+    
+    if (brightRatio > 0.08) { // Si > 8% de pixels lumineux, boutons probablement présents
+      logger.info("GGClubAdapter", `[${windowHandle}] ✅ Boutons d'action détectés par luminosité!`);
+      const buttonWidth = Math.round(region.width / 3);
+      buttons.push({ type: "fold", region: { x: region.x, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      buttons.push({ type: "call", region: { x: region.x + buttonWidth, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      buttons.push({ type: "raise", region: { x: region.x + buttonWidth * 2, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      return buttons;
+    }
+
+    // MÉTHODE 2: Détection par couleur (Originale avec logs de debug)
     const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature; keywords: string[] }> = [
       { type: "fold", color: GGCLUB_UI_COLORS.foldButton, keywords: ["fold", "coucher", "f0ld"] },
       { type: "call", color: GGCLUB_UI_COLORS.callButton, keywords: ["call", "suivre"] },
@@ -1983,31 +2014,16 @@ export class GGClubAdapter extends PlatformAdapter {
     for (let i = 0; i < buttonTypes.length; i++) {
       const buttonDef = buttonTypes[i];
       const buttonRegion: ScreenRegion = {
-        x: region.x + (i % 4) * (buttonWidth * 0.8), // Grille approximative
+        x: region.x + (i % 4) * (buttonWidth * 0.8),
         y: region.y,
         width: buttonWidth,
         height: region.height,
       };
 
-      // 🔍 DEBUG: Log chaque test de couleur
-      const subDominant = getDominantColorInRegion(screenBuffer, table.width, buttonRegion);
-      logger.debug("GGClubAdapter", `[${windowHandle}] Testing ${buttonDef.type}: region(${buttonRegion.x},${buttonRegion.y}) found RGB(${subDominant.r},${subDominant.g},${subDominant.b}) vs expected RGB(${buttonDef.color.r},${buttonDef.color.g},${buttonDef.color.b})`);
-
-      const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, table.width, table.height);
-      
+      const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, imgW, imgH);
       if (isColorMatch) {
-        // Validation OCR seulement si la couleur matche (pour confirmer le texte)
-        const ocrResult = await this.performOCR(screenBuffer, buttonRegion, table.width, table.height);
-        const textLower = ocrResult.text.toLowerCase();
-        
-        if (buttonDef.keywords.some(word => textLower.includes(word)) || ocrResult.confidence > 0.1) {
-          logger.info("GGClubAdapter", `[${windowHandle}] Bouton confirmé: ${buttonDef.type}`);
-          buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
-        } else {
-          // Si couleur ok mais OCR illisible, on l'ajoute quand même en "guess"
-          logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur seulement: ${buttonDef.type}`);
-          buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
-        }
+        logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur: ${buttonDef.type}`);
+        buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
       }
     }
 
