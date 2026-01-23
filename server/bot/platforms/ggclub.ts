@@ -1044,11 +1044,8 @@ export class GGClubAdapter extends PlatformAdapter {
       
       logger.info("GGClubAdapter", `PNG IHDR: ${width}x${height}, bitDepth=${bitDepth}, colorType=${colorType}`);
       
-      // PROTECTION MÉMOIRE: Si la capture est trop grande (> 2000px), on refuse de la traiter
-      if (width > 2000 || height > 2000) {
-        logger.error("GGClubAdapter", `🚨 CAPTURE ÉCRAN ENTIER DÉTECTÉE (${width}x${height}). Refus pour éviter OOM.`);
-        throw new Error(`Capture trop grande: ${width}x${height}. Le bot doit capturer uniquement la fenêtre.`);
-      }
+      // Accepter toutes les tailles - le crop sera fait après
+      logger.info("GGClubAdapter", `📏 Décodage PNG: ${width}x${height}`);
 
       // Trouver chunk IDAT (image data compressé)
       let offset = 8; // Après signature
