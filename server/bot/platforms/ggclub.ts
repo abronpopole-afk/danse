@@ -1054,9 +1054,30 @@ export class GGClubAdapter extends PlatformAdapter {
           
           try {
             // Décoder PNG en RGBA
-            const rgbaBuffer = await this.decodePngToRgba(pngBuffer);
-            logger.info("GGClubAdapter", `[${windowHandle}] RGBA décodé avec succès (${rgbaBuffer.length} bytes)`);
-            return rgbaBuffer;
+            const fullRgbaBuffer = await this.decodePngToRgba(pngBuffer);
+            
+            // CROP INTELLIGENT: Si on a les infos de la fenêtre, on extrait la zone
+            const pngWidth = pngBuffer.readUInt32BE(16);
+            const pngHeight = pngBuffer.readUInt32BE(20);
+            
+            if (pngWidth > window.width && pngHeight > window.height) {
+              logger.info("GGClubAdapter", `[${windowHandle}] ✂️ Cropping full screen capture to window: ${window.width}x${window.height} at (${window.x},${window.y})`);
+              const croppedBuffer = this.cropRgbaRegion(
+                fullRgbaBuffer,
+                pngWidth,
+                pngHeight,
+                window.x,
+                window.y,
+                window.width,
+                window.height
+              );
+              this.lastScreenCaptures.set(windowHandle, { buffer: croppedBuffer, timestamp: now });
+              return croppedBuffer;
+            }
+
+            logger.info("GGClubAdapter", `[${windowHandle}] RGBA décodé avec succès (${fullRgbaBuffer.length} bytes)`);
+            this.lastScreenCaptures.set(windowHandle, { buffer: fullRgbaBuffer, timestamp: now });
+            return fullRgbaBuffer;
           } catch (decodeError) {
             logger.error("GGClubAdapter", `[${windowHandle}] Décodage PNG échoué: ${String(decodeError)}`);
             // Si le décodage fail, retourner quand même le PNG - le pipeline va le gérer (ou crasher plus loin, mais on a le log)
@@ -1075,6 +1096,37 @@ export class GGClubAdapter extends PlatformAdapter {
 
     logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop indisponible`);
     return Buffer.alloc(0);
+  }
+
+  private cropRgbaRegion(
+    rgbaBuffer: Buffer,
+    fullWidth: number,
+    fullHeight: number,
+    cropX: number,
+    cropY: number,
+    cropWidth: number,
+    cropHeight: number
+  ): Buffer {
+    const croppedBuffer = Buffer.alloc(cropWidth * cropHeight * 4);
+    for (let y = 0; y < cropHeight; y++) {
+      for (let x = 0; x < cropWidth; x++) {
+        const srcX = cropX + x;
+        const srcY = cropY + y;
+
+        // Bounds checking
+        if (srcX >= fullWidth || srcY >= fullHeight || srcX < 0 || srcY < 0) continue;
+
+        const srcOffset = (srcY * fullWidth + srcX) * 4;
+        const dstOffset = (y * cropWidth + x) * 4;
+
+        croppedBuffer[dstOffset] = rgbaBuffer[srcOffset];
+        croppedBuffer[dstOffset + 1] = rgbaBuffer[srcOffset + 1];
+        croppedBuffer[dstOffset + 2] = rgbaBuffer[srcOffset + 2];
+        croppedBuffer[dstOffset + 3] = rgbaBuffer[srcOffset + 3];
+      }
+    }
+
+    return croppedBuffer;
   }
 
   private async decodePngToRgba(pngBuffer: Buffer): Promise<Buffer> {
