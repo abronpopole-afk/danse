@@ -11,7 +11,20 @@ import fs from 'fs';
 import os from 'os';
 import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
+// Polyfill pour require dans les deux environnements (ESM/CJS)
+const getRequire = () => {
+  try {
+    // @ts-ignore
+    if (typeof require !== 'undefined') return require;
+    // @ts-ignore
+    return createRequire(import.meta.url);
+  } catch (e) {
+    // Fallback pour le build CJS où import.meta n'existe pas
+    return createRequire('file://' + process.cwd() + '/index.js');
+  }
+};
+
+const _require = getRequire();
 
 // Helper pour charger onnxruntime-node depuis app.asar.unpacked en production
 async function loadOnnxRuntime(): Promise<any> {
@@ -30,26 +43,39 @@ async function loadOnnxRuntime(): Promise<any> {
     console.log(`[OnnxAdapter] Loading onnxruntime-node from: ${unpackedPath}`);
     
     if (!fs.existsSync(unpackedPath)) {
-      throw new Error(`onnxruntime-node not found in unpacked modules: ${unpackedPath}`);
-    }
-    
-    // Charger depuis le chemin absolu
-    try {
-      const modulePath = require.resolve(path.join(unpackedPath, 'dist', 'index.js'));
-      return require(modulePath);
-    } catch (e) {
-      // Fallback au dossier racine si dist/index.js n'est pas le point d'entrée
+      console.warn(`[OnnxAdapter] unpackedPath not found: ${unpackedPath}. Falling back to normal import.`);
+    } else {
+      // Charger depuis le chemin absolu
       try {
-        return require(unpackedPath);
-      } catch (e2) {
-        // En dernier recours, essayer l'import direct
-        return await import('onnxruntime-node');
+        const modulePath = _require.resolve(path.join(unpackedPath, 'dist', 'index.js'));
+        const mod = _require(modulePath);
+        if (mod && typeof mod === 'object') {
+          return mod.default || mod;
+        }
+        return mod;
+      } catch (e) {
+        console.warn(`[OnnxAdapter] Failed to load from absolute path: ${unpackedPath}. Error: ${e}`);
+        try {
+          const mod = _require(unpackedPath);
+          if (mod && typeof mod === 'object') {
+            return mod.default || mod;
+          }
+          return mod;
+        } catch (e2) {
+          console.warn(`[OnnxAdapter] Failed fallback require: ${e2}`);
+        }
       }
     }
   }
   
-  // En développement, utiliser l'import normal
-  return await import('onnxruntime-node');
+  // En développement ou fallback production, utiliser l'import normal
+  try {
+    const mod = await import('onnxruntime-node');
+    return mod.default || mod;
+  } catch (e) {
+    console.error('[OnnxAdapter] CRITICAL: Failed to import onnxruntime-node:', e);
+    throw e;
+  }
 }
 
 // Helper pour obtenir le chemin des modèles dans Electron packagé ou dev
@@ -118,7 +144,13 @@ export class OnnxAdapter extends OCRAdapter {
       // ✅ CORRECTION: Utiliser le loader spécialisé pour Electron packagé
       this.onnxRuntime = await loadOnnxRuntime();
       
-      const ort = this.onnxRuntime.default || this.onnxRuntime;
+      const ort = this.onnxRuntime;
+      if (!ort || typeof ort.InferenceSession === 'undefined') {
+        console.error('[OnnxAdapter] InferenceSession not found in loaded module', {
+          keys: Object.keys(this.onnxRuntime)
+        });
+        throw new Error('onnxruntime-node module structure invalid (InferenceSession missing)');
+      }
       this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
       this.recSession = await ort.InferenceSession.create(this.modelPaths.rec);
 
@@ -276,7 +308,7 @@ export class OnnxAdapter extends OCRAdapter {
           this.modelPaths = getModelPaths();
         }
         // Support both ESM and CJS imports
-        const ort = this.onnxRuntime.default || this.onnxRuntime;
+        const ort = this.onnxRuntime;
         this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
         this.recSession = await ort.InferenceSession.create(this.modelPaths.rec);
         console.log('[OnnxAdapter] ONNX models loaded successfully');
@@ -287,7 +319,7 @@ export class OnnxAdapter extends OCRAdapter {
     }
     
     try {
-      const ort = this.onnxRuntime.default || this.onnxRuntime;
+      const ort = this.onnxRuntime;
       const feeds: any = {};
       
       // Use recognition model for OCR
@@ -331,7 +363,10 @@ export class OnnxAdapterFactory implements OCRAdapterFactory {
       }
 
       // Vérifier que onnxruntime ET le modèle existent
-      await import('onnxruntime-node');
+      const ort = await loadOnnxRuntime();
+      if (!ort || typeof ort.InferenceSession === 'undefined') {
+        throw new Error('onnxruntime-node module structure invalid');
+      }
       getModelPath(); // Throws if not found
       return true;
     } catch {
