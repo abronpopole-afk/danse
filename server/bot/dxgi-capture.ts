@@ -91,35 +91,48 @@ class DXGICaptureImpl implements DXGICapture {
       const robot = require('robotjs');
       const { windowManager } = require('node-window-manager');
       const windows = windowManager.getWindows();
-      const window = windowHandle ? windows.find((w: any) => w.handle === windowHandle) : null;
+      const parentWindow = windowHandle ? windows.find((w: any) => Math.abs(w.handle) === Math.abs(windowHandle)) : null;
       
-      if (window) {
-        const bounds = window.getBounds();
+      if (parentWindow) {
+        // ESSAYER DE TROUVER LE BON HANDLE ENFANT (Qt5QWindowIcon, Chrome_WidgetWin_0, etc.)
+        let targetHandle = parentWindow.handle;
+        
+        try {
+          // Sur GGClub, le rendu est souvent dans un enfant Qt ou CEF
+          // On peut lister les enfants si possible ou filtrer par taille
+          const children = parentWindow.getWindows ? parentWindow.getWindows() : [];
+          const renderChild = children.find((c: any) => {
+            const b = c.getBounds();
+            // Le rendu est généralement ~566x420 ou proche des dimensions parentes mais sans bordures
+            return b.width > 500 && b.width < 1000 && b.height > 350 && b.height < 600;
+          });
+
+          if (renderChild) {
+            console.log(`[DXGI] 🎯 Target child found: ${renderChild.title} (${renderChild.handle})`);
+            targetHandle = renderChild.handle;
+          }
+        } catch (childErr) {
+          console.warn("[DXGI] Failed to scan children:", childErr);
+        }
+
+        const bounds = parentWindow.getBounds();
+        // PROTECTION: Pas de capture si les bounds sont délirants
+        if (bounds.width > 2000 || bounds.height > 2000) {
+           console.error(`[DXGI] 🚨 Capture blocked: Bounds too large (${bounds.width}x${bounds.height})`);
+           return Buffer.alloc(0);
+        }
+
+        console.log(`[DXGI] 🤖 RobotJS capture on: ${bounds.width}x${bounds.height}`);
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
         return Buffer.from(bitmap.image);
       }
-    } catch {}
-
-    try {
-      const screenshotDesktop = require('screenshot-desktop');
-      const pngBuffer = await screenshotDesktop({ format: 'png' });
-      
-      // Décoder le PNG en RGBA brut car le reste du pipeline (ONNX) attend du brut
-      try {
-        const { PNG } = require('pngjs');
-        return new Promise((resolve, reject) => {
-          new PNG().parse(pngBuffer, (error: any, data: any) => {
-            if (error) reject(error);
-            else resolve(data.data);
-          });
-        });
-      } catch (decodeError) {
-        console.warn('[DXGI] PNG decoding failed, returning raw PNG as last resort:', decodeError);
-        return pngBuffer;
-      }
-    } catch {
-      return Buffer.alloc(0);
+    } catch (err) {
+      console.warn("[DXGI] RobotJS fallback failed:", err);
     }
+
+    // SI TOUT ÉCHOUE, PAS DE CAPTURE PLEIN ÉCRAN AUTOMATIQUE
+    console.error("[DXGI] ❌ No valid window target found. Blocking full screen capture.");
+    return Buffer.alloc(0);
   }
 
   getPerformanceStats(): { avgFps: number; avgLatency: number } {

@@ -941,7 +941,7 @@ export class GGClubAdapter extends PlatformAdapter {
                        Array.from(this.activeWindows.values()).find(w => Math.abs(w.handle) === Math.abs(windowHandle));
         
         if (window) {
-          logger.info("GGClubAdapter", `[${windowHandle}] Capture screenshot-desktop (window target): ${window.title}`);
+          logger.info("GGClubAdapter", `[${windowHandle}] 📸 Trying targeted screenshot-desktop: "${window.title}"`);
           const pngBuffer = await screenshotDesktop({
             screen: window.title,
             format: 'png',
@@ -952,9 +952,11 @@ export class GGClubAdapter extends PlatformAdapter {
             this.lastScreenCaptures.set(windowHandle, { buffer: rgbaBuffer, timestamp: now });
             return rgbaBuffer;
           }
+        } else {
+          logger.error("GGClubAdapter", `[${windowHandle}] ❌ Targeted capture failed: Window info missing. NO FULL SCREEN FALLBACK.`);
         }
       } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Fallback screenshot-desktop échoué`, { error: String(error) });
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ Targeted capture error`, { error: String(error) });
       }
     }
 
@@ -1051,8 +1053,8 @@ export class GGClubAdapter extends PlatformAdapter {
         }
 
         logger.warning("GGClubAdapter", `[${windowHandle}] Fenêtre non trouvée dans activeWindows (handles dispos: ${Array.from(this.activeWindows.keys()).join(', ')})`);
-        const imgBuffer = await screenshotDesktop({ format: 'png' });
-        return imgBuffer;
+        logger.error("GGClubAdapter", `[${windowHandle}] ❌ CRITICAL: No window target. AVOIDED FULL SCREEN CAPTURE.`);
+        return Buffer.alloc(0);
       } catch (error) {
         logger.error("GGClubAdapter", `[${windowHandle}] Erreur critique lors de la capture/décodage`, { error: String(error) });
         return Buffer.alloc(0);
