@@ -10,7 +10,9 @@ import { preprocessForOCR } from '../image-processing';
 import { logger } from '../../logger';
 
 export interface ONNXOCRConfig {
-  modelPath: string;
+  detModelPath: string;
+  recModelPath: string;
+  dictPath: string;
   confidenceThreshold: number;
   batchSize: number;
   useGPU: boolean;
@@ -24,14 +26,17 @@ export interface ONNXOCRResult {
 }
 
 const DEFAULT_CONFIG: ONNXOCRConfig = {
-  modelPath: './models/det/det.onnx',
+  detModelPath: './models/det/det.onnx',
+  recModelPath: './models/rec/rec.onnx',
+  dictPath: './models/rec/ppocr_keys_v1.txt',
   confidenceThreshold: 0.85,
   batchSize: 4,
   useGPU: false, // CPU par défaut (plus compatible)
 };
 
 export class ONNXOCREngine {
-  private session: ort.InferenceSession | null = null;
+  private detSession: ort.InferenceSession | null = null;
+  private recSession: ort.InferenceSession | null = null;
   private config: ONNXOCRConfig;
   private initialized = false;
   private stats = {
@@ -66,15 +71,25 @@ export class ONNXOCREngine {
         enableMemPattern: true,
       };
 
-      this.session = await ort.InferenceSession.create(
-        this.config.modelPath,
+      // Load detection model
+      this.detSession = await ort.InferenceSession.create(
+        this.config.detModelPath,
         sessionOptions
       );
+      console.log('[ONNXOCREngine] Detection model loaded:', this.detSession.inputNames);
+
+      // Load recognition model
+      this.recSession = await ort.InferenceSession.create(
+        this.config.recModelPath,
+        sessionOptions
+      );
+      console.log('[ONNXOCREngine] Recognition model loaded:', this.recSession.inputNames);
 
       this.initialized = true;
-      console.log('[ONNXOCREngine] Initialized with', this.session.inputNames);
+      console.log('[ONNXOCREngine] Initialized with PaddleOCR v5 models (det + rec)');
     } catch (error) {
-      console.error('[ONNXOCREngine] ❌ CRITICAL: Failed to load ONNX model at ' + this.config.modelPath, error);
+      console.error('[ONNXOCREngine] ❌ CRITICAL: Failed to load ONNX models', error);
+      console.error('[ONNXOCREngine] Paths: det=' + this.config.detModelPath + ', rec=' + this.config.recModelPath);
       console.warn('[ONNXOCREngine] Falling back to other OCR methods');
       this.initialized = false;
     }
@@ -86,7 +101,7 @@ export class ONNXOCREngine {
     height: number,
     type: 'card' | 'pot' | 'stack' | 'bet' = 'pot'
   ): Promise<ONNXOCRResult> {
-    if (!this.initialized || !this.session) {
+    if (!this.initialized || !this.recSession) {
       throw new Error('ONNX engine not initialized');
     }
 
@@ -101,13 +116,13 @@ export class ONNXOCREngine {
     const inputTensor = new ort.Tensor('float32', preprocessed, [1, 1, height, width]);
 
     try {
-      // Inférence
-      console.log(`[ONNXOCREngine] 🧠 Running ONNX inference...`);
-      const feeds = { [this.session.inputNames[0]]: inputTensor };
-      const results = await this.session.run(feeds);
+      // Inférence avec le modèle de reconnaissance
+      console.log(`[ONNXOCREngine] 🧠 Running ONNX inference (rec model)...`);
+      const feeds = { [this.recSession.inputNames[0]]: inputTensor };
+      const results = await this.recSession.run(feeds);
 
       // Décoder output
-      const outputData = results[this.session.outputNames[0]].data as Float32Array;
+      const outputData = results[this.recSession.outputNames[0]].data as Float32Array;
       console.log(`[ONNXOCREngine] 📥 ONNX output received: ${outputData.length} floats`);
       
       const decoded = this.decodeOutput(outputData, type);
@@ -220,11 +235,9 @@ export class ONNXOCREngine {
   }
 
   async shutdown(): Promise<void> {
-    if (this.session) {
-      await this.session.release();
-      this.session = null;
-      this.initialized = false;
-    }
+    this.detSession = null;
+    this.recSession = null;
+    this.initialized = false;
   }
 }
 

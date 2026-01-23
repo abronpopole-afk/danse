@@ -15,7 +15,9 @@ The GTO Poker Bot is a sophisticated system designed for automated, undetectable
   - Rank/Digit: Conv(16,3,1,1) → MaxPool → Conv(32,3,16,1) → MaxPool → Dense(2304,64) → Dense(64,13)
   - Suits: Conv(8,5,3,1) → MaxPool → Conv(16,3,8,1) → MaxPool → Dense(400,32) → Dense(32,4)
 - ✅ **PaddleOCR v5 ONNX**: Migrated from custom `poker-ocr-v1.onnx` to SOTA PaddleOCR v5 models for detection and recognition.
-  - Models stored in `/models/det/` and `/models/rec/`
+  - Detection model: `models/det/det.onnx`
+  - Recognition model: `models/rec/rec.onnx`
+  - Dictionary: `models/rec/ppocr_keys_v1.txt`
   - Integration updated in `ONNXOCREngine` and `OnnxAdapter`
 
 ## User Preferences

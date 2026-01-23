@@ -932,7 +932,9 @@ Le système intègre maintenant un **moteur OCR ONNX** pour reconnaissance ultra
 **Configuration** :
 ```typescript
 const onnxEngine = await getONNXOCREngine({
-  modelPath: './server/bot/ml-ocr/models/poker-ocr-v1.onnx',
+  detModelPath: './server/bot/ml-ocr/models/det/det.onnx',
+  recModelPath: './server/bot/ml-ocr/models/rec/rec.onnx',
+  dictPath: './server/bot/ml-ocr/models/rec/ppocr_keys_v1.txt',
   confidenceThreshold: 0.85,
   useGPU: false, // true pour accélération GPU
 });

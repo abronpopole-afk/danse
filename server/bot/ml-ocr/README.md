@@ -80,7 +80,9 @@ Capture → Calibration → HSV/ML → Validation 3-Frame → Correction → Cac
 import { getONNXOCREngine } from './onnx-ocr-engine';
 
 const engine = await getONNXOCREngine({
-  modelPath: './models/poker-ocr-v1.onnx',
+  detModelPath: './models/det/det.onnx',
+  recModelPath: './models/rec/rec.onnx',
+  dictPath: './models/rec/ppocr_keys_v1.txt',
   confidenceThreshold: 0.85,
   useGPU: false // CPU par défaut
 });
@@ -245,7 +247,9 @@ Error: Cannot find module 'onnxruntime-node'
 ```typescript
 const engine = await getONNXOCREngine({
   useGPU: false, // Forcer CPU
-  modelPath: './server/bot/ml-ocr/models/poker-ocr-v1.onnx'
+  detModelPath: './server/bot/ml-ocr/models/det/det.onnx',
+  recModelPath: './server/bot/ml-ocr/models/rec/rec.onnx',
+  dictPath: './server/bot/ml-ocr/models/rec/ppocr_keys_v1.txt'
 });
 ```
 
