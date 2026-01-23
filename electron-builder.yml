@@ -2,6 +2,9 @@ appId: com.gtopokerbot.app
 productName: GTO Poker Bot
 copyright: Copyright © 2024
 
+# Forcer Electron 33 qui utilise Node v20
+electronVersion: "33.4.0"
+
 extraMetadata:
   main: electron/main.cjs
   description: GTO Poker Bot - Advanced poker assistant
