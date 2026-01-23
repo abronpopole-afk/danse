@@ -56,6 +56,10 @@ extraResources:
     to: native/
     filter:
       - "*.node"
+  - from: server/bot/ml-ocr/models/
+    to: models/
+    filter:
+      - "*.onnx"
 
 win:
   target:
