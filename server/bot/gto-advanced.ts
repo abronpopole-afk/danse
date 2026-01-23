@@ -1090,7 +1090,7 @@ export class AdvancedGtoAdapter implements GtoAdapter {
     // Check cache first
     const { getGtoCache } = await import("./gto-cache");
     const cache = getGtoCache();
-    const cached = cache.get(context);
+    const cached = await cache.get(context);
     
     if (cached) {
       return cached;
