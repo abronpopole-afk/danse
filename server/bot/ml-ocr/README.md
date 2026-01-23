@@ -13,8 +13,9 @@ Le système OCR utilise un pipeline hiérarchisé pour maximiser vitesse et pré
                       ▼
             ┌─────────────────────┐
             │   ONNX OCR Engine   │  ← Priorité 1 (10x faster)
-            │   - poker-ocr-v1     │
-            │   - CPU optimized    │
+            │   - PaddleOCR v5    │
+            │   - det/det.onnx    │
+            │   - rec/rec.onnx    │
             └─────────┬───────────┘
                       │ confidence < 0.85
                       ▼
@@ -283,31 +284,19 @@ Le système OCR poker utilise **deux moteurs complémentaires** :
 1. **ONNX OCR Engine** : Inférence ultra-rapide (10x Tesseract)
 2. **Poker OCR Engine** : CNN pure JavaScript (fallback)
 
-### ONNX OCR Engine
+### ONNX OCR Engine (PaddleOCR v5)
 
 **Avantages** :
-- **Performance** : 20-50ms par inférence (vs 200-400ms Tesseract)
-- **Précision** : 97%+ sur montants poker
+- **Performance** : 10-30ms par inférence (vs 200-400ms Tesseract)
+- **Précision** : 98%+ (PaddleOCR v5 SOTA)
 - **Optimisé** : ONNX Runtime avec graph optimization
-- **Portable** : Fonctionne CPU et GPU
 
-**Architecture** :
-```
-Input (grayscale) → CNN Backbone → CTC Head → Decoder → Post-processing
-```
-
-**Utilisation** :
-```typescript
-const engine = await getONNXOCREngine();
-const result = await engine.recognize(imageBuffer, width, height, 'pot');
-// { text: "1250.50", confidence: 0.92, latencyMs: 35, method: "onnx" }
-```
-
-**Modèle** :
-- Path : `server/bot/ml-ocr/models/poker-ocr-v1.onnx`
-- Input : [1, 1, H, W] grayscale float32
-- Output : [sequence_length, vocab_size] probabilities
-- Vocab : 0-9, A-K-Q-J-T, k-m-b, suits, symbols
+**Modèles** :
+- Détection : `models/det/det.onnx`
+- Reconnaissance : `models/rec/rec.onnx`
+- Vocabulaire : `models/rec/ppocr_keys_v1.txt`
+- Input : Grayscale/RGB variable
+- Output : Séquences de caractères (CTC)
 
 ### Poker OCR Engine (JavaScript)
 

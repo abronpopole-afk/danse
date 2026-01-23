@@ -24,7 +24,7 @@ export interface ONNXOCRResult {
 }
 
 const DEFAULT_CONFIG: ONNXOCRConfig = {
-  modelPath: './server/bot/ml-ocr/models/poker-ocr-v1.onnx',
+  modelPath: './models/det/det.onnx',
   confidenceThreshold: 0.85,
   batchSize: 4,
   useGPU: false, // CPU par défaut (plus compatible)

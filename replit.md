@@ -14,7 +14,9 @@ The GTO Poker Bot is a sophisticated system designed for automated, undetectable
 - ✅ **ML Weight Generation**: Fixed NeuralNetwork architecture to match CardClassifier layer structure
   - Rank/Digit: Conv(16,3,1,1) → MaxPool → Conv(32,3,16,1) → MaxPool → Dense(2304,64) → Dense(64,13)
   - Suits: Conv(8,5,3,1) → MaxPool → Conv(16,3,8,1) → MaxPool → Dense(400,32) → Dense(32,4)
-- ✅ **Bounds Checking**: Fixed ConvLayer forward pass to prevent index out-of-bounds errors in neural network predictions
+- ✅ **PaddleOCR v5 ONNX**: Migrated from custom `poker-ocr-v1.onnx` to SOTA PaddleOCR v5 models for detection and recognition.
+  - Models stored in `/models/det/` and `/models/rec/`
+  - Integration updated in `ONNXOCREngine` and `OnnxAdapter`
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

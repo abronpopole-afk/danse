@@ -10,41 +10,20 @@ import path from 'path';
 import fs from 'fs';
 
 // Helper pour obtenir le chemin du modèle dans Electron packagé ou dev
-function getModelPath(): string {
-  // En production Electron packagé
-  if ((process as any).resourcesPath) {
-    const packagedPath = path.join((process as any).resourcesPath, 'models', 'poker-ocr-v1.onnx');
-    if (fs.existsSync(packagedPath)) {
-      return packagedPath;
-    }
-  }
-  
-  // En développement - plusieurs chemins possibles
-  const devPaths = [
-    path.join(__dirname, '../../../../ml-ocr/models/poker-ocr-v1.onnx'),
-    path.join(__dirname, '../../../ml-ocr/models/poker-ocr-v1.onnx'),
-    path.join(process.cwd(), 'server/bot/ml-ocr/models/poker-ocr-v1.onnx'),
-    './server/bot/ml-ocr/models/poker-ocr-v1.onnx',
-  ];
-  
-  for (const p of devPaths) {
-    try {
-      if (fs.existsSync(p)) {
-        console.log(`[OnnxAdapter] Model found at: ${p}`);
-        return p;
-      }
-    } catch {
-      // Ignore
-    }
-  }
-  
-  throw new Error(`ONNX model not found. Searched in: ${devPaths.join(', ')}`);
+function getModelPaths(): { det: string, rec: string, keys: string } {
+  const root = process.cwd();
+  return {
+    det: path.join(root, 'models/det/det.onnx'),
+    rec: path.join(root, 'models/rec/rec.onnx'),
+    keys: path.join(root, 'models/rec/ppocr_keys_v1.txt'),
+  };
 }
 
 export class OnnxAdapter extends OCRAdapter {
-  private session: any = null;
+  private detSession: any = null;
+  private recSession: any = null;
   private onnxRuntime: any = null;
-  private modelPath: string | null = null;
+  private modelPaths: { det: string, rec: string, keys: string } | null = null;
 
   constructor() {
     super('onnx');
@@ -52,19 +31,21 @@ export class OnnxAdapter extends OCRAdapter {
 
   async initialize(): Promise<void> {
     try {
-      // Vérifier d'abord si le modèle existe
-      try {
-        this.modelPath = getModelPath();
-        console.log(`[OnnxAdapter] Model path resolved: ${this.modelPath}`);
-      } catch (pathError) {
-        console.warn('[OnnxAdapter] Model not found, adapter unavailable:', pathError);
-        this.isInitialized = false;
-        throw pathError;
-      }
+      this.modelPaths = getModelPaths();
+      
+      // Vérifier l'existence des fichiers
+      if (!fs.existsSync(this.modelPaths.det)) throw new Error(`Model not found: ${this.modelPaths.det}`);
+      if (!fs.existsSync(this.modelPaths.rec)) throw new Error(`Model not found: ${this.modelPaths.rec}`);
+      if (!fs.existsSync(this.modelPaths.keys)) throw new Error(`Keys not found: ${this.modelPaths.keys}`);
 
       this.onnxRuntime = await import('onnxruntime-node');
+      
+      const ort = this.onnxRuntime.default || this.onnxRuntime;
+      this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
+      this.recSession = await ort.InferenceSession.create(this.modelPaths.rec);
+
       this.isInitialized = true;
-      console.log('[OnnxAdapter] Initialized successfully');
+      console.log('[OnnxAdapter] Initialized successfully with PaddleOCR v5 models');
     } catch (error) {
       console.warn('[OnnxAdapter] Failed to initialize:', error);
       this.isInitialized = false;
@@ -73,9 +54,13 @@ export class OnnxAdapter extends OCRAdapter {
   }
 
   async shutdown(): Promise<void> {
-    if (this.session) {
-      await this.session.release();
-      this.session = null;
+    if (this.detSession) {
+      await this.detSession.release();
+      this.detSession = null;
+    }
+    if (this.recSession) {
+      await this.recSession.release();
+      this.recSession = null;
     }
     this.isInitialized = false;
   }
