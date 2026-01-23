@@ -1956,12 +1956,21 @@ export class GGClubAdapter extends PlatformAdapter {
     const tableId = `ggclub_${windowHandle}`;
     const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
     const screenBuffer = await this.captureScreen(windowHandle);
-    if (screenBuffer.length === 0 || !table) return [];
+    if (screenBuffer.length === 0 || !table) {
+      logger.warn("GGClubAdapter", `[${windowHandle}] detectAvailableActions: pas de buffer ou pas de table`);
+      return [];
+    }
 
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
     
-    // Fallback immédiat par couleur (Plus rapide et robuste que l'OCR pur)
+    // 🔍 DEBUG: Log de la région des boutons
+    logger.info("GGClubAdapter", `[${windowHandle}] 🔍 ACTION_REGION: x=${region.x}, y=${region.y}, w=${region.width}, h=${region.height}`);
+    
+    // 🔍 DEBUG: Analyser les couleurs dominantes dans la région
+    const dominantColor = getDominantColorInRegion(screenBuffer, table.width, region);
+    logger.info("GGClubAdapter", `[${windowHandle}] 🎨 DOMINANT_COLOR in action region: R=${dominantColor.r}, G=${dominantColor.g}, B=${dominantColor.b}`);
+
     const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature; keywords: string[] }> = [
       { type: "fold", color: GGCLUB_UI_COLORS.foldButton, keywords: ["fold", "coucher", "f0ld"] },
       { type: "call", color: GGCLUB_UI_COLORS.callButton, keywords: ["call", "suivre"] },
@@ -1979,6 +1988,10 @@ export class GGClubAdapter extends PlatformAdapter {
         width: buttonWidth,
         height: region.height,
       };
+
+      // 🔍 DEBUG: Log chaque test de couleur
+      const subDominant = getDominantColorInRegion(screenBuffer, table.width, buttonRegion);
+      logger.debug("GGClubAdapter", `[${windowHandle}] Testing ${buttonDef.type}: region(${buttonRegion.x},${buttonRegion.y}) found RGB(${subDominant.r},${subDominant.g},${subDominant.b}) vs expected RGB(${buttonDef.color.r},${buttonDef.color.g},${buttonDef.color.b})`);
 
       const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, table.width, table.height);
       

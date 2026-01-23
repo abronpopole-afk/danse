@@ -1,0 +1,49 @@
+2. Une fois que tu as les vraies couleurs, mets à jour GGCLUB_UI_COLORS
+Par exemple, si les logs montrent que le bouton fold est en réalité RGB(200, 50, 50) au lieu de RGB(180, 60, 60), mets à jour la constante.
+
+3. Alternative rapide: Forcer la détection basée sur la position
+Si la calibration des couleurs est trop complexe, tu peux temporairement forcer la détection des boutons quand c'est le tour du joueur en utilisant uniquement la position des pixels brillants dans la région d'action:
+  async detectAvailableActions(windowHandle: number): Promise<DetectedButton[]> {
+    const tableId = `ggclub_${windowHandle}`;
+    const table = this.activeWindows.get(tableId) || this.activeWindows.get(String(windowHandle));
+    const screenBuffer = await this.captureScreen(windowHandle);
+    if (screenBuffer.length === 0 || !table) return [];
+
+    const buttons: DetectedButton[] = [];
+    const region = this.screenLayout.actionButtonsRegion;
+    
+    // MÉTHODE SIMPLIFIÉE: Détecter si des pixels lumineux (boutons actifs) existent dans la région
+    let brightPixelCount = 0;
+    for (let y = region.y; y < region.y + region.height && y < table.height; y++) {
+      for (let x = region.x; x < region.x + region.width && x < table.width; x++) {
+        const offset = (y * table.width + x) * 4;
+        const r = screenBuffer[offset];
+        const g = screenBuffer[offset + 1];
+        const b = screenBuffer[offset + 2];
+        
+        // Pixel lumineux = possiblement un bouton actif
+        const brightness = (r + g + b) / 3;
+        if (brightness > 100) {
+          brightPixelCount++;
+        }
+      }
+    }
+    
+    const totalPixels = region.width * region.height;
+    const brightRatio = brightPixelCount / totalPixels;
+    
+    logger.info("GGClubAdapter", `[${windowHandle}] 🎯 Action region brightness: ${(brightRatio * 100).toFixed(1)}% bright pixels`);
+    
+    // Si plus de 10% de pixels lumineux, il y a probablement des boutons actifs
+    if (brightRatio > 0.10) {
+      // Ajouter les 3 boutons standards (fold, call/check, raise)
+      logger.info("GGClubAdapter", `[${windowHandle}] ✅ Boutons d'action détectés par luminosité!`);
+      
+      const buttonWidth = Math.round(region.width / 3);
+      buttons.push({ type: "fold", region: { x: region.x, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      buttons.push({ type: "call", region: { x: region.x + buttonWidth, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      buttons.push({ type: "raise", region: { x: region.x + buttonWidth * 2, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+    }
+
+    return buttons;
+  }
