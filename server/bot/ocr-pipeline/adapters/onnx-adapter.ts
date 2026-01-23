@@ -8,15 +8,52 @@ import type {
 } from '../types';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
-// Helper pour obtenir le chemin du modèle dans Electron packagé ou dev
+// Helper pour obtenir le chemin des modèles dans Electron packagé ou dev
 function getModelPaths(): { det: string, rec: string, keys: string } {
-  const root = process.cwd();
+  // Electron-specific resourcesPath (may not exist in Node.js)
+  const resourcesPath = (process as any).resourcesPath as string | undefined;
+  
+  // Liste des chemins possibles à vérifier
+  const possibleRoots = [
+    // AppData/Roaming (userData d'Electron)
+    path.join(os.homedir(), 'AppData', 'Roaming', 'GTO Poker Bot'),
+    // process.resourcesPath pour Electron packagé
+    resourcesPath ? path.join(resourcesPath, '..') : '',
+    // process.cwd() pour le développement
+    process.cwd(),
+    // Chemin relatif depuis __dirname
+    path.join(__dirname, '..', '..', '..', '..'),
+  ].filter(Boolean);
+
+  for (const root of possibleRoots) {
+    const detPath = path.join(root, 'models', 'det', 'det.onnx');
+    const recPath = path.join(root, 'models', 'rec', 'rec.onnx');
+    const keysPath = path.join(root, 'models', 'rec', 'ppocr_keys_v1.txt');
+    
+    if (fs.existsSync(detPath) && fs.existsSync(recPath)) {
+      console.log(`[OnnxAdapter] Models found in: ${root}/models`);
+      return { det: detPath, rec: recPath, keys: keysPath };
+    }
+  }
+
+  // Fallback - retourner le premier chemin même s'il n'existe pas (pour le message d'erreur)
+  const fallbackRoot = possibleRoots[0] || process.cwd();
   return {
-    det: path.join(root, 'models/det/det.onnx'),
-    rec: path.join(root, 'models/rec/rec.onnx'),
-    keys: path.join(root, 'models/rec/ppocr_keys_v1.txt'),
+    det: path.join(fallbackRoot, 'models', 'det', 'det.onnx'),
+    rec: path.join(fallbackRoot, 'models', 'rec', 'rec.onnx'),
+    keys: path.join(fallbackRoot, 'models', 'rec', 'ppocr_keys_v1.txt'),
   };
+}
+
+// Alias pour compatibilité (utilisé par isAvailable)
+function getModelPath(): string {
+  const paths = getModelPaths();
+  if (!fs.existsSync(paths.det)) {
+    throw new Error(`Model not found: ${paths.det}`);
+  }
+  return paths.det;
 }
 
 export class OnnxAdapter extends OCRAdapter {
@@ -54,14 +91,8 @@ export class OnnxAdapter extends OCRAdapter {
   }
 
   async shutdown(): Promise<void> {
-    if (this.detSession) {
-      await this.detSession.release();
-      this.detSession = null;
-    }
-    if (this.recSession) {
-      await this.recSession.release();
-      this.recSession = null;
-    }
+    this.detSession = null;
+    this.recSession = null;
     this.isInitialized = false;
   }
 
@@ -194,18 +225,19 @@ export class OnnxAdapter extends OCRAdapter {
       }
     }
 
-    if (!this.session) {
-      console.log('[OnnxAdapter] Loading ONNX model...');
+    if (!this.recSession) {
+      console.log('[OnnxAdapter] Loading ONNX models...');
       try {
-        if (!this.modelPath) {
-          this.modelPath = getModelPath();
+        if (!this.modelPaths) {
+          this.modelPaths = getModelPaths();
         }
         // Support both ESM and CJS imports
         const ort = this.onnxRuntime.default || this.onnxRuntime;
-        this.session = await ort.InferenceSession.create(this.modelPath);
-        console.log('[OnnxAdapter] ONNX model loaded successfully');
+        this.detSession = await ort.InferenceSession.create(this.modelPaths.det);
+        this.recSession = await ort.InferenceSession.create(this.modelPaths.rec);
+        console.log('[OnnxAdapter] ONNX models loaded successfully');
       } catch (error) {
-        console.error('[OnnxAdapter] Failed to load ONNX model:', error);
+        console.error('[OnnxAdapter] Failed to load ONNX models:', error);
         throw error;
       }
     }
@@ -214,13 +246,11 @@ export class OnnxAdapter extends OCRAdapter {
       const ort = this.onnxRuntime.default || this.onnxRuntime;
       const feeds: any = {};
       
-      // The model expects [1, 1, 32, 100] or similar for OCR? 
-      // Based on previous code it was [1, 1, tensor.length]
-      // Let's stick to the providing the tensor as-is but with error handling
-      const inputName = this.session.inputNames[0];
+      // Use recognition model for OCR
+      const inputName = this.recSession.inputNames[0];
       feeds[inputName] = new ort.Tensor('float32', tensor, [1, 1, tensor.length]);
       
-      const output = await this.session.run(feeds);
+      const output = await this.recSession.run(feeds);
       
       // Basic implementation-specific parsing 
       // (This would normally involve decoding the output tensor to characters)
