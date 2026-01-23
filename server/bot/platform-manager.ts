@@ -704,10 +704,19 @@ export class PlatformManager extends EventEmitter {
   }
 
   private validateGameState(gameState: GameTableState): boolean {
-    return gameState.potSize >= 0 && 
-           gameState.heroStack >= 0 &&
-           gameState.players.length > 0 &&
-           gameState.heroCards.length <= 2;
+    // Validation minimale - ne pas bloquer si players est vide (MockAdapter)
+    // La vraie validation se fera lors de la prise de décision
+    const basicValid = gameState.potSize >= 0 && 
+                       gameState.heroStack >= 0 &&
+                       gameState.heroCards.length <= 2;
+    
+    // Si c'est le tour du héro avec des boutons détectés, on valide même sans players
+    if (basicValid && gameState.isHeroTurn && gameState.availableActions.length > 0) {
+      return true;
+    }
+    
+    // Sinon, validation standard (mais on accepte players vide si on a des cartes hero)
+    return basicValid && (gameState.players.length > 0 || gameState.heroCards.length > 0);
   }
 
   private updateTableSession(managedTable: ManagedTable, gameState: GameTableState): void {
