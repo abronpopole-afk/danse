@@ -20,7 +20,7 @@ const getRequire = () => {
     return createRequire(import.meta.url);
   } catch (e) {
     // Fallback pour le build CJS où import.meta n'existe pas
-    return createRequire('file://' + process.cwd() + '/index.js');
+    return createRequire('file://' + process.cwd() + '/index.cjs');
   }
 };
 
@@ -33,6 +33,7 @@ async function loadOnnxRuntime(): Promise<any> {
   
   if (IS_PACKAGED) {
     const resourcesPath = (process as any).resourcesPath as string;
+    // Sur Windows, resourcesPath pointe vers le dossier 'resources' de l'installation
     const unpackedPath = path.join(
       resourcesPath, 
       'app.asar.unpacked', 
@@ -47,23 +48,16 @@ async function loadOnnxRuntime(): Promise<any> {
     } else {
       // Charger depuis le chemin absolu
       try {
-        const modulePath = _require.resolve(path.join(unpackedPath, 'dist', 'index.js'));
-        const mod = _require(modulePath);
-        if (mod && typeof mod === 'object') {
+        // Pointer directement vers le binaire si possible ou l'index
+        const modulePath = path.join(unpackedPath, 'dist', 'index.js');
+        if (fs.existsSync(modulePath)) {
+          const mod = _require(modulePath);
           return mod.default || mod;
         }
-        return mod;
+        const mod = _require(unpackedPath);
+        return mod.default || mod;
       } catch (e) {
         console.warn(`[OnnxAdapter] Failed to load from absolute path: ${unpackedPath}. Error: ${e}`);
-        try {
-          const mod = _require(unpackedPath);
-          if (mod && typeof mod === 'object') {
-            return mod.default || mod;
-          }
-          return mod;
-        } catch (e2) {
-          console.warn(`[OnnxAdapter] Failed fallback require: ${e2}`);
-        }
       }
     }
   }
