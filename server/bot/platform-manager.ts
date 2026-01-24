@@ -148,7 +148,7 @@ export class PlatformManager extends EventEmitter {
         logger.info("PlatformManager", `[GAME] Hero to act detected on table ${data.tableId}`);
         await managedTable.tableSession.start();
         managedTable.tableSession.updateState({ status: "playing" });
-        
+
         await storage.createActionLog({
           tableId: managedTable.tableSession.getId(),
           logType: "info",
@@ -438,7 +438,7 @@ export class PlatformManager extends EventEmitter {
     if (!this.adapter || !this.config) return;
 
     if (this.schedulerStarted) return;
-    
+
     // Lancer le scan initial immédiatement
     logger.info("PlatformManager", "🚀 Lancement du scan initial des tables...");
     this.scanForNewTables().catch(err => {
@@ -556,7 +556,7 @@ export class PlatformManager extends EventEmitter {
           managedTable.lastGameState = gameState;
           this.updateTableSession(managedTable, gameState);
           managedTable.tableSession.resetErrors();
-          
+
           // Émettre l'événement pour le frontend
           this.emit("gameState", gameState);
         } catch (error) {
@@ -671,7 +671,7 @@ export class PlatformManager extends EventEmitter {
       logger.info("PlatformManager", "🔍 Lancement du scan des fenêtres...");
       const tables = await this.adapter.detectTableWindows();
       logger.info("PlatformManager", `Scan terminé: ${tables.length} table(s) trouvée(s)`);
-      
+
       // Synchronisation manuelle au cas où l'événement n'est pas traité assez vite
       for (const table of tables) {
         if (!this.managedTables.has(table.handle)) {
@@ -722,12 +722,12 @@ export class PlatformManager extends EventEmitter {
     const basicValid = gameState.potSize >= 0 && 
                        gameState.heroStack >= 0 &&
                        gameState.heroCards.length <= 2;
-    
+
     // Si c'est le tour du héro avec des boutons détectés, on valide même sans players
     if (basicValid && gameState.isHeroTurn && gameState.availableActions.length > 0) {
       return true;
     }
-    
+
     // Sinon, validation standard (mais on accepte players vide si on a des cartes hero)
     return basicValid && (gameState.players.length > 0 || gameState.heroCards.length > 0);
   }
@@ -807,7 +807,12 @@ export class PlatformManager extends EventEmitter {
     const { action, amount } = queuedAction;
 
     try {
-      await this.adapter.focusWindow(windowHandle);
+      // Try to focus the window first, but continue even if it fails
+      try {
+        await this.adapter.focusWindow(windowHandle);
+      } catch (focusError) {
+        console.warn(`[PlatformManager] Warning: Could not focus window ${windowHandle}, attempting action anyway:`, focusError instanceof Error ? focusError.message : focusError);
+      }
 
       const actionLower = action.toLowerCase();
 
@@ -832,7 +837,7 @@ export class PlatformManager extends EventEmitter {
 
       this.emit("actionExecuted", { windowHandle, action, amount });
     } catch (error) {
-      console.error(`Error executing action ${action}:`, error);
+      console.error(`Error executing action ${action}:`, error instanceof Error ? error.message : error);
       this.emit("actionError", { windowHandle, action, error });
     }
   }
@@ -872,7 +877,7 @@ export class PlatformManager extends EventEmitter {
     this.managedTables.clear();
   }
 
-  
+
   getTableByWindowHandle(windowHandle: number): ManagedTable | undefined {
     return this.managedTables.get(windowHandle);
   }

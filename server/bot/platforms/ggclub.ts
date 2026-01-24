@@ -2660,12 +2660,27 @@ export class GGClubAdapter extends PlatformAdapter {
 
     if (windowManager) {
       try {
-        const windows = windowManager.windowManager.getWindows();
+        // Fix: Use windowManager.getWindows() directly (not windowManager.windowManager)
+        // The module is already resolved to the correct object during loading
+        const getWindowsFn = typeof windowManager.getWindows === 'function' 
+          ? windowManager.getWindows.bind(windowManager)
+          : (windowManager.windowManager?.getWindows?.bind(windowManager.windowManager) || null);
+        
+        if (!getWindowsFn) {
+          console.error(`[GGClubAdapter] Cannot find getWindows function on windowManager`);
+          return;
+        }
+        
+        const windows = getWindowsFn();
         const targetWindow = windows.find((w: any) => w.id === windowHandle);
 
         if (targetWindow) {
           // Check if the window is already active to avoid unnecessary actions
-          const activeWindow = typeof windowManager.getActiveWindow === 'function' ? windowManager.getActiveWindow() : (windowManager.windowManager && typeof windowManager.windowManager.getActiveWindow === 'function' ? windowManager.windowManager.getActiveWindow() : null);
+          const getActiveWindowFn = typeof windowManager.getActiveWindow === 'function'
+            ? windowManager.getActiveWindow.bind(windowManager)
+            : (windowManager.windowManager?.getActiveWindow?.bind(windowManager.windowManager) || null);
+          
+          const activeWindow = getActiveWindowFn ? getActiveWindowFn() : null;
           if (activeWindow && activeWindow.id === windowHandle) {
             console.log(`[GGClubAdapter] Window ${windowHandle} is already focused.`);
             return;
@@ -2681,7 +2696,7 @@ export class GGClubAdapter extends PlatformAdapter {
             await this.addRandomDelay(250); // Short delay to allow OS to process
 
             // Verify if the window is now active
-            const nowActive = windowManager.windowManager.getActiveWindow();
+            const nowActive = getActiveWindowFn ? getActiveWindowFn() : null;
             if (nowActive && nowActive.id === windowHandle) {
               console.log(`[GGClubAdapter] Window ${windowHandle} focused successfully after ${attempts + 1} attempts.`);
               focused = true;
@@ -2715,7 +2730,7 @@ export class GGClubAdapter extends PlatformAdapter {
           console.error(`[GGClubAdapter] Target window ${windowHandle} not found.`);
         }
       } catch (error) {
-        console.error("Focus window error:", error);
+        console.error("Focus window error:", error instanceof Error ? error.message : error);
       }
     } else {
       console.warn("[GGClubAdapter] node-window-manager not available. Cannot focus window.");
