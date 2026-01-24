@@ -1877,14 +1877,58 @@ export class GGClubAdapter extends PlatformAdapter {
 
     const buttons: DetectedButton[] = [];
     const region = this.screenLayout.actionButtonsRegion;
+    const imgW = table.width || 880;
+    const imgH = table.height || 600;
     
     // 🔍 DEBUG: Log de la région des boutons
     logger.info("GGClubAdapter", `[${windowHandle}] 🔍 ACTION_REGION: x=${region.x}, y=${region.y}, w=${region.width}, h=${region.height}`);
     
+    // 🔍 DEBUG ÉTENDU: Scanner plusieurs bandes horizontales pour trouver les boutons
+    const scanBands = [
+      { name: "60-70%", yStart: Math.round(imgH * 0.60), yEnd: Math.round(imgH * 0.70) },
+      { name: "70-80%", yStart: Math.round(imgH * 0.70), yEnd: Math.round(imgH * 0.80) },
+      { name: "80-90%", yStart: Math.round(imgH * 0.80), yEnd: Math.round(imgH * 0.90) },
+      { name: "90-100%", yStart: Math.round(imgH * 0.90), yEnd: imgH },
+    ];
+    
+    let bestBand = { name: "", brightness: 0, yStart: 0, yEnd: 0 };
+    
+    for (const band of scanBands) {
+      let bandBrightPixels = 0;
+      let bandTotalPixels = 0;
+      
+      // Scanner le centre horizontal (40% à 90% de la largeur)
+      const xStart = Math.round(imgW * 0.40);
+      const xEnd = Math.round(imgW * 0.90);
+      
+      for (let y = band.yStart; y < band.yEnd && y < imgH; y++) {
+        for (let x = xStart; x < xEnd && x < imgW; x++) {
+          const offset = (y * imgW + x) * 4;
+          if (offset + 2 >= screenBuffer.length) continue;
+          const r = screenBuffer[offset];
+          const g = screenBuffer[offset + 1];
+          const b = screenBuffer[offset + 2];
+          
+          const brightness = (r + g + b) / 3;
+          if (brightness > 80) {
+            bandBrightPixels++;
+          }
+          bandTotalPixels++;
+        }
+      }
+      
+      const bandBrightness = bandTotalPixels > 0 ? (bandBrightPixels / bandTotalPixels) * 100 : 0;
+      logger.info("GGClubAdapter", `[${windowHandle}] 📊 SCAN BAND ${band.name} (y=${band.yStart}-${band.yEnd}): ${bandBrightness.toFixed(1)}% bright`);
+      
+      if (bandBrightness > bestBand.brightness) {
+        bestBand = { name: band.name, brightness: bandBrightness, yStart: band.yStart, yEnd: band.yEnd };
+      }
+    }
+    
+    logger.info("GGClubAdapter", `[${windowHandle}] 🏆 BEST BAND: ${bestBand.name} with ${bestBand.brightness.toFixed(1)}% brightness`);
+    
     // MÉTHODE 1: Détection par luminosité (MÉTHODE ROBUSTE FALLBACK)
     let brightPixelCount = 0;
-    const imgW = table.width || 880;
-    const imgH = table.height || 600;
 
     for (let y = Math.round(region.y); y < Math.round(region.y + region.height) && y < imgH; y++) {
       for (let x = Math.round(region.x); x < Math.round(region.x + region.width) && x < imgW; x++) {
@@ -1912,6 +1956,23 @@ export class GGClubAdapter extends PlatformAdapter {
       buttons.push({ type: "fold", region: { x: region.x, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
       buttons.push({ type: "call", region: { x: region.x + buttonWidth, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
       buttons.push({ type: "raise", region: { x: region.x + buttonWidth * 2, y: region.y, width: buttonWidth, height: region.height }, isEnabled: true });
+      return buttons;
+    }
+    
+    // 🔄 FALLBACK: Si la région standard ne trouve rien mais qu'une bande a >8% de luminosité,
+    // utiliser cette bande comme région de boutons
+    if (bestBand.brightness > 8 && bestBand.yStart > 0) {
+      logger.info("GGClubAdapter", `[${windowHandle}] 🔄 FALLBACK: Utilisation de la bande ${bestBand.name} comme région de boutons`);
+      const fallbackRegion = {
+        x: Math.round(imgW * 0.40),
+        y: bestBand.yStart,
+        width: Math.round(imgW * 0.50),
+        height: bestBand.yEnd - bestBand.yStart
+      };
+      const buttonWidth = Math.round(fallbackRegion.width / 3);
+      buttons.push({ type: "fold", region: { x: fallbackRegion.x, y: fallbackRegion.y, width: buttonWidth, height: fallbackRegion.height }, isEnabled: true });
+      buttons.push({ type: "call", region: { x: fallbackRegion.x + buttonWidth, y: fallbackRegion.y, width: buttonWidth, height: fallbackRegion.height }, isEnabled: true });
+      buttons.push({ type: "raise", region: { x: fallbackRegion.x + buttonWidth * 2, y: fallbackRegion.y, width: buttonWidth, height: fallbackRegion.height }, isEnabled: true });
       return buttons;
     }
 

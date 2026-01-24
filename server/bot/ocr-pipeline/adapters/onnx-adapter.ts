@@ -188,9 +188,9 @@ export class OnnxAdapter extends OCRAdapter {
     
     try {
       const croppedBuffer = this.cropRegion(frame, region);
-      const tensor = this.bufferToTensor(croppedBuffer, region.bounds.width, region.bounds.height);
+      const tensorData = this.bufferToTensor(croppedBuffer, region.bounds.width, region.bounds.height);
       
-      const result = await this.runInference(tensor);
+      const result = await this.runInference(tensorData);
       const processingTime = Date.now() - startTime;
       
       const ocrResult: OCRResult = {
@@ -264,28 +264,36 @@ export class OnnxAdapter extends OCRAdapter {
     return croppedBuffer;
   }
 
-  private bufferToTensor(buffer: Buffer, width: number, height: number): Float32Array {
-    const tensor = new Float32Array(width * height);
+  private bufferToTensor(buffer: Buffer, width: number, height: number): { data: Float32Array, width: number, height: number } {
+    // PP-OCRv4 expects RGB input with shape [batch, channels, height, width]
+    // We need 3 channels (RGB), not grayscale
+    const channels = 3;
+    const tensor = new Float32Array(channels * height * width);
     const bytesPerPixel = buffer.length / (width * height);
     
-    for (let i = 0; i < width * height; i++) {
-      const offset = i * bytesPerPixel;
-      if (offset + 2 < buffer.length) {
-        const r = buffer[offset];
-        const g = buffer[offset + 1];
-        const b = buffer[offset + 2];
-        const gray = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+    // PP-OCR preprocessing: normalize to [0, 1] and arrange as CHW (channel, height, width)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const pixelIdx = y * width + x;
+        const offset = pixelIdx * bytesPerPixel;
         
-        if (i < tensor.length) {
-          tensor[i] = gray;
+        if (offset + 2 < buffer.length) {
+          const r = buffer[offset] / 255.0;
+          const g = buffer[offset + 1] / 255.0;
+          const b = buffer[offset + 2] / 255.0;
+          
+          // CHW format: all R values, then all G values, then all B values
+          tensor[0 * height * width + pixelIdx] = r;  // R channel
+          tensor[1 * height * width + pixelIdx] = g;  // G channel
+          tensor[2 * height * width + pixelIdx] = b;  // B channel
         }
       }
     }
     
-    return tensor;
+    return { data: tensor, width, height };
   }
 
-  private async runInference(tensor: Float32Array): Promise<{ text: string; confidence: number }> {
+  private async runInference(tensorData: { data: Float32Array, width: number, height: number }): Promise<{ text: string; confidence: number }> {
     if (!this.onnxRuntime) {
       console.log('[OnnxAdapter] Attempting late initialization of onnxRuntime...');
       try {
@@ -316,20 +324,113 @@ export class OnnxAdapter extends OCRAdapter {
       const ort = this.onnxRuntime;
       const feeds: any = {};
       
-      // Use recognition model for OCR
+      // PP-OCRv4 recognition model expects shape [batch, channels, height, width]
+      // Channels = 3 (RGB), batch = 1
       const inputName = this.recSession.inputNames[0];
-      feeds[inputName] = new ort.Tensor('float32', tensor, [1, 1, tensor.length]);
+      const { data, width, height } = tensorData;
+      const channels = 3;
+      
+      // Create tensor with correct 4D shape: [batch=1, channels=3, height, width]
+      feeds[inputName] = new ort.Tensor('float32', data, [1, channels, height, width]);
+      
+      console.log(`[OnnxAdapter] Running inference with shape [1, ${channels}, ${height}, ${width}]`);
       
       const output = await this.recSession.run(feeds);
       
-      // Basic implementation-specific parsing 
-      // (This would normally involve decoding the output tensor to characters)
-      // For now we return a placeholder that confirms the model ran
-      return { text: 'detected', confidence: 0.95 }; 
+      // Get output tensor and decode
+      const outputNames = this.recSession.outputNames;
+      const outputTensor = output[outputNames[0]];
+      
+      // For PP-OCRv4, output is typically [batch, seq_len, num_classes]
+      // We need to decode using CTC decoding and the character dictionary
+      const text = this.decodeOutput(outputTensor);
+      const confidence = this.calculateConfidence(outputTensor);
+      
+      console.log(`[OnnxAdapter] Inference result: "${text}" (confidence: ${confidence.toFixed(2)})`);
+      
+      return { text, confidence }; 
     } catch (error) {
       console.error('[OnnxAdapter] Inference execution failed:', error);
       throw error;
     }
+  }
+  
+  private decodeOutput(outputTensor: any): string {
+    // Simple CTC greedy decoding
+    // Output shape is typically [batch, seq_len, num_classes]
+    const data = outputTensor.data as Float32Array;
+    const dims = outputTensor.dims;
+    
+    if (dims.length < 2) {
+      return '';
+    }
+    
+    const seqLen = dims[1];
+    const numClasses = dims.length > 2 ? dims[2] : data.length / seqLen;
+    
+    const indices: number[] = [];
+    let lastIdx = -1;
+    
+    for (let t = 0; t < seqLen; t++) {
+      let maxIdx = 0;
+      let maxVal = -Infinity;
+      
+      for (let c = 0; c < numClasses; c++) {
+        const val = data[t * numClasses + c];
+        if (val > maxVal) {
+          maxVal = val;
+          maxIdx = c;
+        }
+      }
+      
+      // CTC blank token is usually index 0, skip it and repeats
+      if (maxIdx !== 0 && maxIdx !== lastIdx) {
+        indices.push(maxIdx);
+      }
+      lastIdx = maxIdx;
+    }
+    
+    // For poker OCR, we mainly care about simple characters
+    // Map indices to characters (simplified - full impl would load ppocr_keys_v1.txt)
+    const basicChars = '0123456789AaKkQqJjTt♠♥♦♣shdcSHDC$.';
+    let text = '';
+    for (const idx of indices) {
+      if (idx > 0 && idx <= basicChars.length) {
+        text += basicChars[idx - 1];
+      }
+    }
+    
+    return text;
+  }
+  
+  private calculateConfidence(outputTensor: any): number {
+    const data = outputTensor.data as Float32Array;
+    const dims = outputTensor.dims;
+    
+    if (dims.length < 2 || data.length === 0) {
+      return 0;
+    }
+    
+    const seqLen = dims[1];
+    const numClasses = dims.length > 2 ? dims[2] : data.length / seqLen;
+    
+    let totalConf = 0;
+    let count = 0;
+    
+    for (let t = 0; t < seqLen; t++) {
+      let maxVal = -Infinity;
+      for (let c = 0; c < numClasses; c++) {
+        const val = data[t * numClasses + c];
+        if (val > maxVal) maxVal = val;
+      }
+      // Softmax approximation for confidence
+      if (maxVal > 0) {
+        totalConf += Math.min(1, maxVal);
+        count++;
+      }
+    }
+    
+    return count > 0 ? totalConf / count : 0;
   }
 
   private createBatches<T>(items: T[], batchSize: number): T[][] {
