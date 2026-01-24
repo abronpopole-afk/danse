@@ -1976,31 +1976,47 @@ export class GGClubAdapter extends PlatformAdapter {
       return buttons;
     }
 
-    // MÉTHODE 2: Détection par couleur (Originale avec logs de debug)
+    // MÉTHODE 2: Détection par couleur (Adaptée à la disposition réelle)
     const buttonTypes: Array<{ type: DetectedButton["type"]; color: ColorSignature; keywords: string[] }> = [
       { type: "fold", color: GGCLUB_UI_COLORS.foldButton, keywords: ["fold", "coucher", "f0ld"] },
-      { type: "call", color: GGCLUB_UI_COLORS.callButton, keywords: ["call", "suivre"] },
-      { type: "check", color: GGCLUB_UI_COLORS.checkButton, keywords: ["check", "parole"] },
+      { type: "call", color: GGCLUB_UI_COLORS.callButton, keywords: ["call", "suivre", "check", "parole"] },
       { type: "raise", color: GGCLUB_UI_COLORS.raiseButton, keywords: ["raise", "relancer", "bet", "miser"] },
-      { type: "allin", color: GGCLUB_UI_COLORS.allInButton, keywords: ["all-in", "allin", "tapis"] },
     ];
 
-    const buttonWidth = Math.round(region.width / 4);
-    for (let i = 0; i < buttonTypes.length; i++) {
-      const buttonDef = buttonTypes[i];
+    // Sur GGClub, il y a généralement 3 boutons principaux en bas à droite
+    // On divise la zone en 3 colonnes horizontales
+    const buttonWidth = Math.round(region.width / 3);
+    for (let i = 0; i < 3; i++) {
       const buttonRegion: ScreenRegion = {
-        x: region.x + (i % 4) * (buttonWidth * 0.8),
+        x: region.x + i * buttonWidth,
         y: region.y,
         width: buttonWidth,
         height: region.height,
       };
 
-      const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, imgW, imgH);
-      if (isColorMatch) {
-        logger.info("GGClubAdapter", `[${windowHandle}] Bouton détecté par couleur: ${buttonDef.type}`);
-        buttons.push({ type: buttonDef.type, region: buttonRegion, isEnabled: true });
+      // On vérifie quel type de bouton correspond à cette zone par couleur
+      for (const buttonDef of buttonTypes) {
+        const isColorMatch = await this.checkColorInRegion(screenBuffer, buttonRegion, buttonDef.color, imgW, imgH);
+        if (isColorMatch) {
+          logger.info("GGClubAdapter", `[${windowHandle}] Bouton ${buttonDef.type} détecté en position ${i+1}/3`);
+          buttons.push({ 
+            type: buttonDef.type, 
+            region: buttonRegion, 
+            isEnabled: true 
+          });
+          break; // On a trouvé le bouton pour cette zone
+        }
       }
     }
+
+    // Si on a détecté des boutons par couleur, on les renvoie
+    if (buttons.length > 0) return buttons;
+
+    // Fallback si la couleur échoue (par exemple si les boutons sont grisés/désactivés mais visibles)
+    const fallbackButtonWidth = Math.round(region.width / 3);
+    buttons.push({ type: "fold", region: { x: region.x, y: region.y, width: fallbackButtonWidth, height: region.height }, isEnabled: true });
+    buttons.push({ type: "call", region: { x: region.x + fallbackButtonWidth, y: region.y, width: fallbackButtonWidth, height: region.height }, isEnabled: true });
+    buttons.push({ type: "raise", region: { x: region.x + fallbackButtonWidth * 2, y: region.y, width: fallbackButtonWidth, height: region.height }, isEnabled: true });
 
     return buttons;
   }
