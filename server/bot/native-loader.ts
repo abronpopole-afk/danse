@@ -147,8 +147,8 @@ export async function loadNativeModule<T>(moduleName: string): Promise<T | null>
   });
 
   // Handle robotjs separately to provide a mock on non-Windows platforms or Replit
-  if (moduleName === "robotjs" && (process.platform !== "win32" || process.env.REPL_ID !== undefined)) {
-    logger.info("NativeLoader", "Utilisation du wrapper mock pour robotjs (non-Windows/Replit)");
+  if (moduleName === "robotjs" && (process.platform !== "win32" || process.env.REPL_ID !== undefined || !IS_ELECTRON)) {
+    logger.info("NativeLoader", "Utilisation du wrapper mock pour robotjs (non-Windows/Replit/Node)");
     return robotMock as unknown as T;
   }
   
