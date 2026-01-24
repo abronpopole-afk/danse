@@ -30,7 +30,7 @@ const _require = getRequire();
 async function loadOnnxRuntime(): Promise<any> {
   const IS_PACKAGED = (process as any).resourcesPath !== undefined 
     && !(process as any).resourcesPath?.includes('node_modules');
-  
+
   if (IS_PACKAGED) {
     const resourcesPath = (process as any).resourcesPath as string;
     // Sur Windows, resourcesPath pointe vers le dossier 'resources' de l'installation
@@ -40,9 +40,9 @@ async function loadOnnxRuntime(): Promise<any> {
       'node_modules', 
       'onnxruntime-node'
     );
-    
+
     console.log(`[OnnxAdapter] Loading onnxruntime-node from: ${unpackedPath}`);
-    
+
     if (!fs.existsSync(unpackedPath)) {
       console.warn(`[OnnxAdapter] unpackedPath not found: ${unpackedPath}. Falling back to normal import.`);
     } else {
@@ -61,7 +61,7 @@ async function loadOnnxRuntime(): Promise<any> {
       }
     }
   }
-  
+
   // En développement ou fallback production, utiliser l'import normal
   try {
     const mod = await import('onnxruntime-node');
@@ -76,7 +76,7 @@ async function loadOnnxRuntime(): Promise<any> {
 function getModelPaths(): { det: string, rec: string, keys: string } {
   // Electron-specific resourcesPath (may not exist in Node.js)
   const resourcesPath = (process as any).resourcesPath as string | undefined;
-  
+
   // Liste des chemins possibles à vérifier
   const possibleRoots = [
     // process.resourcesPath pour Electron packagé
@@ -91,7 +91,7 @@ function getModelPaths(): { det: string, rec: string, keys: string } {
     const detPath = path.join(root, 'models', 'det', 'det.onnx');
     const recPath = path.join(root, 'models', 'rec', 'rec.onnx');
     const keysPath = path.join(root, 'models', 'rec', 'ppocr_keys_v1.txt');
-    
+
     if (fs.existsSync(detPath) && fs.existsSync(recPath)) {
       console.log(`[OnnxAdapter] Models found in: ${root}/models`);
       return { det: detPath, rec: recPath, keys: keysPath };
@@ -129,7 +129,7 @@ export class OnnxAdapter extends OCRAdapter {
   async initialize(): Promise<void> {
     try {
       this.modelPaths = getModelPaths();
-      
+
       // Vérifier l'existence des fichiers
       if (!fs.existsSync(this.modelPaths.det)) throw new Error(`Model not found: ${this.modelPaths.det}`);
       if (!fs.existsSync(this.modelPaths.rec)) throw new Error(`Model not found: ${this.modelPaths.rec}`);
@@ -137,7 +137,7 @@ export class OnnxAdapter extends OCRAdapter {
 
       // ✅ CORRECTION: Utiliser le loader spécialisé pour Electron packagé
       this.onnxRuntime = await loadOnnxRuntime();
-      
+
       const ort = this.onnxRuntime;
       if (!ort || typeof ort.InferenceSession === 'undefined') {
         console.error('[OnnxAdapter] InferenceSession not found in loaded module', {
@@ -185,14 +185,49 @@ export class OnnxAdapter extends OCRAdapter {
     }
 
     const startTime = Date.now();
-    
+
+    // Protection contre les dimensions invalides qui peuvent crasher ONNX
+    const { width, height } = region.bounds;
+    if (width < 4 || height < 4) {
+      console.warn(`[OnnxAdapter] Region ${region.id} too small (${width}x${height}), skipping`);
+      return {
+        text: '',
+        confidence: 0,
+        processingTimeMs: Date.now() - startTime,
+        engine: this.name,
+      };
+    }
+
+    // Limiter les dimensions pour éviter les problèmes de mémoire
+    if (width > 2000 || height > 2000) {
+      console.warn(`[OnnxAdapter] Region ${region.id} too large (${width}x${height}), skipping`);
+      return {
+        text: '',
+        confidence: 0,
+        processingTimeMs: Date.now() - startTime,
+        engine: this.name,
+      };
+    }
+
     try {
       const croppedBuffer = this.cropRegion(frame, region);
+
+      // Vérifier que le buffer est valide
+      if (!croppedBuffer || croppedBuffer.length === 0) {
+        console.warn(`[OnnxAdapter] Empty buffer for region ${region.id}`);
+        return {
+          text: '',
+          confidence: 0,
+          processingTimeMs: Date.now() - startTime,
+          engine: this.name,
+        };
+      }
+
       const tensorData = this.bufferToTensor(croppedBuffer, region.bounds.width, region.bounds.height);
-      
+
       const result = await this.runInference(tensorData);
       const processingTime = Date.now() - startTime;
-      
+
       const ocrResult: OCRResult = {
         text: result.text,
         confidence: result.confidence,
@@ -216,9 +251,9 @@ export class OnnxAdapter extends OCRAdapter {
     regions: Region[]
   ): Promise<Map<string, OCRResult>> {
     const results = new Map<string, OCRResult>();
-    
+
     const batches = this.createBatches(regions, this.getCapabilities().maxBatchSize);
-    
+
     for (const batch of batches) {
       const batchPromises = batch.map(region => 
         this.processRegion(frame, region)
@@ -228,16 +263,16 @@ export class OnnxAdapter extends OCRAdapter {
             return { region, result: null };
           })
       );
-      
+
       const batchResults = await Promise.all(batchPromises);
-      
+
       for (const { region, result } of batchResults) {
         if (result) {
           results.set(region.id, result);
         }
       }
     }
-    
+
     return results;
   }
 
@@ -245,14 +280,14 @@ export class OnnxAdapter extends OCRAdapter {
     const { x, y, width, height } = region.bounds;
     const bytesPerPixel = frame.format === 'rgba' ? 4 : frame.format === 'rgb' ? 3 : 1;
     const rowStride = frame.width * bytesPerPixel;
-    
+
     const croppedBuffer = Buffer.alloc(width * height * bytesPerPixel);
-    
+
     for (let row = 0; row < height; row++) {
       const srcRow = y + row;
       const srcOffset = srcRow * rowStride + x * bytesPerPixel;
       const dstOffset = row * width * bytesPerPixel;
-      
+
       const copyLen = width * bytesPerPixel;
       if (srcOffset + copyLen <= frame.data.length && dstOffset + copyLen <= croppedBuffer.length) {
         frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + copyLen);
@@ -260,37 +295,80 @@ export class OnnxAdapter extends OCRAdapter {
         console.warn(`[OnnxAdapter] Crop out of bounds at row ${row}: srcOffset=${srcOffset}, dataLen=${frame.data.length}`);
       }
     }
-    
+
     return croppedBuffer;
   }
 
   private bufferToTensor(buffer: Buffer, width: number, height: number): { data: Float32Array, width: number, height: number } {
-    // PP-OCRv4 expects RGB input with shape [batch, channels, height, width]
-    // We need 3 channels (RGB), not grayscale
+    // PP-OCRv4 recognition model expects:
+    // - Height: 48 pixels (fixed)
+    // - Width: variable (but we keep aspect ratio)
+    // - Normalization: ImageNet style (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+    const TARGET_HEIGHT = 48;
     const channels = 3;
-    const tensor = new Float32Array(channels * height * width);
     const bytesPerPixel = buffer.length / (width * height);
-    
-    // PP-OCR preprocessing: normalize to [0, 1] and arrange as CHW (channel, height, width)
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const pixelIdx = y * width + x;
-        const offset = pixelIdx * bytesPerPixel;
-        
-        if (offset + 2 < buffer.length) {
-          const r = buffer[offset] / 255.0;
-          const g = buffer[offset + 1] / 255.0;
-          const b = buffer[offset + 2] / 255.0;
-          
-          // CHW format: all R values, then all G values, then all B values
-          tensor[0 * height * width + pixelIdx] = r;  // R channel
-          tensor[1 * height * width + pixelIdx] = g;  // G channel
-          tensor[2 * height * width + pixelIdx] = b;  // B channel
+
+    // Calculate new width to maintain aspect ratio
+    const scale = TARGET_HEIGHT / height;
+    const newWidth = Math.max(1, Math.round(width * scale));
+    const newHeight = TARGET_HEIGHT;
+
+    // Clamp width to reasonable bounds to prevent memory issues
+    const finalWidth = Math.min(newWidth, 1024);
+
+    console.log(`[OnnxAdapter] Resizing: ${width}x${height} -> ${finalWidth}x${newHeight}`);
+
+    const tensor = new Float32Array(channels * newHeight * finalWidth);
+
+    // ImageNet normalization values
+    const mean = [0.485, 0.456, 0.406];
+    const std = [0.229, 0.224, 0.225];
+
+    // Bilinear interpolation resize + normalization
+    for (let y = 0; y < newHeight; y++) {
+      for (let x = 0; x < finalWidth; x++) {
+        // Map to source coordinates
+        const srcX = (x / finalWidth) * width;
+        const srcY = (y / newHeight) * height;
+
+        // Bilinear interpolation
+        const x0 = Math.floor(srcX);
+        const y0 = Math.floor(srcY);
+        const x1 = Math.min(x0 + 1, width - 1);
+        const y1 = Math.min(y0 + 1, height - 1);
+
+        const xWeight = srcX - x0;
+        const yWeight = srcY - y0;
+
+        // Get pixel values at 4 corners
+        const getPixel = (px: number, py: number, channel: number) => {
+          const offset = (py * width + px) * bytesPerPixel + channel;
+          return offset < buffer.length ? buffer[offset] / 255.0 : 0;
+        };
+
+        for (let c = 0; c < 3; c++) {
+          const v00 = getPixel(x0, y0, c);
+          const v10 = getPixel(x1, y0, c);
+          const v01 = getPixel(x0, y1, c);
+          const v11 = getPixel(x1, y1, c);
+
+          // Bilinear interpolation
+          const v0 = v00 * (1 - xWeight) + v10 * xWeight;
+          const v1 = v01 * (1 - xWeight) + v11 * xWeight;
+          const value = v0 * (1 - yWeight) + v1 * yWeight;
+
+          // Apply ImageNet normalization: (value - mean) / std
+          const normalized = (value - mean[c]) / std[c];
+
+          // CHW format
+          const tensorIdx = c * newHeight * finalWidth + y * finalWidth + x;
+          tensor[tensorIdx] = normalized;
         }
       }
     }
-    
-    return { data: tensor, width, height };
+
+    return { data: tensor, width: finalWidth, height: newHeight };
   }
 
   private async runInference(tensorData: { data: Float32Array, width: number, height: number }): Promise<{ text: string; confidence: number }> {
@@ -319,62 +397,62 @@ export class OnnxAdapter extends OCRAdapter {
         throw error;
       }
     }
-    
+
     try {
       const ort = this.onnxRuntime;
       const feeds: any = {};
-      
+
       // PP-OCRv4 recognition model expects shape [batch, channels, height, width]
       // Channels = 3 (RGB), batch = 1
       const inputName = this.recSession.inputNames[0];
       const { data, width, height } = tensorData;
       const channels = 3;
-      
+
       // Create tensor with correct 4D shape: [batch=1, channels=3, height, width]
       feeds[inputName] = new ort.Tensor('float32', data, [1, channels, height, width]);
-      
+
       console.log(`[OnnxAdapter] Running inference with shape [1, ${channels}, ${height}, ${width}]`);
-      
+
       const output = await this.recSession.run(feeds);
-      
+
       // Get output tensor and decode
       const outputNames = this.recSession.outputNames;
       const outputTensor = output[outputNames[0]];
-      
+
       // For PP-OCRv4, output is typically [batch, seq_len, num_classes]
       // We need to decode using CTC decoding and the character dictionary
       const text = this.decodeOutput(outputTensor);
       const confidence = this.calculateConfidence(outputTensor);
-      
+
       console.log(`[OnnxAdapter] Inference result: "${text}" (confidence: ${confidence.toFixed(2)})`);
-      
+
       return { text, confidence }; 
     } catch (error) {
       console.error('[OnnxAdapter] Inference execution failed:', error);
       throw error;
     }
   }
-  
+
   private decodeOutput(outputTensor: any): string {
     // Simple CTC greedy decoding
     // Output shape is typically [batch, seq_len, num_classes]
     const data = outputTensor.data as Float32Array;
     const dims = outputTensor.dims;
-    
+
     if (dims.length < 2) {
       return '';
     }
-    
+
     const seqLen = dims[1];
     const numClasses = dims.length > 2 ? dims[2] : data.length / seqLen;
-    
+
     const indices: number[] = [];
     let lastIdx = -1;
-    
+
     for (let t = 0; t < seqLen; t++) {
       let maxIdx = 0;
       let maxVal = -Infinity;
-      
+
       for (let c = 0; c < numClasses; c++) {
         const val = data[t * numClasses + c];
         if (val > maxVal) {
@@ -382,14 +460,14 @@ export class OnnxAdapter extends OCRAdapter {
           maxIdx = c;
         }
       }
-      
+
       // CTC blank token is usually index 0, skip it and repeats
       if (maxIdx !== 0 && maxIdx !== lastIdx) {
         indices.push(maxIdx);
       }
       lastIdx = maxIdx;
     }
-    
+
     // For poker OCR, we mainly care about simple characters
     // Map indices to characters (simplified - full impl would load ppocr_keys_v1.txt)
     const basicChars = '0123456789AaKkQqJjTt♠♥♦♣shdcSHDC$.';
@@ -399,24 +477,24 @@ export class OnnxAdapter extends OCRAdapter {
         text += basicChars[idx - 1];
       }
     }
-    
+
     return text;
   }
-  
+
   private calculateConfidence(outputTensor: any): number {
     const data = outputTensor.data as Float32Array;
     const dims = outputTensor.dims;
-    
+
     if (dims.length < 2 || data.length === 0) {
       return 0;
     }
-    
+
     const seqLen = dims[1];
     const numClasses = dims.length > 2 ? dims[2] : data.length / seqLen;
-    
+
     let totalConf = 0;
     let count = 0;
-    
+
     for (let t = 0; t < seqLen; t++) {
       let maxVal = -Infinity;
       for (let c = 0; c < numClasses; c++) {
@@ -429,7 +507,7 @@ export class OnnxAdapter extends OCRAdapter {
         count++;
       }
     }
-    
+
     return count > 0 ? totalConf / count : 0;
   }
 
