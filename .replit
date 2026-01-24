@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["imagemagick", "openssh", "wget", "xorg.libX11", "xorg.libXext", "xorg.libXi", "xorg.libXinerama", "xorg.libXtst"]
+packages = ["imagemagick", "openssh", "wget", "xorg.libX11", "xorg.libXext", "xorg.libXi", "xorg.libXinerama", "xorg.libXtst", "libpng", "pkg-config", "gcc-unwrapped", "gnumake", "python311"]
 
 [deployment]
 deploymentTarget = "autoscale"
