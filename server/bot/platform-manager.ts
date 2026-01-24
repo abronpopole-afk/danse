@@ -12,8 +12,9 @@ import {
 } from "./platform-adapter";
 import { createPlatformAdapter, getSupportedPlatforms } from "./platforms";
 import { getTableManager, TableSession, TableState } from "./table-manager";
+import actions from "./automation/actions";
+import window from "./automation/window";
 import { getHumanizer, HumanizedAction } from "./humanizer";
-import { getGtoAdapter, HandContext } from "./gto-engine";
 import { storage } from "../storage";
 import { getTaskScheduler } from "./task-scheduler";
 import { getSafeModeManager } from "./safe-mode";
