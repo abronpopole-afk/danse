@@ -53,44 +53,52 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const { x, y, width, height } = region.bounds;
       const channels = frame.format === 'rgba' ? 4 : 3;
       
-      // Extraction de la région d'intérêt
-      const croppedBuffer = Buffer.alloc(width * height * channels);
-      for (let row = 0; row < height; row++) {
-        const srcOffset = ((y + row) * frame.width + x) * channels;
-        const dstOffset = row * width * channels;
-        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + width * channels);
-      }
-
-      // ENCODAGE PNG : Crucial pour que le service Python puisse décoder l'image
       const log = (msg: string) => {
-        const timestamp = new Date().toISOString();
-        console.log(`[PaddleOCRAdapter] ${msg}`);
+        console.log(`[PaddleOCRAdapter] [${region.id}] ${msg}`);
       };
 
-      log(`Encoding region ${region.id} (${width}x${height}) to PNG...`);
+      // SECURISATION : Vérification des bornes
+      const safeX = Math.max(0, Math.min(x, frame.width - 1));
+      const safeY = Math.max(0, Math.min(y, frame.height - 1));
+      const safeWidth = Math.max(1, Math.min(width, frame.width - safeX));
+      const safeHeight = Math.max(1, Math.min(height, frame.height - safeY));
+
+      if (safeWidth !== width || safeHeight !== height || safeX !== x || safeY !== y) {
+        log(`⚠️ Correction dimensions: (${x},${y},${width},${height}) -> (${safeX},${safeY},${safeWidth},${safeHeight})`);
+      }
+
+      // Extraction de la région d'intérêt
+      const croppedBuffer = Buffer.alloc(safeWidth * safeHeight * channels);
+      for (let row = 0; row < safeHeight; row++) {
+        const srcOffset = ((safeY + row) * frame.width + safeX) * channels;
+        const dstOffset = row * safeWidth * channels;
+        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + safeWidth * channels);
+      }
+
+      // ENCODAGE PNG
+      log(`Encoding ${safeWidth}x${safeHeight} to PNG...`);
       const pngBuffer = await sharp(croppedBuffer, {
         raw: {
-          width: width,
-          height: height,
+          width: safeWidth,
+          height: safeHeight,
           channels: channels as 3 | 4
         }
       }).png().toBuffer();
-      log(`PNG encoded for ${region.id}: ${pngBuffer.length} bytes`);
+      log(`PNG size: ${pngBuffer.length} bytes`);
 
       const formData = new FormData();
       const blob = new Blob([pngBuffer], { type: 'image/png' });
       formData.append('file', blob, 'region.png');
 
-      log(`Sending request to Python service: ${this.apiUrl}`);
       const response = await axios.post(this.apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 5000 // Augmentation du timeout car l'OCR peut être lent
+        timeout: 5000
       });
 
       const text = response.data.results?.map((r: any) => r.text).join(' ') || '';
       const confidence = response.data.results?.[0]?.confidence || 0;
       
-      log(`Response received for ${region.id}: "${text}" (conf: ${confidence})`);
+      log(`Result: "${text}" (conf: ${confidence})`);
 
       return {
         text,
@@ -99,7 +107,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
         engine: this.name,
       };
     } catch (error) {
-      console.error('[PaddleOCRAdapter] Error processing region:', error);
+      console.error(`[PaddleOCRAdapter] [${region.id}] Error processing:`, error);
       return {
         text: '',
         confidence: 0,

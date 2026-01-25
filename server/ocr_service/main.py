@@ -40,7 +40,9 @@ def get_ocr():
     if ocr is None:
         logger.info("Initialisation de PaddleOCR (modèle en cours de chargement...)")
         try:
-            ocr = PaddleOCR(use_angle_cls=False, lang='en', show_log=False, use_gpu=False)
+            # Correction des arguments pour compatibilité maximale
+            # Certaines versions ne supportent pas use_gpu ou show_log dans le constructeur
+            ocr = PaddleOCR(lang='en') 
             logger.info("✓ PaddleOCR initialisé avec succès")
         except Exception as e:
             logger.error(f"❌ Erreur lors de l'initialisation de PaddleOCR: {str(e)}")
@@ -56,10 +58,15 @@ async def perform_ocr(file: UploadFile = File(...)):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            logger.error("Erreur de décodage de l'image")
+            logger.error("Erreur de décodage de l'image (img is None)")
             return {"error": "Could not decode image", "results": []}
             
-        logger.debug("Image décodée, lancement de l'OCR...")
+        h, w = img.shape[:2]
+        if h == 0 or w == 0:
+            logger.error(f"Image vide reçue: {w}x{h}")
+            return {"error": "Empty image received", "results": []}
+
+        logger.info(f"Traitement d'image: {w}x{h}")
         engine = get_ocr()
         result = engine.ocr(img, cls=False)
         
