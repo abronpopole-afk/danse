@@ -53,7 +53,6 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const bytesPerPixel = frame.format === 'rgba' ? 4 : 3;
       const croppedBuffer = Buffer.alloc(width * height * bytesPerPixel);
       
-      // Extraction simple du buffer
       for (let row = 0; row < height; row++) {
         const srcOffset = ((y + row) * frame.width + x) * bytesPerPixel;
         const dstOffset = row * width * bytesPerPixel;
@@ -83,10 +82,21 @@ export class PaddleOCRAdapter extends OCRAdapter {
         text: '',
         confidence: 0,
         processingTimeMs: Date.now() - startTime,
-        engine: this.name,
-        error: String(error)
+        engine: this.name
       };
     }
+  }
+
+  async processFrame(
+    frame: Frame | NormalizedFrame,
+    regions: Region[]
+  ): Promise<Map<string, OCRResult>> {
+    const results = new Map<string, OCRResult>();
+    for (const region of regions) {
+      const result = await this.processRegion(frame, region);
+      results.set(region.id, result);
+    }
+    return results;
   }
 }
 

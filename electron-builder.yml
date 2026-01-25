@@ -35,7 +35,6 @@ asarUnpack:
   - "**/node_modules/extract-file-icon/**/*"
   - "**/node_modules/ref-napi/**/*"
   - "**/node_modules/ffi-napi/**/*"
-  - "**/node_modules/onnxruntime-node/**/*"
   # Dépendances requises par les modules natifs
   - "**/node_modules/temp/**/*"
   - "**/node_modules/node-gyp-build/**/*"
@@ -60,10 +59,6 @@ extraResources:
     to: native/
     filter:
       - "*.node"
-  - from: server/bot/ml-ocr/models/
-    to: models/
-    filter:
-      - "*.onnx"
 
 win:
   target:
