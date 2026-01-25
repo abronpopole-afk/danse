@@ -124,7 +124,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
       }
 
       // UPSCALING pour améliorer l'OCR
-      const MIN_OCR_DIMENSION = 80; // Augmenté de 50 à 80
+      const MIN_OCR_DIMENSION = 120; // Augmenté de 80 à 120 pour forcer un meilleur upscale
       let finalWidth = extractW;
       let finalHeight = extractH;
       let scaleFactor = 1;
@@ -134,7 +134,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
           Math.ceil(MIN_OCR_DIMENSION / extractW),
           Math.ceil(MIN_OCR_DIMENSION / extractH)
         );
-        scaleFactor = Math.min(scaleFactor, 4);
+        scaleFactor = Math.min(scaleFactor, 6); // Max 6x upscale pour les très petites régions
         finalWidth = extractW * scaleFactor;
         finalHeight = extractH * scaleFactor;
         log(`📈 Upscaling ${extractW}x${extractH} -> ${finalWidth}x${finalHeight} (${scaleFactor}x)`);
