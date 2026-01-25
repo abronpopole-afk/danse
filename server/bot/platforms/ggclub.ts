@@ -318,22 +318,23 @@ export class GGClubAdapter extends PlatformAdapter {
 
   private getDefaultScreenLayout(): GGClubScreenLayout {
     // Coordonnées relatives (0.0 à 1.0) basées sur une résolution de référence de 880x600
+    // On augmente légèrement les tailles pour améliorer l'OCR
     const refW = 880;
     const refH = 600;
 
     return {
       heroCardsRegion: [
-        { x: 410 / refW, y: 450 / refH, width: 50 / refW, height: 75 / refH },
-        { x: 460 / refW, y: 450 / refH, width: 50 / refW, height: 75 / refH }
+        { x: 405 / refW, y: 445 / refH, width: 60 / refW, height: 85 / refH },
+        { x: 455 / refW, y: 445 / refH, width: 60 / refW, height: 85 / refH }
       ],
-      communityCardsRegion: [{ x: 280 / refW, y: 270 / refH, width: 340 / refW, height: 90 / refH }],
-      potRegion: { x: 390 / refW, y: 220 / refH, width: 120 / refW, height: 50 / refH },
-      actionButtonsRegion: { x: 480 / refW, y: 510 / refH, width: 400 / refW, height: 80 / refH },
-      betSliderRegion: { x: 480 / refW, y: 470 / refH, width: 320 / refW, height: 40 / refH },
+      communityCardsRegion: [{ x: 275 / refW, y: 265 / refH, width: 350 / refW, height: 100 / refH }],
+      potRegion: { x: 385 / refW, y: 215 / refH, width: 130 / refW, height: 60 / refH },
+      actionButtonsRegion: { x: 475 / refW, y: 505 / refH, width: 410 / refW, height: 90 / refH },
+      betSliderRegion: { x: 475 / refW, y: 465 / refH, width: 330 / refW, height: 50 / refH },
       playerSeats: this.generatePlayerSeatRegions(9, refW, refH),
-      dealerButtonRegion: { x: 440 / refW, y: 200 / refH, width: 40 / refW, height: 40 / refH },
-      chatRegion: { x: 10 / refW, y: 400 / refH, width: 220 / refW, height: 160 / refH },
-      timerRegion: { x: 400 / refW, y: 190 / refH, width: 100 / refW, height: 40 / refH },
+      dealerButtonRegion: { x: 435 / refW, y: 195 / refH, width: 50 / refW, height: 50 / refH },
+      chatRegion: { x: 5 / refW, y: 395 / refH, width: 230 / refW, height: 170 / refH },
+      timerRegion: { x: 395 / refW, y: 185 / refH, width: 110 / refW, height: 50 / refH },
     };
   }
 
@@ -589,7 +590,9 @@ export class GGClubAdapter extends PlatformAdapter {
               lowerTitle.includes("form1") ||
               lowerTitle.includes("visual studio") ||
               lowerTitle.includes("cmd.exe") ||
-              lowerTitle.includes("powershell");
+              lowerTitle.includes("powershell") ||
+              lowerTitle.includes("poker tracker") ||
+              lowerTitle.includes("holdem manager");
 
             if (isExcludedTitle) {
               continue;

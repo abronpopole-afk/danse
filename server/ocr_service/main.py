@@ -71,8 +71,12 @@ async def perform_ocr(file: UploadFile = File(...)):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            logger.error(f"❌ Erreur de décodage de l'image (img is None), bytes reçus: {content_len}")
-            return {"error": "Could not decode image", "results": []}
+            # Sauvegarder l'image illisible pour analyse
+            fail_path = os.path.join(LOG_DIR, f"decode_fail_{int(os.time.time())}.png")
+            with open(fail_path, "wb") as f:
+                f.write(contents)
+            logger.error(f"❌ Erreur de décodage de l'image (img is None), bytes reçus: {content_len}. Sauvegardé dans {fail_path}")
+            return {"error": f"Could not decode image of {content_len} bytes", "results": []}
             
         h, w = img.shape[:2]
         logger.info(f"Image décodée: {w}x{h}")
@@ -80,12 +84,12 @@ async def perform_ocr(file: UploadFile = File(...)):
         # Validation dimensions
         if h == 0 or w == 0:
             logger.error(f"❌ Image vide reçue: {w}x{h}")
-            return {"error": "Empty image received", "results": []}
+            return {"error": f"Empty image received: {w}x{h}", "results": []}
         
         # Validation dimensions minimales pour OCR
-        if h < 5 or w < 5:
+        if h < 10 or w < 10:
             logger.warning(f"⚠️ Image trop petite pour OCR fiable: {w}x{h}")
-            return {"error": "Image too small for OCR", "results": [], "warning": f"Image {w}x{h} too small"}
+            return {"error": "Image too small for OCR (min 10x10)", "results": [], "warning": f"Image {w}x{h} too small"}
 
         logger.info(f"Traitement OCR sur image: {w}x{h}")
         engine = get_ocr()

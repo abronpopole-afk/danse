@@ -145,6 +145,12 @@ export class OCRPipeline {
     try {
       console.debug(`[OCRPipeline] Processing region: ${regionId} (${region.type})`);
       const startTime = Date.now();
+      
+      // Log dimensions avant envoi
+      const regionW = region.bounds.width;
+      const regionH = region.bounds.height;
+      console.log(`[OCRPipeline] Region ${regionId} dimensions: ${regionW}x${regionH}`);
+
       const result = await this.fallbackManager.processRegion(normalizedFrame, region);
       const duration = Date.now() - startTime;
       
@@ -153,6 +159,10 @@ export class OCRPipeline {
       return result;
     } catch (error) {
       console.error(`[OCRPipeline] ❌ Échec region ${regionId}:`, error);
+      // Log plus d'infos sur l'erreur
+      if (error instanceof Error) {
+        console.error(`[OCRPipeline] Error details for ${regionId}: ${error.message}`);
+      }
       return null;
     }
   }
