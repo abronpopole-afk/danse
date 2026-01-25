@@ -3,7 +3,7 @@ import { FrameNormalizer, type NormalizationConfig } from './normalization';
 import { RegionManager } from './regions';
 import { FallbackManager, type FallbackConfig } from './fallback-manager';
 import { 
-  OnnxAdapterFactory, 
+  PaddleOCRAdapterFactory,
   MockAdapterFactory 
 } from './adapters';
 import type { 
@@ -68,8 +68,8 @@ export class OCRPipeline {
         this.fallbackManager.registerFactory(new MockAdapterFactory());
       } else {
         console.log('[OCRPipeline] Enregistrement des adaptateurs OCR...');
-        console.log('[OCRPipeline] - OnnxAdapterFactory');
-        this.fallbackManager.registerFactory(new OnnxAdapterFactory());
+        console.log('[OCRPipeline] - PaddleOCRAdapterFactory');
+        this.fallbackManager.registerFactory(new PaddleOCRAdapterFactory());
         console.log('[OCRPipeline] - MockAdapterFactory (fallback)');
         this.fallbackManager.registerFactory(new MockAdapterFactory());
       }
