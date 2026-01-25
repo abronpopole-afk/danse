@@ -100,6 +100,7 @@ export class OCRPipeline {
     height: number,
     format: Frame['format'] = 'rgba'
   ): Frame {
+    console.log(`[OCRPipeline] 🖼️ Frame pushed: ${width}x${height}, format: ${format}, data length: ${data.length}`);
     const frame = this.frameBuffer.push(data, width, height, format);
     
     if (this.regionManager.getAllRegions().length === 0) {
