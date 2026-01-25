@@ -116,6 +116,10 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const extractW = Math.min(frame.width - extractX, safeWidth + margin * 2);
       const extractH = Math.min(frame.height - extractY, safeHeight + margin * 2);
 
+      if (extractW < 5 || extractH < 5) {
+        log(`❌ Crop result too small: ${extractW}x${extractH}`);
+      }
+
       const croppedBuffer = Buffer.alloc(extractW * extractH * channels);
       for (let row = 0; row < extractH; row++) {
         const srcOffset = ((extractY + row) * frame.width + extractX) * channels;

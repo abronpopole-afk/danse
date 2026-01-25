@@ -127,6 +127,11 @@ class DXGICaptureImpl implements DXGICapture {
         }
 
         console.log(`[DXGI] 🤖 RobotJS capture on handle ${targetHandle}: ${bounds.width}x${bounds.height} at (${bounds.x},${bounds.y})`);
+        
+        // Log screen size to verify coordinate space
+        const screenSize = robot.getScreenSize();
+        console.log(`[DXGI] 🖥️ Screen size: ${screenSize.width}x${screenSize.height}`);
+
         const bitmap = robot.screen.capture(bounds.x, bounds.y, bounds.width, bounds.height);
         
         if (!bitmap || !bitmap.image) {
