@@ -12,7 +12,7 @@ Les modules suivants **ne fonctionnent que sur Windows** :
 ✅ **Fonctionnel** :
 - Serveur web + API
 - GTO Engine (calculs)
-- ML OCR (reconnaissance)
+- ML OCR (PaddleOCR via service Python)
 - Dashboard frontend
 - Base de données PostgreSQL
 - Event Bus Redis
@@ -192,7 +192,25 @@ brew services start redis
 redis-cli ping  # Doit retourner "PONG"
 ```
 
-### 1.4 Installation des Build Tools pour Modules Natifs
+### 1.4 Installation de Python et PaddleOCR (Requis pour l'OCR)
+
+Le bot utilise un microservice Python pour une reconnaissance de texte ultra-précise.
+
+#### Windows
+1. Télécharger Python 3.11+ depuis https://www.python.org/
+2. **IMPORTANT** : Cocher "Add Python to PATH" lors de l'installation.
+3. Installer les dépendances :
+```bash
+pip install fastapi uvicorn paddleocr paddlepaddle-tiny python-multipart opencv-python-headless
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+sudo apt-get install -y python3-pip
+pip3 install fastapi uvicorn paddleocr paddlepaddle-tiny python-multipart opencv-python-headless
+```
+
+### 1.5 Installation des Build Tools pour Modules Natifs
 
 #### Windows - Installation Automatique (RECOMMANDÉE)
 
@@ -431,11 +449,8 @@ Le bot nécessite une calibration pour détecter les éléments de la table :
 
 ### 5.1 Démarrage en mode développement
 ```bash
-# Démarrer le serveur de développement
+# Le script 'npm run dev' lance automatiquement le service Python OCR et le bot
 npm run dev
-
-# Le serveur démarre sur http://localhost:5000
-# Le frontend avec Hot Module Replacement est activé
 ```
 
 ### 5.2 Vérification du démarrage
@@ -446,6 +461,7 @@ Vérifier dans la console :
 ✓ screenshot-desktop loaded
 ✓ robotjs loaded
 ✓ node-window-manager loaded
+✓ PaddleOCR service connected (Port 8000)
 ✓ Database connected
 ✓ Player profile initialized from database
 ✓ EventBus initialized (Redis connected)

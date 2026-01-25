@@ -43,11 +43,11 @@ Voir le pipeline complet dans [`server/bot/ocr-pipeline/`](server/bot/ocr-pipeli
 
 ### 4. OCR Pipeline Hiérarchique
 
-**ONNX OCR Engine** ([`ml-ocr/onnx-ocr-engine.ts`](server/bot/ml-ocr/onnx-ocr-engine.ts)) :
-- Inférence ultra-rapide (10x Tesseract)
-- Modèle ONNX Runtime optimisé
-- CTC Decoding pour séquences
-- **Priorité 1** dans fallback
+**PaddleOCR Service** ([`server/ocr_service/main.py`](server/ocr_service/main.py)) :
+- Service Python (FastAPI) pour l'inférence PaddleOCR v5
+- Précision SOTA pour le texte incurvé ou flou
+- Communication via HTTP/JSON (Port 8000)
+- **Priorité 1** dans le fallback via `PaddleOCRAdapter`
 
 **Poker OCR Engine ML** ([`ml-ocr/poker-ocr-engine.ts`](server/bot/ml-ocr/poker-ocr-engine.ts)) :
 - CNN custom JavaScript
@@ -61,7 +61,7 @@ Voir le pipeline complet dans [`server/bot/ocr-pipeline/`](server/bot/ocr-pipeli
 - **Priorité 3** dans fallback
 
 **Fallback Manager** ([`ocr-pipeline/fallback-manager.ts`](server/bot/ocr-pipeline/fallback-manager.ts)) :
-- Gestion hiérarchique ONNX → ML → Tesseract
+- Gestion hiérarchique PaddleOCR → Tesseract
 - Retry logic avec délais
 - Timeout par opération
 - Statistiques par adapter

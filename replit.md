@@ -14,11 +14,10 @@ The GTO Poker Bot is a sophisticated system designed for automated, undetectable
 - ✅ **ML Weight Generation**: Fixed NeuralNetwork architecture to match CardClassifier layer structure
   - Rank/Digit: Conv(16,3,1,1) → MaxPool → Conv(32,3,16,1) → MaxPool → Dense(2304,64) → Dense(64,13)
   - Suits: Conv(8,5,3,1) → MaxPool → Conv(16,3,8,1) → MaxPool → Dense(400,32) → Dense(32,4)
-- ✅ **PaddleOCR v5 ONNX**: Migrated from custom `poker-ocr-v1.onnx` to SOTA PaddleOCR v5 models for detection and recognition.
-  - Detection model: `models/det/det.onnx`
-  - Recognition model: `models/rec/rec.onnx`
-  - Dictionary: `models/rec/ppocr_keys_v1.txt`
-  - Integration updated in `ONNXOCREngine` and `OnnxAdapter`
+- ✅ **PaddleOCR v5 Service**: Migrated from ONNX Runtime to a standalone Python microservice (FastAPI + PaddleOCR v5) for superior accuracy.
+  - OCR Service: `server/ocr_service/main.py` (Port 8000)
+  - Integration: `PaddleOCRAdapter` in the OCR pipeline communicating via HTTP.
+  - Improved text detection and recognition for cards, pot, and player stacks.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -44,12 +43,12 @@ Utilizes Express.js with TypeScript, a WebSocket Server, Drizzle ORM, and Node.j
 -   **Event Bus (Redis Streams):** Distributed event system for vision, GTO, and action events, enabling multi-table scalability (200+ tables).
 -   **Worker Pool:** Thread-based workers for Vision (OCR/template matching), GTO (Monte Carlo equity), and Humanizer (timing/trajectories) - non-blocking architecture.
 -   **Humanizer:** Applies Gaussian random timing, Bézier mouse movements, and micro-pauses based on player profile for anti-detection.
--   **Computer Vision System:** Performs screen capture, OCR (Tesseract.js), template matching, and color-based state detection. Includes an OCR Error Correction System for robust data interpretation.
+-   **Computer Vision System:** Performs screen capture, OCR (PaddleOCR via Python Service), template matching, and color-based state detection. Includes an OCR Error Correction System for robust data interpretation.
 -   **State Confidence System:** Assigns confidence scores to detected elements, retries uncertain states, and blocks actions below validation thresholds to prevent errors.
 -   **Calibration System:** Manages platform-specific screen region definitions, DPI scaling, and passive auto-recalibration to adapt to window movements.
 -   **Safe Mode System:** Dynamically adjusts bot behavior (Normal, Conservative, Freeze) based on suspicion level to prevent detection and bans.
 -   **Anti-Detection Architecture:** Multi-layered defense including timing humanization, natural mouse movements, behavioral patterns, and player profile integration to mimic human play.
--   **ML-Based OCR Engine:** Custom JavaScript NeuralNetwork for card/rank/suit/digit recognition with HSV color detection fallback. Loads weights from JSON files at initialization.
+-   **ML-Based OCR Engine:** Python-based PaddleOCR service for card/rank/suit/digit recognition with HSV color detection fallback.
 
 ### Database Architecture
 Uses PostgreSQL with Drizzle ORM. The schema includes tables for users, bot sessions, poker tables, hand histories, action logs, bot stats, and configuration for humanizer, GTO, platform, and player profile state. Key decisions include AES-256-GCM password encryption, JSONB for flexible settings and player profile state, and accountId field for multi-account support in platform_config.
