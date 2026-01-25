@@ -4,6 +4,40 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { storage } from "./storage";
 
+import fs from 'fs';
+import path from 'path';
+
+// Configuration des logs centralisée
+const LOG_DIR = process.platform === 'win32' 
+  ? 'C:\\Users\\adria\\AppData\\Roaming\\GTO Poker Bot\\logs'
+  : path.join(process.cwd(), 'logs');
+
+if (!fs.existsSync(LOG_DIR)) {
+  try {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+  } catch (err) {
+    console.error(`Impossible de créer le dossier de logs: ${err}`);
+  }
+}
+
+const logStream = fs.createWriteStream(path.join(LOG_DIR, 'backend.log'), { flags: 'a' });
+
+// Redirection de console vers le fichier log en plus de la console standard
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = (...args) => {
+  const msg = `[${new Date().toISOString()}] [INFO] ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}\n`;
+  logStream.write(msg);
+  originalLog.apply(console, args);
+};
+
+console.error = (...args) => {
+  const msg = `[${new Date().toISOString()}] [ERROR] ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}\n`;
+  logStream.write(msg);
+  originalError.apply(console, args);
+};
+
 const app = express();
 const httpServer = createServer(app);
 

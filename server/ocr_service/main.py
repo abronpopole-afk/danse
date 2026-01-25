@@ -6,28 +6,60 @@ from paddleocr import PaddleOCR
 import io
 import os
 
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Configuration des logs centralisée
+LOG_DIR = r"C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs"
+if not os.path.exists(LOG_DIR):
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+    except:
+        # Fallback pour Replit/Linux
+        LOG_DIR = "logs"
+        os.makedirs(LOG_DIR, exist_ok=True)
+
+log_file = os.path.join(LOG_DIR, "ocr_service.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("OCRService")
+
 app = FastAPI()
 
-# Initialisation différée de PaddleOCR pour éviter les erreurs au démarrage si les modèles ne sont pas encore là
+# Initialisation différée de PaddleOCR
 ocr = None
 
 def get_ocr():
     global ocr
     if ocr is None:
-        # Utilisation de modèles légers pour Replit
-        ocr = PaddleOCR(use_angle_cls=False, lang='en', show_log=False, use_gpu=False)
+        logger.info("Initialisation de PaddleOCR (modèle en cours de chargement...)")
+        try:
+            ocr = PaddleOCR(use_angle_cls=False, lang='en', show_log=False, use_gpu=False)
+            logger.info("✓ PaddleOCR initialisé avec succès")
+        except Exception as e:
+            logger.error(f"❌ Erreur lors de l'initialisation de PaddleOCR: {str(e)}")
+            raise e
     return ocr
 
 @app.post("/ocr")
 async def perform_ocr(file: UploadFile = File(...)):
+    logger.info(f"Requête OCR reçue: {file.filename}")
     try:
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
+            logger.error("Erreur de décodage de l'image")
             return {"error": "Could not decode image", "results": []}
             
+        logger.debug("Image décodée, lancement de l'OCR...")
         engine = get_ocr()
         result = engine.ocr(img, cls=False)
         
@@ -41,9 +73,11 @@ async def perform_ocr(file: UploadFile = File(...)):
                     "confidence": float(confidence),
                     "box": box
                 })
-                
+        
+        logger.info(f"OCR terminé: {len(formatted_results)} éléments détectés")
         return {"results": formatted_results}
     except Exception as e:
+        logger.exception(f"Erreur pendant l'OCR: {str(e)}")
         return {"error": str(e), "results": []}
 
 @app.get("/health")
@@ -52,4 +86,5 @@ async def health():
 
 if __name__ == "__main__":
     port = 8000
+    logger.info(f"Démarrage du service sur le port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
