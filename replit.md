@@ -3,21 +3,26 @@
 ## Overview
 The GTO Poker Bot is a sophisticated system designed for automated, undetectable poker gameplay on platforms like GGClub. It integrates Game Theory Optimal (GTO) strategies with advanced humanization techniques, dynamic player profiling, and intelligent task scheduling. The project aims to provide a reliable and adaptable solution for automated poker, built with a React frontend, Express backend, and PostgreSQL database.
 
-## Recent Updates (2026-01-20)
-- ✅ **Fixed OCR Logging**: Added explicit logs to CardClassifier and PokerOCREngine initialization to show model loading progress
-  - When PokerOCREngine initializes, you now see:
-    - `[CardClassifier] Creating neural network architectures...`
-    - `[CardClassifier] ✓ Rank weights loaded successfully`
-    - `[CardClassifier] ✓ Suit weights loaded successfully`
-    - `[CardClassifier] ✓ Digit weights loaded successfully`
-    - `[PokerOCREngine] ✓ Initialized with ML primary - Ready for OCR`
-- ✅ **ML Weight Generation**: Fixed NeuralNetwork architecture to match CardClassifier layer structure
-  - Rank/Digit: Conv(16,3,1,1) → MaxPool → Conv(32,3,16,1) → MaxPool → Dense(2304,64) → Dense(64,13)
-  - Suits: Conv(8,5,3,1) → MaxPool → Conv(16,3,8,1) → MaxPool → Dense(400,32) → Dense(32,4)
-- ✅ **PaddleOCR v5 Service**: Migrated from ONNX Runtime to a standalone Python microservice (FastAPI + PaddleOCR v5) for superior accuracy.
-  - OCR Service: `server/ocr_service/main.py` (Port 8000)
-  - Integration: `PaddleOCRAdapter` in the OCR pipeline communicating via HTTP.
-  - Improved text detection and recognition for cards, pot, and player stacks.
+## Recent Updates (2026-01-25)
+- ✅ **OCR Service Optimization**: Hardcoded port to 8000 for consistent local/remote access and fixed port conflicts.
+- ✅ **Centralized Logging System**: Implemented redirected logs for both Backend (Node.js) and OCR Service (Python).
+  - Log Directory: `C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs` (Windows) or `./logs` (Replit/Linux).
+  - Log Files: `backend.log` and `ocr_service.log` with automatic rotation.
+- ✅ **Windows Automation**: Added `start_ocr_service.bat` for one-click startup of the OCR microservice.
+- ✅ **Database Reliability**: Synchronized database schema with `drizzle-kit push` to ensure all tables (action_logs, bot_sessions, etc.) are present.
+
+## Operational Procedures
+
+### OCR Service (PaddleOCR)
+The OCR service must be running for the bot to process table images.
+- **Windows**: Run `start_ocr_service.bat` from the root directory.
+- **Replit**: Run `python server/ocr_service/main.py` in the Shell.
+- **Configuration**: Listens on port 8000. Ensure Python 3.8-3.12 is used on Windows for PaddlePaddle compatibility.
+
+### Monitoring & Debugging
+All system activities are recorded in the centralized log directory:
+- Check `backend.log` for game logic, API requests, and database operations.
+- Check `ocr_service.log` for image processing details and OCR detection results.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
