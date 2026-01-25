@@ -62,6 +62,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
       }
 
       // ENCODAGE PNG : Crucial pour que le service Python puisse décoder l'image
+      console.log(`[PaddleOCRAdapter] Encoding region ${region.id} (${width}x${height}) to PNG...`);
       const pngBuffer = await sharp(croppedBuffer, {
         raw: {
           width: width,
@@ -69,11 +70,13 @@ export class PaddleOCRAdapter extends OCRAdapter {
           channels: channels as 3 | 4
         }
       }).png().toBuffer();
+      console.log(`[PaddleOCRAdapter] PNG encoded for ${region.id}: ${pngBuffer.length} bytes`);
 
       const formData = new FormData();
       const blob = new Blob([pngBuffer], { type: 'image/png' });
       formData.append('file', blob, 'region.png');
 
+      console.log(`[PaddleOCRAdapter] Sending request to Python service: ${this.apiUrl}`);
       const response = await axios.post(this.apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 5000 // Augmentation du timeout car l'OCR peut être lent
@@ -81,6 +84,8 @@ export class PaddleOCRAdapter extends OCRAdapter {
 
       const text = response.data.results?.map((r: any) => r.text).join(' ') || '';
       const confidence = response.data.results?.[0]?.confidence || 0;
+      
+      console.log(`[PaddleOCRAdapter] Response received for ${region.id}: "${text}" (conf: ${confidence})`);
 
       return {
         text,
