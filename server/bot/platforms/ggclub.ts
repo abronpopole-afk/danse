@@ -248,6 +248,8 @@ export class GGClubAdapter extends PlatformAdapter {
     this.ocrCache = ocrCache;
     this.autoCalibration = getAutoCalibrationManager();
     ocrPool.initialize();
+    
+    // Initialisation du pipeline OCR avec PaddleOCR par défaut (pas de mock)
     this.mlInitPromise = this.initializeCardClassifier();
 
     // Initialisation du profil par défaut pour GGClub
@@ -264,19 +266,21 @@ export class GGClubAdapter extends PlatformAdapter {
   private async initializeCardClassifier(): Promise<void> {
     if (this.enableML) {
       try {
+        // Force l'utilisation du service PaddleOCR Python
         this.pokerOCREngine = await getPokerOCREngine({
           useMLPrimary: true,
           confidenceThreshold: 0.75,
           collectTrainingData: true,
         });
+        
         if (this.pokerOCREngine) {
-          console.log("[GGClubAdapter] ML PokerOCREngine initialized successfully");
+          console.log("[GGClubAdapter] PaddleOCR Service initialized successfully");
         } else {
-          console.log("[GGClubAdapter] ML PokerOCREngine not available, using fallback OCR");
+          console.log("[GGClubAdapter] PaddleOCR Service not available, falling back");
           this.enableML = false;
         }
       } catch (error) {
-        console.error("[GGClubAdapter] Failed to initialize ML PokerOCREngine:", error);
+        console.error("[GGClubAdapter] Failed to initialize PaddleOCR:", error);
         this.enableML = false;
         this.pokerOCREngine = null;
       }
