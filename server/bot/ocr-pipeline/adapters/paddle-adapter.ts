@@ -7,6 +7,7 @@ import type {
   OCREngineCapabilities 
 } from '../types';
 import axios from 'axios';
+import sharp from 'sharp';
 
 export class PaddleOCRAdapter extends OCRAdapter {
   private apiUrl = 'http://localhost:8000/ocr';
@@ -50,22 +51,32 @@ export class PaddleOCRAdapter extends OCRAdapter {
     const startTime = Date.now();
     try {
       const { x, y, width, height } = region.bounds;
-      const bytesPerPixel = frame.format === 'rgba' ? 4 : 3;
-      const croppedBuffer = Buffer.alloc(width * height * bytesPerPixel);
+      const channels = frame.format === 'rgba' ? 4 : 3;
       
+      // Extraction de la région d'intérêt
+      const croppedBuffer = Buffer.alloc(width * height * channels);
       for (let row = 0; row < height; row++) {
-        const srcOffset = ((y + row) * frame.width + x) * bytesPerPixel;
-        const dstOffset = row * width * bytesPerPixel;
-        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + width * bytesPerPixel);
+        const srcOffset = ((y + row) * frame.width + x) * channels;
+        const dstOffset = row * width * channels;
+        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + width * channels);
       }
 
+      // ENCODAGE PNG : Crucial pour que le service Python puisse décoder l'image
+      const pngBuffer = await sharp(croppedBuffer, {
+        raw: {
+          width: width,
+          height: height,
+          channels: channels as 3 | 4
+        }
+      }).png().toBuffer();
+
       const formData = new FormData();
-      const blob = new Blob([croppedBuffer], { type: 'image/png' });
+      const blob = new Blob([pngBuffer], { type: 'image/png' });
       formData.append('file', blob, 'region.png');
 
       const response = await axios.post(this.apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 2000
+        timeout: 5000 // Augmentation du timeout car l'OCR peut être lent
       });
 
       const text = response.data.results?.map((r: any) => r.text).join(' ') || '';
@@ -78,6 +89,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
         engine: this.name,
       };
     } catch (error) {
+      console.error('[PaddleOCRAdapter] Error processing region:', error);
       return {
         text: '',
         confidence: 0,
