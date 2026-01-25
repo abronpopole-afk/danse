@@ -57,22 +57,66 @@ export class PaddleOCRAdapter extends OCRAdapter {
         console.log(`[PaddleOCRAdapter] [${region.id}] ${msg}`);
       };
 
-      // SECURISATION : Vérification des bornes
+      // LOG des dimensions originales pour debug
+      log(`Input: region(${x},${y},${width},${height}) frame(${frame.width}x${frame.height}) bufferLen=${frame.data.length}`);
+
+      // VALIDATION: Vérifier que les dimensions sont positives
+      if (width <= 0 || height <= 0) {
+        log(`❌ Dimensions invalides: ${width}x${height}`);
+        return {
+          text: '',
+          confidence: 0,
+          processingTimeMs: Date.now() - startTime,
+          engine: this.name,
+        };
+      }
+
+      // SECURISATION : Vérification des bornes avec clamping
       const safeX = Math.max(0, Math.min(x, frame.width - 1));
       const safeY = Math.max(0, Math.min(y, frame.height - 1));
       const safeWidth = Math.max(1, Math.min(width, frame.width - safeX));
       const safeHeight = Math.max(1, Math.min(height, frame.height - safeY));
 
+      // Vérification si la région est trop petite pour l'OCR
+      if (safeWidth < 5 || safeHeight < 5) {
+        log(`⚠️ Région trop petite pour OCR: ${safeWidth}x${safeHeight}`);
+        return {
+          text: '',
+          confidence: 0,
+          processingTimeMs: Date.now() - startTime,
+          engine: this.name,
+        };
+      }
+
       if (safeWidth !== width || safeHeight !== height || safeX !== x || safeY !== y) {
         log(`⚠️ Correction dimensions: (${x},${y},${width},${height}) -> (${safeX},${safeY},${safeWidth},${safeHeight})`);
       }
 
-      // Extraction de la région d'intérêt
+      // Vérification que le buffer source est assez grand
+      const requiredSize = (safeY + safeHeight) * frame.width * channels;
+      if (frame.data.length < requiredSize) {
+        log(`❌ Buffer trop petit: ${frame.data.length} < ${requiredSize} requis`);
+        return {
+          text: '',
+          confidence: 0,
+          processingTimeMs: Date.now() - startTime,
+          engine: this.name,
+        };
+      }
+
+      // Extraction de la région d'intérêt avec vérification des offsets
       const croppedBuffer = Buffer.alloc(safeWidth * safeHeight * channels);
       for (let row = 0; row < safeHeight; row++) {
         const srcOffset = ((safeY + row) * frame.width + safeX) * channels;
         const dstOffset = row * safeWidth * channels;
-        frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + safeWidth * channels);
+        const copyLen = safeWidth * channels;
+        
+        // Vérification que la copie est dans les limites
+        if (srcOffset >= 0 && srcOffset + copyLen <= frame.data.length) {
+          frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + copyLen);
+        } else {
+          log(`⚠️ Skip row ${row}: srcOffset=${srcOffset} copyLen=${copyLen} bufLen=${frame.data.length}`);
+        }
       }
 
       // ENCODAGE PNG

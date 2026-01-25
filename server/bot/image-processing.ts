@@ -127,17 +127,41 @@ export function extractRegion(
   imageBuffer: Buffer,
   imageWidth: number,
   region: ScreenRegion,
-  channels: number = 4
+  channels: number = 4,
+  imageHeight?: number
 ): Buffer {
-  const regionBuffer = Buffer.alloc(region.width * region.height * channels);
+  // Calcul de la hauteur de l'image source si non fournie
+  const srcHeight = imageHeight ?? Math.floor(imageBuffer.length / (imageWidth * channels));
+  
+  // VALIDATION DES BORNES - Correction des coordonnées hors limites
+  const safeX = Math.max(0, Math.min(region.x, imageWidth - 1));
+  const safeY = Math.max(0, Math.min(region.y, srcHeight - 1));
+  const safeWidth = Math.max(1, Math.min(region.width, imageWidth - safeX));
+  const safeHeight = Math.max(1, Math.min(region.height, srcHeight - safeY));
+  
+  // Log si correction appliquée
+  if (safeX !== region.x || safeY !== region.y || safeWidth !== region.width || safeHeight !== region.height) {
+    console.warn(`[extractRegion] Correction bornes: (${region.x},${region.y},${region.width},${region.height}) -> (${safeX},${safeY},${safeWidth},${safeHeight}) [image: ${imageWidth}x${srcHeight}]`);
+  }
+  
+  // Vérification si région valide
+  if (safeWidth <= 0 || safeHeight <= 0) {
+    console.error(`[extractRegion] Région invalide après correction: ${safeWidth}x${safeHeight}`);
+    return Buffer.alloc(channels); // Retourne un pixel transparent
+  }
+  
+  const regionBuffer = Buffer.alloc(safeWidth * safeHeight * channels);
 
-  for (let y = 0; y < region.height; y++) {
-    for (let x = 0; x < region.width; x++) {
-      const srcOffset = ((region.y + y) * imageWidth + (region.x + x)) * channels;
-      const dstOffset = (y * region.width + x) * channels;
+  for (let y = 0; y < safeHeight; y++) {
+    for (let x = 0; x < safeWidth; x++) {
+      const srcOffset = ((safeY + y) * imageWidth + (safeX + x)) * channels;
+      const dstOffset = (y * safeWidth + x) * channels;
 
-      for (let c = 0; c < channels; c++) {
-        regionBuffer[dstOffset + c] = imageBuffer[srcOffset + c] || 0;
+      // Vérification que srcOffset est dans les limites du buffer
+      if (srcOffset >= 0 && srcOffset + channels <= imageBuffer.length) {
+        for (let c = 0; c < channels; c++) {
+          regionBuffer[dstOffset + c] = imageBuffer[srcOffset + c] || 0;
+        }
       }
     }
   }

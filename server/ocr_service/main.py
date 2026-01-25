@@ -54,19 +54,40 @@ async def perform_ocr(file: UploadFile = File(...)):
     logger.info(f"Requête OCR reçue: {file.filename}")
     try:
         contents = await file.read()
+        content_len = len(contents)
+        logger.info(f"Taille données reçues: {content_len} bytes")
+        
+        # Vérification données non vides
+        if content_len == 0:
+            logger.error("❌ Données vides reçues (0 bytes)")
+            return {"error": "Empty data received", "results": []}
+        
+        # Vérification taille minimale pour une image PNG valide
+        if content_len < 67:  # PNG header minimal
+            logger.error(f"❌ Données trop petites pour être un PNG valide: {content_len} bytes")
+            return {"error": "Data too small to be valid image", "results": []}
+        
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            logger.error("Erreur de décodage de l'image (img is None)")
+            logger.error(f"❌ Erreur de décodage de l'image (img is None), bytes reçus: {content_len}")
             return {"error": "Could not decode image", "results": []}
             
         h, w = img.shape[:2]
+        logger.info(f"Image décodée: {w}x{h}")
+        
+        # Validation dimensions
         if h == 0 or w == 0:
-            logger.error(f"Image vide reçue: {w}x{h}")
+            logger.error(f"❌ Image vide reçue: {w}x{h}")
             return {"error": "Empty image received", "results": []}
+        
+        # Validation dimensions minimales pour OCR
+        if h < 5 or w < 5:
+            logger.warning(f"⚠️ Image trop petite pour OCR fiable: {w}x{h}")
+            return {"error": "Image too small for OCR", "results": [], "warning": f"Image {w}x{h} too small"}
 
-        logger.info(f"Traitement d'image: {w}x{h}")
+        logger.info(f"Traitement OCR sur image: {w}x{h}")
         engine = get_ocr()
         result = engine.ocr(img, cls=False)
         
@@ -80,11 +101,12 @@ async def perform_ocr(file: UploadFile = File(...)):
                     "confidence": float(confidence),
                     "box": box
                 })
+                logger.debug(f"  Détecté: '{text}' (conf: {confidence:.2f})")
         
-        logger.info(f"OCR terminé: {len(formatted_results)} éléments détectés")
+        logger.info(f"✅ OCR terminé: {len(formatted_results)} éléments détectés")
         return {"results": formatted_results}
     except Exception as e:
-        logger.exception(f"Erreur pendant l'OCR: {str(e)}")
+        logger.exception(f"❌ Erreur pendant l'OCR: {str(e)}")
         return {"error": str(e), "results": []}
 
 @app.get("/health")
