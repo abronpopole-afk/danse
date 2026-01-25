@@ -59,6 +59,10 @@ export class PaddleOCRAdapter extends OCRAdapter {
 
       // LOG des dimensions originales pour debug
       log(`Input: region(${x},${y},${width},${height}) frame(${frame.width}x${frame.height}) bufferLen=${frame.data.length}`);
+      
+      if (frame.width < 100 || frame.height < 100) {
+        log(`❌ ERREUR: Frame source suspecte car trop petite (${frame.width}x${frame.height})`);
+      }
 
       // VALIDATION: Vérifier que les dimensions sont positives
       if (width <= 0 || height <= 0) {

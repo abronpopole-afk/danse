@@ -140,12 +140,17 @@ export class RegionManager {
   }
 
   private relativeToBounds(relative: RelativeBounds): Bounds {
-    return {
-      x: Math.round(relative.xPercent * this.frameWidth),
-      y: Math.round(relative.yPercent * this.frameHeight),
-      width: Math.round(relative.widthPercent * this.frameWidth),
-      height: Math.round(relative.heightPercent * this.frameHeight),
-    };
+    const x = Math.round(relative.xPercent * this.frameWidth);
+    const y = Math.round(relative.yPercent * this.frameHeight);
+    const width = Math.round(relative.widthPercent * this.frameWidth);
+    const height = Math.round(relative.heightPercent * this.frameHeight);
+    
+    // Log pour debug
+    if (width < 20 || height < 20) {
+      console.warn(`[RegionManager] Region calculée minuscule: ${width}x${height} (frame: ${this.frameWidth}x${this.frameHeight}, rel: ${relative.widthPercent}x${relative.heightPercent})`);
+    }
+
+    return { x, y, width, height };
   }
 
   getRegion(id: string): Region | undefined {
