@@ -1,4 +1,4 @@
-import { logger } from '../../logger';
+import { logger } from "../../../logger";
 import type { Region, RegionType, Bounds, ProcessingHints } from '../types';
 
 export interface RegionTemplate {

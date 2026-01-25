@@ -2368,69 +2368,6 @@ export class GGClubAdapter extends PlatformAdapter {
     };
   }
 
-  async executeClick(windowHandle: number, x: number, y: number, timerPosition?: number): Promise<void> {
-    const window = this.activeWindows.get(`ggclub_${windowHandle}`);
-    if (!window) {
-      console.warn(`[GGClubAdapter] Window ${windowHandle} not found for click execution.`);
-      return;
-    }
-
-    // Increment action counter for auto-calibration
-    this.autoCalibration.incrementActionCount(windowHandle);
-
-    // Introduce random mouse movements before the click for anti-detection
-    if (Math.random() < 0.3) { // Increased probability for more variation
-      const randomX = window.x + Math.random() * window.width;
-      const randomY = window.y + Math.random() * window.height;
-
-      await this.performMouseMove(windowHandle, randomX, randomY);
-      await this.addRandomDelay(150 + Math.random() * 300);
-    }
-
-    this.antiDetectionMonitor.recordAction("click", timerPosition, { x: window.x + x, y: window.y + y }); // Record absolute screen coordinates
-    this.trackAction();
-
-    await this.addRandomDelay(50); // Short delay before moving to target
-
-    const jitteredPos = this.getJitteredPosition(x, y, window); // Pass window for absolute positioning
-
-    const currentPos = robot ? robot.getMousePos() : { x: 0, y: 0 };
-    this.antiDetectionMonitor.recordMouseTrajectory(currentPos.x, currentPos.y, jitteredPos.x, jitteredPos.y);
-
-    // Simulate human-like hesitation during mouse movement
-    const humanizer = getHumanizer();
-    const hesitation = humanizer.shouldHesitateClick();
-
-    if (hesitation.hesitate && hesitation.movements) {
-      // Move towards target partially
-      const partialX = currentPos.x + (jitteredPos.x - currentPos.x) * 0.6;
-      const partialY = currentPos.y + (jitteredPos.y - currentPos.y) * 0.6;
-      await this.performMouseMove(windowHandle, partialX, partialY);
-
-      // Pause (hesitation)
-      await this.addRandomDelay(hesitation.pauseDuration || 300);
-
-      // Micro-movements during hesitation
-      for (let i = 0; i < hesitation.movements; i++) {
-        const microJitterX = partialX + (Math.random() - 0.5) * 8;
-        const microJitterY = partialY + (Math.random() - 0.5) * 8;
-        await this.performMouseMove(windowHandle, microJitterX, microJitterY);
-        await this.addRandomDelay(80 + Math.random() * 120);
-      }
-
-      // Resume movement to target
-      await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
-    } else {
-      // Direct movement to target if no hesitation
-      await this.performMouseMove(windowHandle, jitteredPos.x, jitteredPos.y);
-    }
-
-    await this.addRandomDelay(30); // Small delay before click
-    await this.performMouseClick(windowHandle, jitteredPos.x, jitteredPos.y);
-
-    await this.addRandomDelay(50); // Delay after click
-  }
-
   // Helper to get jittered position relative to window
   private getJitteredPosition(x: number, y: number, window: TableWindow): { x: number; y: number } {
     if (!robot) return { x: window.x + x, y: window.y + y }; // No robot, return absolute position

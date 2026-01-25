@@ -1,0 +1,58 @@
+Run npm run build
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.1.12 building for production...
+transforming...
+✓ 2268 modules transformed.
+rendering chunks...
+[meta-images] no Replit deployment domain found, skipping meta tag updates
+computing gzip size...
+../dist/public/index.html                                                            1.49 kB │ gzip:   0.59 kB
+../dist/public/assets/futuristic_digital_poker_table_top-down_view-BeDi9m7Y.png  1,735.87 kB
+../dist/public/assets/index-BYe6wEmX.css                                            99.96 kB │ gzip:  16.78 kB
+../dist/public/assets/index-B_5ILkMy.js                                            645.99 kB │ gzip: 196.96 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.43s
+building server...
+Warning: G] Duplicate member "executeClick" in class body [duplicate-class-member]
+
+    server/bot/platforms/ggclub.ts:2448:16:
+      2448 │   private async executeClick(windowHandle: number, x: number, y:...
+           ╵                 ~~~~~~~~~~~~
+
+  The original member "executeClick" is here:
+
+    server/bot/platforms/ggclub.ts:2371:8:
+      2371 │   async executeClick(windowHandle: number, x: number, y: number,...
+           ╵         ~~~~~~~~~~~~
+
+Error: R] Could not resolve "../../logger"
+
+    server/bot/ocr-pipeline/regions/region-manager.ts:1:23:
+      1 │ import { logger } from '../../logger';
+        ╵                        ~~~~~~~~~~~~~~
+
+1 warning and 1 error
+Error: Build failed with 1 error:
+server/bot/ocr-pipeline/regions/region-manager.ts:1:23: ERROR: Could not resolve "../../logger"
+    at failureErrorWithLog (D:\a\danse\danse\node_modules\esbuild\lib\main.js:1467:15)
+    at D:\a\danse\danse\node_modules\esbuild\lib\main.js:926:25
+    at D:\a\danse\danse\node_modules\esbuild\lib\main.js:878:52
+    at buildResponseToResult (D:\a\danse\danse\node_modules\esbuild\lib\main.js:924:7)
+    at D:\a\danse\danse\node_modules\esbuild\lib\main.js:951:16
+    at responseCallbacks.<computed> (D:\a\danse\danse\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (D:\a\danse\danse\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (D:\a\danse\danse\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+Error: Process completed with exit code 1.
