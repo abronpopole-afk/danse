@@ -44,14 +44,14 @@ export class RegionManager {
       {
         name: 'pot_total',
         type: 'pot',
-        relativeBounds: { xPercent: 0.40, yPercent: 0.32, widthPercent: 0.20, heightPercent: 0.05 },
+        relativeBounds: { xPercent: 0.38, yPercent: 0.30, widthPercent: 0.24, heightPercent: 0.08 },
         priority: 90,
         processingHints: { expectedCharset: 'currency', preprocessing: ['contrast_enhance'] },
       },
       {
         name: 'hero_stack',
         type: 'player_stack',
-        relativeBounds: { xPercent: 0.42, yPercent: 0.88, widthPercent: 0.16, heightPercent: 0.04 },
+        relativeBounds: { xPercent: 0.40, yPercent: 0.86, widthPercent: 0.20, heightPercent: 0.06 },
         priority: 85,
         processingHints: { expectedCharset: 'currency' },
       },
@@ -65,14 +65,14 @@ export class RegionManager {
       {
         name: 'bet_amount_input',
         type: 'bet_amount',
-        relativeBounds: { xPercent: 0.65, yPercent: 0.80, widthPercent: 0.15, heightPercent: 0.04 },
+        relativeBounds: { xPercent: 0.63, yPercent: 0.78, widthPercent: 0.18, heightPercent: 0.06 },
         priority: 75,
         processingHints: { expectedCharset: 'numeric' },
       },
       {
         name: 'timer',
         type: 'timer',
-        relativeBounds: { xPercent: 0.48, yPercent: 0.68, widthPercent: 0.04, heightPercent: 0.03 },
+        relativeBounds: { xPercent: 0.46, yPercent: 0.66, widthPercent: 0.08, heightPercent: 0.06 },
         priority: 70,
         processingHints: { expectedCharset: 'numeric' },
       },
@@ -88,10 +88,10 @@ export class RegionManager {
         name: `player_${i}_stack`,
         type: 'player_stack',
         relativeBounds: { 
-          xPercent: centerX - 0.06, 
-          yPercent: centerY + 0.05, 
-          widthPercent: 0.12, 
-          heightPercent: 0.03 
+          xPercent: centerX - 0.08, 
+          yPercent: centerY + 0.04, 
+          widthPercent: 0.16, 
+          heightPercent: 0.05 
         },
         priority: 60 - i,
         processingHints: { expectedCharset: 'currency' },
@@ -101,10 +101,10 @@ export class RegionManager {
         name: `player_${i}_name`,
         type: 'player_name',
         relativeBounds: { 
-          xPercent: centerX - 0.08, 
-          yPercent: centerY - 0.02, 
-          widthPercent: 0.16, 
-          heightPercent: 0.03 
+          xPercent: centerX - 0.10, 
+          yPercent: centerY - 0.03, 
+          widthPercent: 0.20, 
+          heightPercent: 0.05 
         },
         priority: 50 - i,
         processingHints: { expectedCharset: 'alphanumeric' },

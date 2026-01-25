@@ -10,11 +10,11 @@ export interface FallbackConfig {
 }
 
 const DEFAULT_FALLBACK_CONFIG: FallbackConfig = {
-  maxRetries: 2,
-  retryDelayMs: 100,
-  minConfidenceThreshold: 0.6,
-  enableParallelFallback: false,
-  timeoutMs: 5000,
+  maxRetries: 1,
+  retryDelayMs: 200,
+  minConfidenceThreshold: 0.5,
+  enableParallelFallback: true,
+  timeoutMs: 10000,
 };
 
 export class FallbackManager {

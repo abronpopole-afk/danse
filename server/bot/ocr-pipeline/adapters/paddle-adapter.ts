@@ -119,15 +119,41 @@ export class PaddleOCRAdapter extends OCRAdapter {
         }
       }
 
-      // ENCODAGE PNG
-      log(`Encoding ${safeWidth}x${safeHeight} to PNG...`);
-      const pngBuffer = await sharp(croppedBuffer, {
+      // UPSCALING pour améliorer l'OCR sur petites images
+      const MIN_OCR_DIMENSION = 50;
+      let finalWidth = safeWidth;
+      let finalHeight = safeHeight;
+      let scaleFactor = 1;
+      
+      if (safeWidth < MIN_OCR_DIMENSION || safeHeight < MIN_OCR_DIMENSION) {
+        scaleFactor = Math.max(
+          Math.ceil(MIN_OCR_DIMENSION / safeWidth),
+          Math.ceil(MIN_OCR_DIMENSION / safeHeight)
+        );
+        scaleFactor = Math.min(scaleFactor, 4); // Max 4x upscale
+        finalWidth = safeWidth * scaleFactor;
+        finalHeight = safeHeight * scaleFactor;
+        log(`📈 Upscaling ${safeWidth}x${safeHeight} -> ${finalWidth}x${finalHeight} (${scaleFactor}x)`);
+      }
+
+      // ENCODAGE PNG avec upscaling si nécessaire
+      log(`Encoding ${safeWidth}x${safeHeight} to PNG (output: ${finalWidth}x${finalHeight})...`);
+      let sharpPipeline = sharp(croppedBuffer, {
         raw: {
           width: safeWidth,
           height: safeHeight,
           channels: channels as 3 | 4
         }
-      }).png().toBuffer();
+      });
+      
+      if (scaleFactor > 1) {
+        sharpPipeline = sharpPipeline.resize(finalWidth, finalHeight, {
+          kernel: sharp.kernel.lanczos3,
+          fit: 'fill'
+        });
+      }
+      
+      const pngBuffer = await sharpPipeline.png().toBuffer();
       log(`PNG size: ${pngBuffer.length} bytes`);
 
       const formData = new FormData();
@@ -136,7 +162,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
 
       const response = await axios.post(this.apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 5000
+        timeout: 10000
       });
 
       const text = response.data.results?.map((r: any) => r.text).join(' ') || '';
