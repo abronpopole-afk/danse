@@ -318,23 +318,23 @@ export class GGClubAdapter extends PlatformAdapter {
 
   private getDefaultScreenLayout(): GGClubScreenLayout {
     // Coordonnées relatives (0.0 à 1.0) basées sur une résolution de référence de 880x600
-    // On augmente légèrement les tailles pour améliorer l'OCR
+    // On augmente les tailles pour garantir que les régions sont assez grandes pour l'OCR
     const refW = 880;
     const refH = 600;
 
     return {
       heroCardsRegion: [
-        { x: 405 / refW, y: 445 / refH, width: 60 / refW, height: 85 / refH },
-        { x: 455 / refW, y: 445 / refH, width: 60 / refW, height: 85 / refH }
+        { x: 400 / refW, y: 440 / refH, width: 80 / refW, height: 100 / refH },
+        { x: 450 / refW, y: 440 / refH, width: 80 / refW, height: 100 / refH }
       ],
-      communityCardsRegion: [{ x: 275 / refW, y: 265 / refH, width: 350 / refW, height: 100 / refH }],
-      potRegion: { x: 385 / refW, y: 215 / refH, width: 130 / refW, height: 60 / refH },
-      actionButtonsRegion: { x: 475 / refW, y: 505 / refH, width: 410 / refW, height: 90 / refH },
-      betSliderRegion: { x: 475 / refW, y: 465 / refH, width: 330 / refW, height: 50 / refH },
+      communityCardsRegion: [{ x: 270 / refW, y: 260 / refH, width: 360 / refW, height: 110 / refH }],
+      potRegion: { x: 380 / refW, y: 210 / refH, width: 140 / refW, height: 70 / refH },
+      actionButtonsRegion: { x: 470 / refW, y: 500 / refH, width: 420 / refW, height: 100 / refH },
+      betSliderRegion: { x: 470 / refW, y: 460 / refH, width: 340 / refW, height: 60 / refH },
       playerSeats: this.generatePlayerSeatRegions(9, refW, refH),
-      dealerButtonRegion: { x: 435 / refW, y: 195 / refH, width: 50 / refW, height: 50 / refH },
-      chatRegion: { x: 5 / refW, y: 395 / refH, width: 230 / refW, height: 170 / refH },
-      timerRegion: { x: 395 / refW, y: 185 / refH, width: 110 / refW, height: 50 / refH },
+      dealerButtonRegion: { x: 430 / refW, y: 190 / refH, width: 60 / refW, height: 60 / refH },
+      chatRegion: { x: 0 / refW, y: 390 / refH, width: 240 / refW, height: 180 / refH },
+      timerRegion: { x: 390 / refW, y: 180 / refH, width: 120 / refW, height: 60 / refH },
     };
   }
 

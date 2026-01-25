@@ -146,6 +146,11 @@ export class PaddleOCRAdapter extends OCRAdapter {
         }
       });
       
+      // Amélioration de l'image avant l'OCR
+      sharpPipeline = sharpPipeline
+        .modulate({ brightness: 1.1, contrast: 1.2 }) // Augmenter légèrement luminosité et contraste
+        .sharpen(); // Accentuer les bords
+
       if (scaleFactor > 1) {
         sharpPipeline = sharpPipeline.resize(finalWidth, finalHeight, {
           kernel: sharp.kernel.lanczos3,
