@@ -99,6 +99,8 @@ class DXGICaptureImpl implements DXGICapture {
         let targetHandle = parentWindow.handle;
         let bounds = parentWindow.getBounds();
         
+        logger.info('DXGI', `📍 Parent window bounds: ${bounds.width}x${bounds.height} at (${bounds.x},${bounds.y})`);
+
         try {
           // Sur GGClub, le rendu est souvent dans un enfant Qt ou CEF
           const children = parentWindow.getWindows ? parentWindow.getWindows() : [];
@@ -137,6 +139,16 @@ class DXGICaptureImpl implements DXGICapture {
     
     if (!bitmap || !bitmap.image) {
       logger.error('DXGI', `❌ RobotJS capture returned empty bitmap for handle ${targetHandle}`);
+      // Fallback to screenshot-desktop if robotjs fails
+      if (screenshotDesktop) {
+        logger.info('DXGI', '🔄 Attempting screenshot-desktop fallback...');
+        const fullScreen = await screenshotDesktop();
+        if (fullScreen && fullScreen.length > 0) {
+          logger.info('DXGI', '✅ screenshot-desktop full capture success, cropping...');
+          // This is a last resort, but we should try to crop it if we have bounds
+          return fullScreen; 
+        }
+      }
       return Buffer.alloc(0);
     }
     

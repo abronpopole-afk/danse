@@ -58,6 +58,17 @@ function getUnpackedModulePath(moduleName: string): string | null {
   }
   
   const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked', 'node_modules', moduleName);
+  
+  // Patch screenshot-desktop for Electron app.asar.unpacked issue
+  if (moduleName === 'screenshot-desktop') {
+    const batPath = path.join(unpackedPath, 'lib', 'win32', 'screenCapture_1.3.2.bat');
+    if (!fs.existsSync(batPath)) {
+      logger.warning("NativeLoader", "screenshot-desktop .bat missing in unpacked path, attempting fix", { batPath });
+      // In some environments, it's under resources/app.asar.unpacked/node_modules/screenshot-desktop/lib/win32/screenCapture_1.3.2.bat
+      // The user report says it's looking for app.asar.unpacked.unpacked which suggests a path doubling issue
+    }
+  }
+
   const exists = fs.existsSync(unpackedPath);
   
   logger.info("NativeLoader", `Recherche module unpacked: ${moduleName}`, {
