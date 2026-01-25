@@ -105,43 +105,47 @@ export class PaddleOCRAdapter extends OCRAdapter {
       }
 
       // Extraction de la région d'intérêt avec vérification des offsets
-      const croppedBuffer = Buffer.alloc(safeWidth * safeHeight * channels);
-      for (let row = 0; row < safeHeight; row++) {
-        const srcOffset = ((safeY + row) * frame.width + safeX) * channels;
-        const dstOffset = row * safeWidth * channels;
-        const copyLen = safeWidth * channels;
+      // On ajoute une marge de 2 pixels pour éviter de couper les bords des caractères
+      const margin = 2;
+      const extractX = Math.max(0, safeX - margin);
+      const extractY = Math.max(0, safeY - margin);
+      const extractW = Math.min(frame.width - extractX, safeWidth + margin * 2);
+      const extractH = Math.min(frame.height - extractY, safeHeight + margin * 2);
+
+      const croppedBuffer = Buffer.alloc(extractW * extractH * channels);
+      for (let row = 0; row < extractH; row++) {
+        const srcOffset = ((extractY + row) * frame.width + extractX) * channels;
+        const dstOffset = row * extractW * channels;
+        const copyLen = extractW * channels;
         
-        // Vérification que la copie est dans les limites
         if (srcOffset >= 0 && srcOffset + copyLen <= frame.data.length) {
           frame.data.copy(croppedBuffer, dstOffset, srcOffset, srcOffset + copyLen);
-        } else {
-          log(`⚠️ Skip row ${row}: srcOffset=${srcOffset} copyLen=${copyLen} bufLen=${frame.data.length}`);
         }
       }
 
-      // UPSCALING pour améliorer l'OCR sur petites images
-      const MIN_OCR_DIMENSION = 50;
-      let finalWidth = safeWidth;
-      let finalHeight = safeHeight;
+      // UPSCALING pour améliorer l'OCR
+      const MIN_OCR_DIMENSION = 80; // Augmenté de 50 à 80
+      let finalWidth = extractW;
+      let finalHeight = extractH;
       let scaleFactor = 1;
       
-      if (safeWidth < MIN_OCR_DIMENSION || safeHeight < MIN_OCR_DIMENSION) {
+      if (extractW < MIN_OCR_DIMENSION || extractH < MIN_OCR_DIMENSION) {
         scaleFactor = Math.max(
-          Math.ceil(MIN_OCR_DIMENSION / safeWidth),
-          Math.ceil(MIN_OCR_DIMENSION / safeHeight)
+          Math.ceil(MIN_OCR_DIMENSION / extractW),
+          Math.ceil(MIN_OCR_DIMENSION / extractH)
         );
-        scaleFactor = Math.min(scaleFactor, 4); // Max 4x upscale
-        finalWidth = safeWidth * scaleFactor;
-        finalHeight = safeHeight * scaleFactor;
-        log(`📈 Upscaling ${safeWidth}x${safeHeight} -> ${finalWidth}x${finalHeight} (${scaleFactor}x)`);
+        scaleFactor = Math.min(scaleFactor, 4);
+        finalWidth = extractW * scaleFactor;
+        finalHeight = extractH * scaleFactor;
+        log(`📈 Upscaling ${extractW}x${extractH} -> ${finalWidth}x${finalHeight} (${scaleFactor}x)`);
       }
 
-      // ENCODAGE PNG avec upscaling si nécessaire
-      log(`Encoding ${safeWidth}x${safeHeight} to PNG (output: ${finalWidth}x${finalHeight})...`);
+      // ENCODAGE PNG
+      log(`Encoding ${extractW}x${extractH} to PNG (output: ${finalWidth}x${finalHeight})...`);
       let sharpPipeline = sharp(croppedBuffer, {
         raw: {
-          width: safeWidth,
-          height: safeHeight,
+          width: extractW,
+          height: extractH,
           channels: channels as 3 | 4
         }
       });
