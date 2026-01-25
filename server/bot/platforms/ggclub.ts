@@ -2438,43 +2438,51 @@ export class GGClubAdapter extends PlatformAdapter {
     };
   }
 
-  private async performMouseMove(windowHandle: number, x: number, y: number): Promise<void> {
+  private async executeClick(windowHandle: number, x: number, y: number, timerPosition?: number): Promise<void> {
+    const window = this.activeWindows.get(`ggclub_${Math.abs(windowHandle)}`) || 
+                   this.activeWindows.get(String(windowHandle)) ||
+                   Array.from(this.activeWindows.values()).find(w => Math.abs(w.handle) === Math.abs(windowHandle));
+    
+    if (!window) {
+      logger.error("GGClubAdapter", "Window not found for click", { windowHandle });
+      return;
+    }
+
+    // Calcul des coordonnées absolues basées sur la position réelle de la fenêtre
+    // x et y sont des ratios (0-1)
+    const absoluteX = window.x + (x * window.width);
+    const absoluteY = window.y + (y * window.height);
+
+    logger.info("GGClubAdapter", "Executing absolute click", { 
+      windowHandle, 
+      relX: x.toFixed(3), 
+      relY: y.toFixed(3),
+      absX: Math.round(absoluteX),
+      absY: Math.round(absoluteY),
+      windowPos: `${window.x},${window.y}`,
+      windowSize: `${window.width}x${window.height}`
+    });
+
     if (robot) {
       try {
-        const currentPos = robot.getMousePos();
-
-        // Determine target position (absolute screen coordinates)
-        const targetX = x;
-        const targetY = y;
-
-        const steps = this.antiDetectionConfig.enableMouseJitter ? 
-          Math.floor(Math.random() * 10) + 5 : 10;
-
-        for (let i = 1; i <= steps; i++) {
-          const progress = i / steps;
-          const eased = this.easeInOutQuad(progress); // Use easing function
-
-          const midX = currentPos.x + (targetX - currentPos.x) * eased;
-          const midY = currentPos.y + (targetY - currentPos.y) * eased;
-
-          const jitter = this.antiDetectionConfig.enableMouseJitter ? 
-            this.antiDetectionConfig.mouseJitterRange : 0;
-          const jitterX = (Math.random() - 0.5) * jitter;
-          const jitterY = (Math.random() - 0.5) * jitter;
-
-          robot.moveMouse(Math.round(midX + jitterX), Math.round(midY + jitterY));
-          await this.addRandomDelay(10); // Delay between mouse movements
-        }
-
-        // Final move to target position
-        robot.moveMouse(targetX, targetY);
+        // Déplacement de la souris
+        robot.moveMouseSmooth(Math.round(absoluteX), Math.round(absoluteY));
+        await this.addRandomDelay(100);
+        
+        // Clic
+        robot.mouseClick();
+        
+        this.antiDetectionMonitor.recordAction("click", timerPosition, { x: absoluteX, y: absoluteY });
       } catch (error) {
-        console.error("Mouse move error:", error);
+        logger.error("GGClubAdapter", "RobotJS click error", { error: String(error) });
       }
     } else {
-      // Simulate delay even without robot
-      await this.addRandomDelay(10);
+      logger.warning("GGClubAdapter", "RobotJS not available, simulating click only");
     }
+  }
+
+  private async performMouseMove(windowHandle: number, x: number, y: number): Promise<void> {
+    // Intégré dans executeClick
   }
 
   private easeInOutQuad(t: number): number {
@@ -2482,17 +2490,7 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private async performMouseClick(windowHandle: number, x: number, y: number): Promise<void> {
-    if (robot) {
-      try {
-        await this.addRandomDelay(20); // Small delay before click
-        robot.mouseClick();
-        await this.addRandomDelay(30); // Small delay after click
-      } catch (error) {
-        console.error("Mouse click error:", error);
-      }
-    } else {
-      await this.addRandomDelay(10); // Simulate delay
-    }
+    // Intégré dans executeClick
   }
 
   async executeFold(windowHandle: number): Promise<void> {
