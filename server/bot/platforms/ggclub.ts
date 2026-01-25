@@ -274,13 +274,13 @@ export class GGClubAdapter extends PlatformAdapter {
         });
         
         if (this.pokerOCREngine) {
-          console.log("[GGClubAdapter] PaddleOCR Service initialized successfully");
+          logger.info('GGClubAdapter', 'PaddleOCR Service initialized successfully');
         } else {
-          console.log("[GGClubAdapter] PaddleOCR Service not available, falling back");
+          logger.warning('GGClubAdapter', 'PaddleOCR Service not available, falling back');
           this.enableML = false;
         }
       } catch (error) {
-        console.error("[GGClubAdapter] Failed to initialize PaddleOCR:", error);
+        logger.error('GGClubAdapter', 'Failed to initialize PaddleOCR', { error });
         this.enableML = false;
         this.pokerOCREngine = null;
       }
@@ -293,7 +293,7 @@ export class GGClubAdapter extends PlatformAdapter {
     this.cardRecognizer.enableDebugMode(enabled);
     this.gtoAdapter.enableDebugMode(enabled);
     debugVisualizer.enableDebugMode();
-    console.log(`[GGClubAdapter] Debug mode ${enabled ? 'enabled' : 'disabled'}`);
+    logger.info('GGClubAdapter', `Debug mode ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   getDebugVisualizer() {

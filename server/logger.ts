@@ -4,31 +4,10 @@ import * as path from "path";
 import * as os from "os";
 
 function getLogsDirectory(): string {
-  const isElectron = process.env.ELECTRON_RUN_AS_NODE === "1" || 
-                     (process as any).type !== undefined ||
-                     process.versions && (process.versions as any).electron;
-  
   const isWindows = os.platform() === "win32";
   
-  if (isElectron && isWindows) {
-    const appDataPath = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
-    return path.join(appDataPath, "GTO Poker Bot", "logs");
-  }
-  
   if (isWindows) {
-    const exeDir = process.env.PORTABLE_EXECUTABLE_DIR || 
-                   path.dirname(process.execPath);
-    if (exeDir && !exeDir.includes("node_modules")) {
-      const logsPath = path.join(exeDir, "logs");
-      try {
-        fs.mkdirSync(logsPath, { recursive: true });
-        fs.accessSync(logsPath, fs.constants.W_OK);
-        return logsPath;
-      } catch {
-      }
-    }
-    const appDataPath = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
-    return path.join(appDataPath, "GTO Poker Bot", "logs");
+    return "C:\\Users\\adria\\AppData\\Roaming\\GTO Poker Bot\\logs";
   }
   
   return path.join(process.cwd(), "logs");

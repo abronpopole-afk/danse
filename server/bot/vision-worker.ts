@@ -1,4 +1,5 @@
 
+import { logger } from "../logger";
 import { getEventBus } from "./event-bus";
 import { getPlatformManager } from "./platform-manager";
 import { getWorkerManager } from "./workers/worker-manager";
@@ -12,7 +13,7 @@ export class VisionWorker {
     if (this.isRunning) return;
     
     this.isRunning = true;
-    console.log("[VisionWorker] Started with worker threads");
+    logger.info('VisionWorker', 'Started with worker threads');
     
     // Initialize worker manager
     const workerManager = getWorkerManager();
@@ -64,16 +65,16 @@ export class VisionWorker {
     if (!adapter) return null;
 
     try {
-      console.log(`[VisionWorker] [${windowHandle}] Appel de adapter.getGameState...`);
+      logger.info('VisionWorker', `[${windowHandle}] Appel de adapter.getGameState...`);
       const state = await adapter.getGameState(windowHandle);
       if (state) {
-        console.log(`[VisionWorker] [${windowHandle}] SUCCESS: Game state detected`);
+        logger.info('VisionWorker', `[${windowHandle}] SUCCESS: Game state detected`);
       } else {
-        console.log(`[VisionWorker] [${windowHandle}] WARNING: No game state returned`);
+        logger.warning('VisionWorker', `[${windowHandle}] WARNING: No game state returned`);
       }
       return state;
     } catch (error) {
-      console.error(`[VisionWorker] [${windowHandle}] Error detecting table state:`, error);
+      logger.error('VisionWorker', `[${windowHandle}] Error detecting table state`, { error });
       return null;
     }
   }

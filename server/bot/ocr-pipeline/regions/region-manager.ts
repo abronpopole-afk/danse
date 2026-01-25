@@ -1,3 +1,4 @@
+import { logger } from '../../logger';
 import type { Region, RegionType, Bounds, ProcessingHints } from '../types';
 
 export interface RegionTemplate {
@@ -146,10 +147,10 @@ export class RegionManager {
     const height = Math.round(relative.heightPercent * this.frameHeight);
     
     // Log pour debug renforcé
-    console.log(`[RegionManager] 📐 Calcul bounds: rel(${relative.xPercent}, ${relative.yPercent}, ${relative.widthPercent}, ${relative.heightPercent}) * frame(${this.frameWidth}x${this.frameHeight}) => abs(${x}, ${y}, ${width}, ${height})`);
+    logger.info('RegionManager', `📐 Calcul bounds: rel(${relative.xPercent}, ${relative.yPercent}, ${relative.widthPercent}, ${relative.heightPercent}) * frame(${this.frameWidth}x${this.frameHeight}) => abs(${x}, ${y}, ${width}, ${height})`);
 
     if (width < 20 || height < 20) {
-      console.warn(`[RegionManager] ⚠️ Region calculée minuscule: ${width}x${height} (frame: ${this.frameWidth}x${this.frameHeight})`);
+      logger.warning('RegionManager', `⚠️ Region calculée minuscule: ${width}x${height} (frame: ${this.frameWidth}x${this.frameHeight})`);
     }
 
     return { x, y, width, height };

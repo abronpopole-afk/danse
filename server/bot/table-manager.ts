@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 import { EventEmitter } from "events";
 import { PokerTable, PlayerData, GtoRecommendation } from "@shared/schema";
 import { getGtoAdapter, HandContext } from "./gto-engine";
@@ -390,7 +391,7 @@ export class TableSession extends EventEmitter {
     // Alerter si patterns suspects
     if (detector.shouldTriggerAlert()) {
       const issues = detector.getCriticalIssues();
-      console.warn('[TableManager] ⚠️  Suspicious patterns detected:', issues.map(i => i.description).join(', '));
+      logger.warning('TableManager', `⚠️ Suspicious patterns detected: ${issues.map(i => i.description).join(', ')}`);
     }
 
     return { action: selectedAction, humanizedAction };
@@ -568,7 +569,7 @@ export class MultiTableManager extends EventEmitter {
         await table.resume();
         this.emit("tableRecovered", { tableId: table.getId() });
       } catch (error) {
-        console.error(`Failed to recover table ${table.getId()}:`, error);
+        logger.error('MultiTableManager', `Failed to recover table ${table.getId()}`, { error });
       }
     }
   }
@@ -596,12 +597,12 @@ export class MultiTableManager extends EventEmitter {
       const activeSession = await storage.getActiveBotSession();
       sessionId = activeSession?.id ?? null;
       if (activeSession?.id) {
-        console.log(`[TableManager] ⚠️ sessionId was undefined, using active session: ${activeSession.id}`);
+        logger.warning('TableManager', `sessionId was undefined, using active session: ${activeSession.id}`);
         this.sessionId = activeSession.id;
       }
     }
 
-    console.log(`[TableManager] Adding table: ${config.tableName} with sessionId: ${sessionId}`);
+    logger.info('TableManager', `Adding table: ${config.tableName} with sessionId: ${sessionId}`);
 
     const pokerTable = await storage.createPokerTable({
       sessionId,

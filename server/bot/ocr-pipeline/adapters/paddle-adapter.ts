@@ -1,3 +1,4 @@
+import { logger } from '../../../logger';
 import { OCRAdapter, type OCRAdapterFactory } from './ocr-adapter';
 import type { 
   Frame, 
@@ -21,10 +22,10 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const response = await axios.get('http://localhost:8000/health', { timeout: 1000 });
       if (response.data.status === 'ok') {
         this.isInitialized = true;
-        console.log('[PaddleOCRAdapter] Initialized and connected to Python service');
+        logger.info('PaddleOCRAdapter', 'Initialized and connected to Python service');
       }
     } catch (error) {
-      console.warn('[PaddleOCRAdapter] Python OCR service not reachable at startup');
+      logger.warning('PaddleOCRAdapter', 'Python OCR service not reachable at startup');
       // On marque comme initialisé car le service peut démarrer plus tard
       this.isInitialized = true;
     }
@@ -53,20 +54,20 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const { x, y, width, height } = region.bounds;
       const channels = frame.format === 'rgba' ? 4 : 3;
       
-      const log = (msg: string) => {
-        console.log(`[PaddleOCRAdapter] [${region.id}] ${msg}`);
+      const log = (msg: string, level: 'info' | 'error' | 'warning' = 'info', data?: any) => {
+        logger[level]('PaddleOCRAdapter', `[${region.id}] ${msg}`, data);
       };
 
       // LOG des dimensions originales pour debug
       log(`Input: region(${x},${y},${width},${height}) frame(${frame.width}x${frame.height}) bufferLen=${frame.data.length}`);
       
       if (frame.width < 100 || frame.height < 100) {
-        log(`❌ ERREUR: Frame source suspecte car trop petite (${frame.width}x${frame.height})`);
+        log(`❌ ERREUR: Frame source suspecte car trop petite (${frame.width}x${frame.height})`, 'error');
       }
 
       // VALIDATION: Vérifier que les dimensions sont positives
       if (width <= 0 || height <= 0) {
-        log(`❌ Dimensions invalides: ${width}x${height}`);
+        log(`❌ Dimensions invalides: ${width}x${height}`, 'error');
         return {
           text: '',
           confidence: 0,
@@ -83,7 +84,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
 
       // Vérification si la région est trop petite pour l'OCR
       if (safeWidth < 5 || safeHeight < 5) {
-        log(`⚠️ Région trop petite pour OCR: ${safeWidth}x${safeHeight}`);
+        log(`⚠️ Région trop petite pour OCR: ${safeWidth}x${safeHeight}`, 'warning');
         return {
           text: '',
           confidence: 0,
@@ -93,13 +94,13 @@ export class PaddleOCRAdapter extends OCRAdapter {
       }
 
       if (safeWidth !== width || safeHeight !== height || safeX !== x || safeY !== y) {
-        log(`⚠️ Correction dimensions: (${x},${y},${width},${height}) -> (${safeX},${safeY},${safeWidth},${safeHeight})`);
+        log(`⚠️ Correction dimensions: (${x},${y},${width},${height}) -> (${safeX},${safeY},${safeWidth},${safeHeight})`, 'warning');
       }
 
       // Vérification que le buffer source est assez grand
       const requiredSize = (safeY + safeHeight) * frame.width * channels;
       if (frame.data.length < requiredSize) {
-        log(`❌ Buffer trop petit: ${frame.data.length} < ${requiredSize} requis`);
+        log(`❌ Buffer trop petit: ${frame.data.length} < ${requiredSize} requis`, 'error');
         return {
           text: '',
           confidence: 0,
@@ -117,7 +118,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
       const extractH = Math.min(frame.height - extractY, safeHeight + margin * 2);
 
       if (extractW < 5 || extractH < 5) {
-        log(`❌ Crop result too small: ${extractW}x${extractH}`);
+        log(`❌ Crop result too small: ${extractW}x${extractH}`, 'error');
       }
 
       const croppedBuffer = Buffer.alloc(extractW * extractH * channels);
@@ -194,7 +195,7 @@ export class PaddleOCRAdapter extends OCRAdapter {
         engine: this.name,
       };
     } catch (error) {
-      console.error(`[PaddleOCRAdapter] [${region.id}] Error processing:`, error);
+      logger.error('PaddleOCRAdapter', `[${region.id}] Error processing`, { error });
       return {
         text: '',
         confidence: 0,
