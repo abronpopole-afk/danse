@@ -44,8 +44,13 @@ class DXGICaptureImpl implements DXGICapture {
   }
 
   private async loadNativeModule(): Promise<any> {
-    const { loadNativeModule } = require('./native-loader');
-    return await loadNativeModule('dxgi-capture');
+    try {
+      const { loadNativeModule } = require('./native-loader');
+      return await loadNativeModule('dxgi-capture');
+    } catch (error) {
+      console.warn('[DXGI] Failed to load native module via loader, falling back:', error);
+      return null;
+    }
   }
 
   isSupported(): boolean {

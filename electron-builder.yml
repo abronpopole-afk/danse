@@ -35,6 +35,8 @@ asarUnpack:
   - "**/node_modules/extract-file-icon/**/*"
   - "**/node_modules/ref-napi/**/*"
   - "**/node_modules/ffi-napi/**/*"
+  - "node_modules/dxgi-capture/**"
+  - "native/dxgi-capture/**"
   # Dépendances requises par les modules natifs
   - "**/node_modules/temp/**/*"
   - "**/node_modules/node-gyp-build/**/*"
