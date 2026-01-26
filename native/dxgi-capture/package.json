@@ -1,0 +1,14 @@
+{
+  "name": "dxgi-capture",
+  "version": "1.0.0",
+  "main": "index.js",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "bindings": "^1.5.0"
+  },
+  "os": ["win32"]
+}

@@ -45,14 +45,19 @@ class DXGICaptureImpl implements DXGICapture {
 
   private async loadNativeModule(): Promise<any> {
     try {
-      // Tentative de chargement du module natif compilé
-      // Ce module devrait être dans ./native/dxgi-capture.node
-      const module = require('../native/dxgi-capture.node');
+      // Tentative de chargement du module natif dxgi-capture (structuré en module local)
+      const module = require('dxgi-capture');
       return module;
     } catch {
-      // Module natif non disponible, fallback vers screenshot-desktop
-      console.warn('[DXGI] Native module not found, using screenshot-desktop fallback');
-      return null;
+      try {
+        // Fallback pour chargement direct si non linké
+        const module = require('../native/dxgi-capture');
+        return module;
+      } catch {
+        // Module natif non disponible, fallback vers screenshot-desktop
+        console.warn('[DXGI] Native module not found, using screenshot-desktop fallback');
+        return null;
+      }
     }
   }
 
