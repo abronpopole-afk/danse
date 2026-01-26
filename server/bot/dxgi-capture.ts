@@ -44,6 +44,9 @@ class DXGICaptureImpl implements DXGICapture {
   }
 
   private async loadNativeModule(): Promise<any> {
+    if (process.platform !== 'win32') {
+      return null;
+    }
     try {
       // Tentative de chargement du module natif dxgi-capture (structuré en module local)
       const module = require('dxgi-capture');
@@ -55,7 +58,6 @@ class DXGICaptureImpl implements DXGICapture {
         return module;
       } catch {
         // Module natif non disponible, fallback vers screenshot-desktop
-        console.warn('[DXGI] Native module not found, using screenshot-desktop fallback');
         return null;
       }
     }
