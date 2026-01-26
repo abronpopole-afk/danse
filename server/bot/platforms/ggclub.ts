@@ -887,28 +887,22 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private async captureScreen(windowHandle: number): Promise<Buffer> {
-    logger.debug("GGClubAdapter", `[${windowHandle}] captureScreen - tentative`);
-    
-    // 1. Essayer la capture DXGI haute performance
-    try {
-      const dxgi = getDXGICapture();
-      if (dxgi.isSupported()) {
+    const dxgi = getDXGICapture();
+    if (dxgi.isSupported()) {
+      try {
         const buffer = await dxgi.captureScreen(windowHandle);
-        if (buffer && buffer.length > 0) {
-          if (this.debugMode) {
-            logger.debug("GGClubAdapter", "✅ Capture DXGI réussie", { 
-              handle: windowHandle, 
-              size: buffer.length
-            });
-          }
+        if (this.validateImageBuffer(buffer)) {
+          logger.info("GGClubAdapter", `DXGI capture OK (${buffer.length} bytes)`);
           return buffer;
+        } else {
+          logger.warn("GGClubAdapter", "DXGI buffer trop petit, fallback screenshot-desktop");
         }
+      } catch (err) {
+        logger.error("GGClubAdapter", "DXGI captureScreen failed, fallback", { error: String(err) });
       }
-    } catch (dxgiError) {
-      logger.warning("GGClubAdapter", "⚠️ Échec capture DXGI, repli sur screenshot-desktop", { error: dxgiError });
     }
 
-    // 2. Fallback historique (screenshot-desktop)
+    // Fallback screenshot-desktop si DXGI non supporté ou erreur
     if (screenshotDesktop) {
       try {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
@@ -942,16 +936,15 @@ export class GGClubAdapter extends PlatformAdapter {
           window.height
         );
         
-        logger.info("GGClubAdapter", `[${windowHandle}] ✅ Capture réussie (fallback): ${croppedBuffer.length} octets`);
+        logger.info("GGClubAdapter", `screenshot-desktop capture (${croppedBuffer.length} bytes)`);
         return croppedBuffer;
       } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture/crop`, { error: String(error) });
+        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture/crop (fallback)`, { error: String(error) });
         return Buffer.alloc(0);
       }
     }
 
-    logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop indisponible`);
-    return Buffer.alloc(0);
+    throw new Error("Aucune méthode de capture disponible");
   }
 
   private async performAutoRecalibration(windowHandle: number): Promise<void> {
