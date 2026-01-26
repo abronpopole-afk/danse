@@ -150,12 +150,26 @@ const robotMock = {
   setKeyboardDelay: () => {},
 };
 
+const dxgiMock = {
+  captureDesktop: () => {
+    logger.warning("NativeLoader", "dxgi-capture mock: captureDesktop appelé sur non-Windows");
+    return Buffer.alloc(0);
+  }
+};
+
 export async function loadNativeModule<T>(moduleName: string): Promise<T | null> {
   logger.info("NativeLoader", `=== CHARGEMENT MODULE: ${moduleName} ===`, {
     IS_ELECTRON,
     IS_PACKAGED,
     platform: process.platform,
   });
+
+  if (moduleName === "dxgi-capture") {
+    if (process.platform !== "win32") {
+      logger.warning("NativeLoader", "dxgi-capture demandé mais non-Windows -> mock");
+      return dxgiMock as unknown as T;
+    }
+  }
 
   // Handle robotjs separately to provide a mock on non-Windows platforms or Replit
   if (moduleName === "robotjs" && (process.platform !== "win32" || process.env.REPL_ID !== undefined || !IS_ELECTRON)) {

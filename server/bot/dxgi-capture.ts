@@ -44,23 +44,8 @@ class DXGICaptureImpl implements DXGICapture {
   }
 
   private async loadNativeModule(): Promise<any> {
-    if (process.platform !== 'win32') {
-      return null;
-    }
-    try {
-      // Tentative de chargement du module natif dxgi-capture (structuré en module local)
-      const module = require('dxgi-capture');
-      return module;
-    } catch {
-      try {
-        // Fallback pour chargement direct si non linké
-        const module = require('../native/dxgi-capture');
-        return module;
-      } catch {
-        // Module natif non disponible, fallback vers screenshot-desktop
-        return null;
-      }
-    }
+    const { loadNativeModule } = require('./native-loader');
+    return await loadNativeModule('dxgi-capture');
   }
 
   isSupported(): boolean {
