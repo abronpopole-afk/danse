@@ -8,9 +8,13 @@ use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWin
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
+use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory, IDXGIFactory, IDXGIAdapter, IDXGIOutput, IDXGIOutput1, DXGI_OUTPUT_DESC, IDXGIResource, DXGI_OUTDUPL_DESC, DXGI_OUTDUPL_FRAME_INFO, IDXGIOutputDuplication};
+use windows::Win32::Graphics::Direct3D11::{D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, D3D11_SDK_VERSION, D3D11_CREATE_DEVICE_FLAG, ID3D11Texture2D, D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING, D3D11_CPU_ACCESS_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_MAP_READ};
+use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_UNKNOWN;
 use std::sync::Mutex;
 use base64::{Engine as _, engine::general_purpose};
 use thiserror::Error;
+use lazy_static::lazy_static;
 
 #[derive(Error, Debug, serde::Serialize)]
 pub enum PokerError {
@@ -22,6 +26,8 @@ pub enum PokerError {
     InvalidDimensions(i32, i32),
     #[error("Capture failed")]
     CaptureFailed,
+    #[error("DXGI Error: {0}")]
+    DxgiError(String),
 }
 
 impl From<anyhow::Error> for PokerError {
@@ -37,6 +43,57 @@ struct WindowInfo {
     hwnd: isize,
     title: String,
     class_name: String,
+}
+
+struct DxgiState {
+    device: ID3D11Device,
+    context: ID3D11DeviceContext,
+    dupl: Option<IDXGIOutputDuplication>,
+}
+
+lazy_static! {
+    static ref DXGI_STATE: Mutex<Option<DxgiState>> = Mutex::new(None);
+}
+
+fn init_dxgi() -> PokerResult<()> {
+    let mut state = DXGI_STATE.lock().unwrap();
+    if state.is_some() {
+        return Ok(());
+    }
+
+    unsafe {
+        let mut device: Option<ID3D11Device> = None;
+        let mut context: Option<ID3D11DeviceContext> = None;
+        
+        D3D11CreateDevice(
+            None,
+            D3D_DRIVER_TYPE_UNKNOWN,
+            None,
+            D3D11_CREATE_DEVICE_FLAG(0),
+            None,
+            D3D11_SDK_VERSION,
+            Some(&mut device),
+            None,
+            Some(&mut context),
+        ).map_err(|e| PokerError::DxgiError(format!("D3D11 Device Creation Failed: {}", e)))?;
+
+        let device = device.unwrap();
+        let context = context.unwrap();
+
+        let factory: IDXGIFactory = CreateDXGIFactory().map_err(|e| PokerError::DxgiError(format!("DXGI Factory Failed: {}", e)))?;
+        let adapter = factory.EnumAdapters(0).map_err(|e| PokerError::DxgiError(format!("EnumAdapters Failed: {}", e)))?;
+        let output = adapter.EnumOutputs(0).map_err(|e| PokerError::DxgiError(format!("EnumOutputs Failed: {}", e)))?;
+        let output1: IDXGIOutput1 = output.cast().map_err(|e| PokerError::DxgiError(format!("Cast to Output1 Failed: {}", e)))?;
+        
+        let dupl = output1.DuplicateOutput(&device).map_err(|e| PokerError::DxgiError(format!("DuplicateOutput Failed: {}", e)))?;
+
+        *state = Some(DxgiState {
+            device,
+            context,
+            dupl: Some(dupl),
+        });
+    }
+    Ok(())
 }
 
 #[command]
@@ -79,7 +136,6 @@ fn find_poker_windows() -> Vec<WindowInfo> {
     all.into_iter()
         .filter(|w| {
             let t = w.title.to_lowercase();
-            // Détection robuste par classe Qt5 pour GGClub
             t.contains("ggclub") || t.contains("poker") || w.class_name.contains("Qt5Window")
         })
         .collect()
@@ -121,21 +177,21 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
             bmiHeader: BITMAPINFOHEADER {
                 biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
                 biWidth: width,
-                biHeight: -height, // top-down
+                biHeight: -height,
                 biPlanes: 1,
                 biBitCount: 24,
-                biCompression: 0, // BI_RGB
+                biCompression: 0,
                 ..Default::default()
             },
             ..Default::default()
         };
 
+        let buffer_size = (width * height * 3) as usize;
         let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
-        unsafe { buffer.set_len(buffer_size); }
+        buffer.set_len(buffer_size);
         
-        GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
+        let _ = GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
 
-        // Cleanup
         SelectObject(hdc_mem, old_obj);
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
@@ -177,10 +233,11 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
 
 #[command]
 async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
+    let _ = init_dxgi(); 
+
     std::thread::spawn(move || {
         let mut last_capture = std::time::Instant::now();
         loop {
-            // throttle à ~30 FPS (33ms)
             let elapsed = last_capture.elapsed();
             if elapsed < std::time::Duration::from_millis(33) {
                 std::thread::sleep(std::time::Duration::from_millis(33) - elapsed);
@@ -189,10 +246,9 @@ async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
             last_capture = std::time::Instant::now();
             if let Ok(image_data) = capture_window_internal(hwnd) {
                 if let Err(_) = window.emit("poker-frame", image_data) {
-                    break; // Fenêtre fermée ou erreur fatale
+                    break;
                 }
             } else {
-                // Si la capture échoue (fenêtre fermée par ex), on arrête le thread
                 break;
             }
         }
