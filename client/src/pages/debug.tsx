@@ -1,6 +1,7 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ReplayViewer } from "@/components/debug/replay-viewer";
+import { TauriTest } from "@/components/TauriTest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -44,61 +45,65 @@ export default function DebugPage() {
               Debug Mode & Replay Viewer
             </h1>
             <p className="text-muted-foreground mt-1">
-              Analyse détaillée des sessions et replay des décisions du bot
+              Analyse détaillée des sessions et migration Tauri
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Sessions List */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Sessions Disponibles
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                <div className="space-y-2">
-                  {sessions.map((session) => (
-                    <Button
-                      key={session.id}
-                      variant={selectedSession === session.id ? "default" : "outline"}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedSession(session.id)}
-                    >
-                      <div className="flex flex-col items-start w-full">
-                        <div className="flex items-center gap-2 w-full">
-                          <Eye className="w-3 h-3" />
-                          <span className="text-xs truncate">
-                            {new Date(session.startedAt).toLocaleString()}
-                          </span>
+          <div className="lg:col-span-1 space-y-6">
+            <TauriTest />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Sessions Disponibles
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2">
+                    {sessions.map((session) => (
+                      <Button
+                        key={session.id}
+                        variant={selectedSession === session.id ? "default" : "outline"}
+                        className="w-full justify-start"
+                        onClick={() => setSelectedSession(session.id)}
+                      >
+                        <div className="flex flex-col items-start w-full">
+                          <div className="flex items-center gap-2 w-full">
+                            <Eye className="w-3 h-3" />
+                            <span className="text-xs truncate">
+                              {new Date(session.startedAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-[10px]">
+                              {session.platform}
+                            </Badge>
+                            <Badge 
+                              variant={session.status === "stopped" ? "outline" : "default"}
+                              className="text-[10px]"
+                            >
+                              {session.status}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-[10px]">
-                            {session.platform}
-                          </Badge>
-                          <Badge 
-                            variant={session.status === "stopped" ? "outline" : "default"}
-                            className="text-[10px]"
-                          >
-                            {session.status}
-                          </Badge>
-                        </div>
+                      </Button>
+                    ))}
+                    
+                    {sessions.length === 0 && (
+                      <div className="text-center text-muted-foreground py-8 text-sm">
+                        Aucune session disponible
                       </div>
-                    </Button>
-                  ))}
-                  
-                  {sessions.length === 0 && (
-                    <div className="text-center text-muted-foreground py-8 text-sm">
-                      Aucune session disponible
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Replay Viewer */}
           <div className="lg:col-span-2">
