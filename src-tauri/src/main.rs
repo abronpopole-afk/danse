@@ -48,6 +48,7 @@ struct WindowInfo {
     class_name: String,
 }
 
+#[allow(dead_code)]
 struct DxgiState {
     device: ID3D11Device,
     context: ID3D11DeviceContext,
