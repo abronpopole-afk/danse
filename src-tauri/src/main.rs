@@ -4,6 +4,7 @@
 )]
 
 use tauri::{command, Window, Manager};
+use windows::core::ComInterface;
 use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOSIZE, SWP_NOMOVE, HWND_TOP, GetClassNameW};
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
@@ -110,7 +111,7 @@ fn list_windows() -> Vec<WindowInfo> {
 
 unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let windows = &mut *(lparam.0 as *mut Vec<WindowInfo>);
-    if IsWindowVisible(hwnd).as_bool() {
+    if IsWindowVisible(hwnd).is_ok() {
         let mut text: [u16; 512] = [0; 512];
         let len = GetWindowTextW(hwnd, &mut text);
         let mut class_text: [u16; 512] = [0; 512];
@@ -150,7 +151,7 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
     unsafe {
         let hwnd = HWND(hwnd_isize as _);
         let mut rect = RECT::default();
-        if !GetWindowRect(hwnd, &mut rect).as_bool() {
+        if GetWindowRect(hwnd, &mut rect).is_err() {
             return Err(PokerError::Win32Error("Failed to get window rect".into()));
         }
         let width = rect.right - rect.left;
@@ -186,7 +187,7 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
-        if !bit_blt_res.as_bool() {
+        if bit_blt_res.is_err() {
             return Err(PokerError::CaptureFailed);
         }
         let base64_image = general_purpose::STANDARD.encode(&buffer);
@@ -198,7 +199,7 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
 fn focus_window(hwnd: isize) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
-        if SetForegroundWindow(hwnd).as_bool() {
+        if SetForegroundWindow(hwnd).is_ok() {
             Ok(())
         } else {
             Err(PokerError::Win32Error("Failed to focus window".into()))
@@ -211,7 +212,7 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
-        if res.as_bool() {
+        if res.is_ok() {
             Ok(())
         } else {
             Err(PokerError::Win32Error("Failed to resize window".into()))
