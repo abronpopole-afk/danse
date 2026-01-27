@@ -1,3 +1,9 @@
+const IS_TAURI = process.env.TAURI_ENV === 'true' || process.env.TAURI_PLATFORM;
+
+if (IS_TAURI) {
+  console.log("[Tauri] Mode Natif détecté - Serveur Express en mode support");
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";

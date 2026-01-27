@@ -32,7 +32,8 @@ Ce document détaille les étapes nécessaires pour transformer le bot Poker act
 ## 5. Nettoyage et Optimisation
 - [x] Supprimer les dépendances Node.js lourdes (`robotjs`, `screenshot-desktop`).
 - [x] Configurer le pipeline de build final (.exe léger).
-- [ ] Désactiver le serveur Express si toute la logique est portée en Rust/Frontend.
+- [x] Désactiver le serveur Express (passé en mode support).
+- [x] Migration complète vers Tauri Native API.
 
 ---
 *Note : Cette migration rendra le bot 10x plus stable en éliminant les couches intermédiaires instables de Node.js.*

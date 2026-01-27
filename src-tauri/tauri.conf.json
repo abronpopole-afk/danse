@@ -48,8 +48,10 @@
         "fullscreen": false,
         "height": 800,
         "resizable": true,
-        "title": "GTO Poker Bot",
-        "width": 1200
+        "title": "GTO Poker Bot - Ultra High Performance",
+        "width": 1200,
+        "decorations": true,
+        "transparent": false
       }
     ]
   }
