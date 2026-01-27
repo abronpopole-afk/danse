@@ -1,18 +1,13 @@
 {
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:5000",
-    "distDir": "../dist"
+    "beforeBuildCommand": "npm run build"
   },
   "package": {
     "productName": "GTO Poker Bot",
     "version": "0.1.0"
   },
   "tauri": {
-    "allowlist": {
-      "all": true
-    },
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
@@ -35,6 +30,9 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256"
       }
+    },
+    "allowlist": {
+      "all": true
     },
     "security": {
       "csp": null
