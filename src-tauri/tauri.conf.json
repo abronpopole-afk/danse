@@ -26,7 +26,7 @@
       "publisher": "",
       "resources": [],
       "shortDescription": "",
-      "targets": ["msi"],
+      "targets": [],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256"
