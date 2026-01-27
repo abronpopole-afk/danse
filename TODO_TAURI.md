@@ -28,6 +28,7 @@ Ce document détaille les étapes nécessaires pour transformer le bot Poker act
 - [x] Configurer le pipeline de build final (.exe léger).
 - [x] Désactiver le serveur Express (passé en mode support).
 - [x] Migration complète vers Tauri Native API.
+- [x] Nettoyage final : Suppression des workflows GitHub Electron et de `electron-builder.json`.
 
 ---
 *Note : Cette migration rendra le bot 10x plus stable en éliminant les couches intermédiaires instables de Node.js.*
