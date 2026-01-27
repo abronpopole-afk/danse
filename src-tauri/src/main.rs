@@ -10,6 +10,7 @@ use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
 use anyhow::{Result, anyhow};
 use std::sync::Mutex;
+use base64::{Engine as _, engine::general_purpose};
 
 #[derive(serde::Serialize, Clone, Debug)]
 struct WindowInfo {
@@ -58,7 +59,6 @@ fn find_poker_windows() -> Vec<WindowInfo> {
     all.into_iter()
         .filter(|w| {
             let t = w.title.to_lowercase();
-            // Noms de fenêtres typiques pour GGClub ou plateformes similaires
             t.contains("ggclub") || t.contains("poker") || w.class_name.contains("Qt5Window")
         })
         .collect()
@@ -96,14 +96,29 @@ fn capture_window_internal(hwnd: isize) -> Result<String> {
             return Err(anyhow!("BitBlt failed"));
         }
 
-        // Pour l'instant on se contente de confirmer la réussite
-        // L'encodage base64 sera ajouté avec une crate dédiée si nécessaire
-        
+        let mut bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: width,
+                biHeight: -height, // top-down
+                biPlanes: 1,
+                biBitCount: 24,
+                biCompression: 0, // BI_RGB
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let mut buffer: Vec<u8> = vec![0; (width * height * 3) as usize];
+        GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
+
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
 
-        Ok(format!("Captured {}x{} image successfully", width, height))
+        // Convert captured RGB buffer to base64 string
+        let base64_image = general_purpose::STANDARD.encode(&buffer);
+        Ok(format!("data:image/bmp;base64,{}", base64_image))
     }
 }
 
@@ -132,6 +147,21 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> Result<(), String> {
     }
 }
 
+#[command]
+async fn stream_window_frames(window: Window, hwnd: isize) -> Result<(), String> {
+    // Cette commande simule un flux de frames pour le frontend
+    // Dans une implémentation complète, on utiliserait DXGI ici
+    std::thread::spawn(move || {
+        loop {
+            if let Ok(image_data) = capture_window_internal(hwnd) {
+                let _ = window.emit("poker-frame", image_data);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100)); // 10 FPS
+        }
+    });
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -140,6 +170,7 @@ fn main() {
             capture_window,
             focus_window,
             resize_window,
+            stream_window_frames
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
