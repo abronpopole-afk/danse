@@ -96,13 +96,13 @@
   <meta name="route-pattern" content="/:user_id/:repository/raw/*name(/*path)" data-turbo-transient>
   <meta name="route-controller" content="blob" data-turbo-transient>
   <meta name="route-action" content="raw" data-turbo-transient>
-  <meta name="fetch-nonce" content="v2:9f6e9f77-9ecc-d282-ef93-f40329aba205">
+  <meta name="fetch-nonce" content="v2:6da6919c-2b68-f986-a1ae-7b363ed3b54a">
 
     
   <meta name="current-catalog-service-hash" content="f3abb0cc802f3d7b95fc8762b94bdcb13bf39634c40c357301c4aa1d67a256fb">
 
 
-  <meta name="request-id" content="AD00:3910C8:188E1A3:2316145:6978E3F4" data-turbo-transient="true" /><meta name="html-safe-nonce" content="bb7db40b646ba8a3c85e7d4ad32b5a9a2d31b82b5eb70d61cc51722e3d43d818" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6bnVsbCwicmVxdWVzdF9pZCI6IkFEMDA6MzkxMEM4OjE4OEUxQTM6MjMxNjE0NTo2OTc4RTNGNCIsInZpc2l0b3JfaWQiOiI4MDE1NDE1MTMyMzI0MTYwNTAwIiwicmVnaW9uX2VkZ2UiOiJpYWQiLCJyZWdpb25fcmVuZGVyIjoiaWFkIn0=" data-turbo-transient="true" /><meta name="visitor-hmac" content="0fa30532f36102fc7c24aab8d4067b38be70b3cc80b1f6031b956818fea36d4b" data-turbo-transient="true" />
+  <meta name="request-id" content="D540:15B1F7:214BDAB:2F04006:6978EB2E" data-turbo-transient="true" /><meta name="html-safe-nonce" content="cf2ce4a1a95ffbe73744d4347e91f13a472faf99a5bd7dd74c4fc002cb320bda" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6bnVsbCwicmVxdWVzdF9pZCI6IkQ1NDA6MTVCMUY3OjIxNEJEQUI6MkYwNDAwNjo2OTc4RUIyRSIsInZpc2l0b3JfaWQiOiI4NTczODg5MDQ2OTIzMjQyMjg2IiwicmVnaW9uX2VkZ2UiOiJpYWQiLCJyZWdpb25fcmVuZGVyIjoiaWFkIn0=" data-turbo-transient="true" /><meta name="visitor-hmac" content="3f677112480a6604ea2310618e7b9b227c3000f92a9120338da7ba933703197e" data-turbo-transient="true" />
 
 
     <meta name="hovercard-subject-tag" content="repository:196701619" data-turbo-transient>
@@ -111,7 +111,7 @@
   <meta name="github-keyboard-shortcuts" content="copilot" data-turbo-transient="true" />
   
 
-  <meta name="selected-link" value="/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png" data-turbo-transient>
+  <meta name="selected-link" value="/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png" data-turbo-transient>
   <link rel="assets" href="https://github.githubassets.com/">
 
     <meta name="google-site-verification" content="Apib7-x98H0j5cPqHWwSMm6dNU4GmODRoqxLiDzdx9I">
@@ -139,7 +139,7 @@
 
     <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
     <meta property="fb:app_id" content="1401488693436528">
-    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png" />
+    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png" />
 
       <meta property="og:url" content="https://github.com">
   <meta property="og:site_name" content="GitHub">
@@ -196,7 +196,7 @@
 
 
 
-      <link rel="canonical" href="https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png" data-turbo-transient>
+      <link rel="canonical" href="https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png" data-turbo-transient>
 
 
     <meta name="turbo-body-classes" content="logged-out env-production page-responsive min-height-full d-flex flex-column">
@@ -207,7 +207,7 @@
 
   <meta name="browser-errors-url" content="https://api.github.com/_private/browser/errors">
 
-  <meta name="release" content="eaed570eead52a9920afef75dc3eb6d826fdc5ef">
+  <meta name="release" content="024f9f4ca72571329d73933440b8ceb5414e77a5">
   <meta name="ui-target" content="full">
 
   <link rel="mask-icon" href="https://github.githubassets.com/assets/pinned-octocat-093da3e6fa40.svg" color="#000000">
@@ -300,19 +300,19 @@
 
       <div class="d-flex flex-1 flex-order-2 text-right d-lg-none gap-2 flex-justify-end">
           <a
-            href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fdev%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png"
+            href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fv1%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png"
             class="HeaderMenu-link HeaderMenu-button d-inline-flex f5 no-underline border color-border-default rounded-2 px-2 py-1 color-fg-inherit js-prevent-focus-on-mobile-nav"
-            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="6bb3ef8b1e98970ce50bd3e909f2961110f84751ae0e92817ec7c5671dcef03b"
+            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="095fc67d22c1c74b5d6f4d75406d25598bc870d94f9604bdeb988cdfcb263059"
             data-analytics-event="{&quot;category&quot;:&quot;Marketing nav&quot;,&quot;action&quot;:&quot;click to Sign in&quot;,&quot;label&quot;:&quot;ref_page:Marketing;ref_cta:Sign in;ref_loc:Header&quot;}"
           >
             Sign in
           </a>
               <div class="AppHeader-appearanceSettings">
     <react-partial-anchor>
-      <button data-target="react-partial-anchor.anchor" id="icon-button-16218f0f-610e-4d0b-ae0d-a0420a9199f1" aria-labelledby="tooltip-455aa98e-6de9-4b72-ba4c-990dda5e6b6d" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
+      <button data-target="react-partial-anchor.anchor" id="icon-button-f28b8741-c105-4ebc-9bf9-75a35aa86a35" aria-labelledby="tooltip-2a9a91d0-a4f7-4f25-bdef-eb12794287a8" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
     <path d="M15 2.75a.75.75 0 0 1-.75.75h-4a.75.75 0 0 1 0-1.5h4a.75.75 0 0 1 .75.75Zm-8.5.75v1.25a.75.75 0 0 0 1.5 0v-4a.75.75 0 0 0-1.5 0V2H1.75a.75.75 0 0 0 0 1.5H6.5Zm1.25 5.25a.75.75 0 0 0 0-1.5h-6a.75.75 0 0 0 0 1.5h6ZM15 8a.75.75 0 0 1-.75.75H11.5V10a.75.75 0 1 1-1.5 0V6a.75.75 0 0 1 1.5 0v1.25h2.75A.75.75 0 0 1 15 8Zm-9 5.25v-2a.75.75 0 0 0-1.5 0v1.25H1.75a.75.75 0 0 0 0 1.5H4.5v1.25a.75.75 0 0 0 1.5 0v-2Zm9 0a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h6a.75.75 0 0 1 .75.75Z"></path>
 </svg>
-</button><tool-tip id="tooltip-455aa98e-6de9-4b72-ba4c-990dda5e6b6d" for="icon-button-16218f0f-610e-4d0b-ae0d-a0420a9199f1" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
+</button><tool-tip id="tooltip-2a9a91d0-a4f7-4f25-bdef-eb12794287a8" for="icon-button-f28b8741-c105-4ebc-9bf9-75a35aa86a35" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
 
       <template data-target="react-partial-anchor.template">
         <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react.5bce0217e66f2d3c3166.module.css" />
@@ -360,7 +360,7 @@
                 
 
 
-<qbsearch-input class="search-input" data-scope="" data-custom-scopes-path="/search/custom_scopes" data-delete-custom-scopes-csrf="JK2MGLrSYxIZOsEdh12XOqhuimhEHvgVyDndH8lFyBOG491cetimNPadmGICizJ3bhwiFE8vcburNtQFmUXrOg" data-max-custom-scopes="10" data-header-redesign-enabled="false" data-initial-value="" data-blackbird-suggestions-path="/search/suggestions" data-jump-to-suggestions-path="/_graphql/GetSuggestedNavigationDestinations" data-current-repository="" data-current-org="" data-current-owner="" data-logged-in="false" data-copilot-chat-enabled="false" data-nl-search-enabled="false" data-retain-scroll-position="true">
+<qbsearch-input class="search-input" data-scope="" data-custom-scopes-path="/search/custom_scopes" data-delete-custom-scopes-csrf="K9BlCxxBBxLGHX8W4_AfbYQ_YLvtxfa9zT7WwkB9OB2KpSg_J9mSlxjeXFCg3cSU2QUbqDx0-GBSZYZcubkaNg" data-max-custom-scopes="10" data-header-redesign-enabled="false" data-initial-value="" data-blackbird-suggestions-path="/search/suggestions" data-jump-to-suggestions-path="/_graphql/GetSuggestedNavigationDestinations" data-current-repository="" data-current-org="" data-current-owner="" data-logged-in="false" data-copilot-chat-enabled="false" data-nl-search-enabled="false" data-retain-scroll-position="true">
   <div
     class="search-input-container search-with-dialog position-relative d-flex flex-row flex-items-center mr-4 rounded"
     data-action="click:qbsearch-input#searchInputContainerClicked"
@@ -424,7 +424,7 @@
           ></div>
           <div class="QueryBuilder-InputWrapper">
             <div aria-hidden="true" class="QueryBuilder-Sizer" data-target="query-builder.sizer"></div>
-            <input id="query-builder-test" name="query-builder-test" value="" autocomplete="off" type="text" role="combobox" spellcheck="false" aria-expanded="false" aria-describedby="validation-1f5926ce-4ea5-4895-9518-0d1aed964efd" data-target="query-builder.input" data-action="
+            <input id="query-builder-test" name="query-builder-test" value="" autocomplete="off" type="text" role="combobox" spellcheck="false" aria-expanded="false" aria-describedby="validation-2d267553-d267-4d37-a247-ccf9e84b2e5b" data-target="query-builder.input" data-action="
           input:query-builder#inputChange
           blur:query-builder#inputBlur
           keydown:query-builder#inputKeydown
@@ -662,7 +662,7 @@
                   tabindex="-1"
                 ></ul>
         </div>
-      <div class="FormControl-inlineValidation" id="validation-1f5926ce-4ea5-4895-9518-0d1aed964efd" hidden="hidden">
+      <div class="FormControl-inlineValidation" id="validation-2d267553-d267-4d37-a247-ccf9e84b2e5b" hidden="hidden">
         <span class="FormControl-inlineValidation--visual">
           <svg aria-hidden="true" height="12" viewBox="0 0 12 12" version="1.1" width="12" data-view-component="true" class="octicon octicon-alert-fill">
     <path d="M4.855.708c.5-.896 1.79-.896 2.29 0l4.675 8.351a1.312 1.312 0 0 1-1.146 1.954H1.33A1.313 1.313 0 0 1 .183 9.058ZM7 7V3H5v4Zm-1 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"></path>
@@ -703,7 +703,7 @@
   
 </div>
       <scrollable-region data-labelled-by="feedback-dialog-title">
-        <div data-view-component="true" class="Overlay-body">        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="code-search-feedback-form" data-turbo="false" action="/search/feedback" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="d7uNMc7bXjfuka-SfoN0cgbepNV5b_44k5fSvIWt_UYiGCOiJCbOmjqvFN11aR3q6oioForomgR7w3KG2XsBZA" />
+        <div data-view-component="true" class="Overlay-body">        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="code-search-feedback-form" data-turbo="false" action="/search/feedback" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="5JakM9qDJlACmh66l2GJBRTKsuorum9EEhb0wG25JDwS3sz2FiIyys7bihF5xQrXQP74c_WaWWvBJblpGKXniA" />
           <p>We read every piece of feedback, and take your input very seriously.</p>
           <textarea name="feedback" class="form-control width-full mb-2" style="height: 120px" id="feedback"></textarea>
           <input name="include_email" id="include_email" aria-label="Include my email address so I can be contacted" class="form-control mr-2" type="checkbox">
@@ -741,7 +741,7 @@
         <div data-view-component="true" class="Overlay-body">        <div data-target="custom-scopes.customScopesModalDialogFlash"></div>
 
         <div hidden class="create-custom-scope-form" data-target="custom-scopes.createCustomScopeForm">
-        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="custom-scopes-dialog-form" data-turbo="false" action="/search/custom_scopes" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="Zw8c5FEh0j0_TACSBTUNUsXhno6w5HbSbmWi6dM0Tb13LuGMffVpLFlSA_eYfXrDME6c-jDITXa2cBeSeRz0_w" />
+        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="custom-scopes-dialog-form" data-turbo="false" action="/search/custom_scopes" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="6opSmnE36f3hH1dU17Xhj0cM-iCA3f7BqIKTt_H6U-lrFJxC2oS11fnXDNOQ-Jl17hZl9amuXHICfSQ5c8VQRw" />
           <div data-target="custom-scopes.customScopesModalDialogFlash"></div>
 
           <input type="hidden" id="custom_scope_id" name="custom_scope_id" data-target="custom-scopes.customScopesIdField">
@@ -759,7 +759,7 @@
                 placeholder="github-ruby"
                 required
                 maxlength="50">
-              <input type="hidden" value="PNBCV-onAiVfnci_E0nwfBGKGQc5eufbYZqCvKyixqgHZSE2jxED91N-9_YBnObadXGr8X7pVf7FCmZkb05UbQ" data-csrf="true" />
+              <input type="hidden" value="_6LTfSX4xuHEfumwxHecCHlG-LG2x8cMPXiPXYF1ho3YlNAhUct42174CinXCA-KFgrd-g5ogXi3Ifmvo57fSQ" data-csrf="true" />
             </auto-check>
           </div>
 
@@ -801,10 +801,10 @@
 
             <div class="position-relative HeaderMenu-link-wrap d-lg-inline-block">
               <a
-                href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fdev%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png"
+                href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fv1%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png"
                 class="HeaderMenu-link HeaderMenu-link--sign-in HeaderMenu-button flex-shrink-0 no-underline d-none d-lg-inline-flex border border-lg-0 rounded px-2 py-1"
                 style="margin-left: 12px;"
-                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="6bb3ef8b1e98970ce50bd3e909f2961110f84751ae0e92817ec7c5671dcef03b"
+                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="095fc67d22c1c74b5d6f4d75406d25598bc870d94f9604bdeb988cdfcb263059"
                 data-analytics-event="{&quot;category&quot;:&quot;Marketing nav&quot;,&quot;action&quot;:&quot;click to go to homepage&quot;,&quot;label&quot;:&quot;ref_page:Marketing;ref_cta:Sign in;ref_loc:Header&quot;}"
               >
                 Sign in
@@ -814,7 +814,7 @@
     <h4 data-view-component="true" class="color-fg-default mb-2">                    Sign in to GitHub
 </h4>
                         
-<!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/session" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="vr243Zu21Ep54WrvQtmENZBY5frlMviVpTSoao49Q3jYrf-JzuIet8078mj4etSC1MxlBn0KrwK8mY1FOtGTCA" />  <input type="hidden" name="add_account" id="add_account" autocomplete="off" class="form-control" />
+<!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/session" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="4YN-iKD58xIT7JvGm4aPalnfH7Uf-5itgAZUwOjPoKAK2eyCF1FJSfnDOeqV0DMOb-ksfhxbVUeetG1uiIslrA" />  <input type="hidden" name="add_account" id="add_account" autocomplete="off" class="form-control" />
 
     <label for="login_field">
       Username or email address
@@ -832,17 +832,17 @@
 <input type="hidden" class="js-support" name="javascript-support" value="unknown">
 <input type="hidden" class="js-webauthn-support" name="webauthn-support" value="unknown">
 <input type="hidden" class="js-webauthn-iuvpaa-support" name="webauthn-iuvpaa-support" value="unknown">
-<input type="hidden" name="return_to" id="return_to" value="https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png" autocomplete="off" class="form-control" />
+<input type="hidden" name="return_to" id="return_to" value="https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png" autocomplete="off" class="form-control" />
 <input type="hidden" name="allow_signup" id="allow_signup" autocomplete="off" class="form-control" />
 <input type="hidden" name="client_id" id="client_id" autocomplete="off" class="form-control" />
 <input type="hidden" name="integration" id="integration" autocomplete="off" class="form-control" />
-<input type="text" name="required_field_42cb" hidden="hidden" class="form-control" /><input type="hidden" name="timestamp" value="1769530356828" autocomplete="off" class="form-control" /><input type="hidden" name="timestamp_secret" value="b0ec3dd5ba14904e3ac4874dc91032ad9cee442007e9df84a6619c2c6708c460" autocomplete="off" class="form-control" />
+<input type="text" name="required_field_3e9c" hidden="hidden" class="form-control" /><input type="hidden" name="timestamp" value="1769532207098" autocomplete="off" class="form-control" /><input type="hidden" name="timestamp_secret" value="7ad5cc4da4568685f72e2330d30f29284bc6b19052d91b197398406248c9ae1b" autocomplete="off" class="form-control" />
 
     <input type="submit" name="commit" value="Sign in" class="btn btn-primary btn-block js-sign-in-button" data-disable-with="Signing in…" data-signin-label="Sign in" data-sso-label="Sign in with your identity provider" development="false" disable-emu-sso="false" />
   </div>
 </form>  <webauthn-status class="js-webauthn-login-emu-control">
         <div data-target="webauthn-status.partial" class="d-flex flex-justify-between flex-column mt-3 mb-0" hidden>
-          <a href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fdev%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png" data-analytics-event="{&quot;category&quot;:&quot;passkey_404_login&quot;,&quot;action&quot;:&quot;clicked&quot;,&quot;label&quot;:null}" data-view-component="true" class="Button--link Button--medium Button">  <span class="Button-content">
+          <a href="/login?return_to=https%3A%2F%2Fgithub.com%2Ftauri-apps%2Ftauri%2Fraw%2Fv1%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png" data-analytics-event="{&quot;category&quot;:&quot;passkey_404_login&quot;,&quot;action&quot;:&quot;clicked&quot;,&quot;label&quot;:null}" data-view-component="true" class="Button--link Button--medium Button">  <span class="Button-content">
     <span class="Button-label">or continue with other methods</span>
   </span>
 </a>
@@ -852,20 +852,20 @@
 
 </div></div>            </div>
 
-              <a href="/signup?ref_cta=Sign+up&amp;ref_loc=header+logged+out&amp;ref_page=%2Ftauri-apps%2Ftauri%2Fraw%2Fdev%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png&amp;source=header"
+              <a href="/signup?ref_cta=Sign+up&amp;ref_loc=header+logged+out&amp;ref_page=%2Ftauri-apps%2Ftauri%2Fraw%2Fv1%2Ftooling%2Fcli%2Ftemplates%2Fapp%2Ficons%2FSquare310x310Logo.png&amp;source=header"
                 class="HeaderMenu-link HeaderMenu-link--sign-up HeaderMenu-button flex-shrink-0 d-flex d-lg-inline-flex no-underline border color-border-default rounded px-2 py-1"
-                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="6bb3ef8b1e98970ce50bd3e909f2961110f84751ae0e92817ec7c5671dcef03b"
-                data-analytics-event="{&quot;category&quot;:&quot;Sign up&quot;,&quot;action&quot;:&quot;click to sign up for account&quot;,&quot;label&quot;:&quot;ref_page:/tauri-apps/tauri/raw/dev/tooling/cli/templates/app/icons/Square310x310Logo.png;ref_cta:Sign up;ref_loc:header logged out&quot;}"
+                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="095fc67d22c1c74b5d6f4d75406d25598bc870d94f9604bdeb988cdfcb263059"
+                data-analytics-event="{&quot;category&quot;:&quot;Sign up&quot;,&quot;action&quot;:&quot;click to sign up for account&quot;,&quot;label&quot;:&quot;ref_page:/tauri-apps/tauri/raw/v1/tooling/cli/templates/app/icons/Square310x310Logo.png;ref_cta:Sign up;ref_loc:header logged out&quot;}"
               >
                 Sign up
               </a>
 
                 <div class="AppHeader-appearanceSettings">
     <react-partial-anchor>
-      <button data-target="react-partial-anchor.anchor" id="icon-button-70d61b55-e8d6-457e-b5ea-e96e59fa0362" aria-labelledby="tooltip-a180200f-4a74-437f-a143-7cc72ac796fd" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
+      <button data-target="react-partial-anchor.anchor" id="icon-button-66149b8d-1d7d-4fd7-8ff5-7145d2b2f791" aria-labelledby="tooltip-0f4e83f4-bb61-4218-977b-375eb8df50cc" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
     <path d="M15 2.75a.75.75 0 0 1-.75.75h-4a.75.75 0 0 1 0-1.5h4a.75.75 0 0 1 .75.75Zm-8.5.75v1.25a.75.75 0 0 0 1.5 0v-4a.75.75 0 0 0-1.5 0V2H1.75a.75.75 0 0 0 0 1.5H6.5Zm1.25 5.25a.75.75 0 0 0 0-1.5h-6a.75.75 0 0 0 0 1.5h6ZM15 8a.75.75 0 0 1-.75.75H11.5V10a.75.75 0 1 1-1.5 0V6a.75.75 0 0 1 1.5 0v1.25h2.75A.75.75 0 0 1 15 8Zm-9 5.25v-2a.75.75 0 0 0-1.5 0v1.25H1.75a.75.75 0 0 0 0 1.5H4.5v1.25a.75.75 0 0 0 1.5 0v-2Zm9 0a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h6a.75.75 0 0 1 .75.75Z"></path>
 </svg>
-</button><tool-tip id="tooltip-a180200f-4a74-437f-a143-7cc72ac796fd" for="icon-button-70d61b55-e8d6-457e-b5ea-e96e59fa0362" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
+</button><tool-tip id="tooltip-0f4e83f4-bb61-4218-977b-375eb8df50cc" for="icon-button-66149b8d-1d7d-4fd7-8ff5-7145d2b2f791" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
 
       <template data-target="react-partial-anchor.template">
         <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react.5bce0217e66f2d3c3166.module.css" />
@@ -903,10 +903,10 @@
         <span class="js-stale-session-flash-signed-out" hidden>You signed out in another tab or window. <a class="Link--inTextBlock" href="">Reload</a> to refresh your session.</span>
         <span class="js-stale-session-flash-switched" hidden>You switched accounts on another tab or window. <a class="Link--inTextBlock" href="">Reload</a> to refresh your session.</span>
 
-    <button id="icon-button-23c3081b-2983-4219-95a1-197b473be8d7" aria-labelledby="tooltip-905d6c55-ac1d-4dfe-963d-1177c48459a0" type="button" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium flash-close js-flash-close">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x Button-visual">
+    <button id="icon-button-50be317b-df24-45af-9fb8-b27bec894152" aria-labelledby="tooltip-c91716cc-fe2a-442c-a588-f0ca8cc3ddbe" type="button" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium flash-close js-flash-close">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x Button-visual">
     <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
 </svg>
-</button><tool-tip id="tooltip-905d6c55-ac1d-4dfe-963d-1177c48459a0" for="icon-button-23c3081b-2983-4219-95a1-197b473be8d7" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Dismiss alert</tool-tip>
+</button><tool-tip id="tooltip-c91716cc-fe2a-442c-a588-f0ca8cc3ddbe" for="icon-button-50be317b-df24-45af-9fb8-b27bec894152" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Dismiss alert</tool-tip>
 
 
   
