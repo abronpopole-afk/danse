@@ -20,10 +20,16 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Masquer le mot de passe dans les logs
-const dbUrlForLog = process.env.DATABASE_URL.replace(/:([^@]+)@/, ':***@');
+const dbUrlForLog = (process.env.DATABASE_URL || "").replace(/:([^@]+)@/, ':***@');
 logger.info('[DB]', 'Connexion à:', { url: dbUrlForLog });
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  // Ajout de paramètres pour la robustesse en mode local
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 export const db = drizzle(pool, { schema });
 
 // Test de connexion au démarrage
