@@ -35,3 +35,4 @@ jobs:
           releaseBody: "Automated release of GTO Poker Bot"
           releaseDraft: false
           prerelease: false
+          build_command: npx tauri build
