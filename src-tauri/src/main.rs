@@ -28,6 +28,8 @@ pub enum PokerError {
     CaptureFailed,
     #[error("DXGI Error: {0}")]
     DxgiError(String),
+    #[error("Feature not implemented in native mode yet")]
+    NotImplemented,
 }
 
 impl From<anyhow::Error> for PokerError {
@@ -96,6 +98,7 @@ fn init_dxgi() -> PokerResult<()> {
     Ok(())
 }
 
+// Windows Management
 #[command]
 fn list_windows() -> Vec<WindowInfo> {
     let mut windows: Vec<WindowInfo> = Vec::new();
@@ -110,14 +113,11 @@ unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BO
     if IsWindowVisible(hwnd).as_bool() {
         let mut text: [u16; 512] = [0; 512];
         let len = GetWindowTextW(hwnd, &mut text);
-        
         let mut class_text: [u16; 512] = [0; 512];
         let class_len = GetClassNameW(hwnd, &mut class_text);
-
         if len > 0 {
             let title = String::from_utf16_lossy(&text[..len as usize]);
             let class_name = String::from_utf16_lossy(&class_text[..class_len as usize]);
-            
             if !title.trim().is_empty() {
                 windows.push(WindowInfo {
                     hwnd: hwnd.0 as isize,
@@ -153,26 +153,19 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
         if !GetWindowRect(hwnd, &mut rect).as_bool() {
             return Err(PokerError::Win32Error("Failed to get window rect".into()));
         }
-
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
-
         if width <= 0 || height <= 0 {
             return Err(PokerError::InvalidDimensions(width, height));
         }
-
         let hdc_screen = GetDC(hwnd);
         if hdc_screen.is_invalid() {
             return Err(PokerError::Win32Error("Failed to get DC".into()));
         }
-        
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
-        
         let old_obj = SelectObject(hdc_mem, hbitmap);
-
         let bit_blt_res = BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY);
-        
         let mut bmi = BITMAPINFO {
             bmiHeader: BITMAPINFOHEADER {
                 biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
@@ -185,22 +178,17 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
             },
             ..Default::default()
         };
-
         let buffer_size = (width * height * 3) as usize;
         let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
         buffer.set_len(buffer_size);
-        
         let _ = GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
-
         SelectObject(hdc_mem, old_obj);
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
-
         if !bit_blt_res.as_bool() {
             return Err(PokerError::CaptureFailed);
         }
-
         let base64_image = general_purpose::STANDARD.encode(&buffer);
         Ok(format!("data:image/bmp;base64,{}", base64_image))
     }
@@ -234,7 +222,6 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
 #[command]
 async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
     let _ = init_dxgi(); 
-
     std::thread::spawn(move || {
         let mut last_capture = std::time::Instant::now();
         loop {
@@ -242,7 +229,6 @@ async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
             if elapsed < std::time::Duration::from_millis(33) {
                 std::thread::sleep(std::time::Duration::from_millis(33) - elapsed);
             }
-            
             last_capture = std::time::Instant::now();
             if let Ok(image_data) = capture_window_internal(hwnd) {
                 if let Err(_) = window.emit("poker-frame", image_data) {
@@ -256,15 +242,47 @@ async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
     Ok(())
 }
 
+// Stubbed placeholders for backend transition
+#[command] fn start_session() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn stop_session() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn force_stop_session() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn cleanup_stale_sessions() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_current_session() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_all_tables() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn add_table(_config: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn remove_table(_table_id: String) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn start_table(_table_id: String) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn pause_table(_table_id: String) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn start_all_tables() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn stop_all_tables() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_humanizer_config() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn update_humanizer_config(_updates: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_gto_config() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn update_gto_config(_updates: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn test_gto_connection() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_platform_config() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn update_platform_config(_updates: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn connect_platform(_config: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn disconnect_platform(_account_id: String) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_recent_logs(_limit: u32) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_global_stats() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_recent_histories(_limit: u32) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn simulate_hand(_params: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn get_player_profile() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn update_player_personality(_personality: String) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn reset_player_profile() -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+#[command] fn send_ws_message(_message: serde_json::Value) -> PokerResult<serde_json::Value> { Err(PokerError::NotImplemented) }
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            list_windows,
-            find_poker_windows,
-            capture_window,
-            focus_window,
-            resize_window,
-            stream_window_frames
+            list_windows, find_poker_windows, capture_window, focus_window, resize_window, stream_window_frames,
+            start_session, stop_session, force_stop_session, cleanup_stale_sessions, get_current_session,
+            get_all_tables, add_table, remove_table, start_table, pause_table, start_all_tables, stop_all_tables,
+            get_humanizer_config, update_humanizer_config, get_gto_config, update_gto_config, test_gto_connection,
+            get_platform_config, update_platform_config, connect_platform, disconnect_platform,
+            get_recent_logs, get_global_stats, get_recent_histories, simulate_hand,
+            get_player_profile, update_player_personality, reset_player_profile, send_ws_message
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

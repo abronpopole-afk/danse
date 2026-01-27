@@ -1,26 +1,8 @@
+import { invoke } from "@tauri-apps/api/tauri";
 import { 
   BotSession, PokerTable, HumanizerConfig, GtoConfig, 
   PlatformConfig, ActionLog, BotStats, HandHistory, GtoRecommendation 
 } from "@shared/schema";
-
-const API_BASE = "/api";
-
-async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Erreur réseau" }));
-    throw new Error(error.error || `Erreur HTTP: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 export interface TableState {
   id: string;
@@ -66,139 +48,85 @@ export interface HumanizerSettings {
 export const api = {
   session: {
     async start(): Promise<{ success: boolean; session: BotSession }> {
-      return fetchJson(`${API_BASE}/session/start`, { method: "POST" });
+      return invoke("start_session");
     },
-
     async stop(): Promise<{ success: boolean; stats: TableStats }> {
-      return fetchJson(`${API_BASE}/session/stop`, { method: "POST" });
+      return invoke("stop_session");
     },
-
     async forceStop(): Promise<{ success: boolean; forced: boolean }> {
-      return fetchJson(`${API_BASE}/session/force-stop`, { method: "POST" });
+      return invoke("force_stop_session");
     },
-
     async cleanupStale(): Promise<{ success: boolean; cleaned: boolean; sessionId?: string }> {
-      return fetchJson(`${API_BASE}/session/cleanup-stale`, { method: "POST" });
+      return invoke("cleanup_stale_sessions");
     },
-
     async getCurrent(): Promise<{ session: BotSession | null; stats: TableStats; tables: TableState[] }> {
-      return fetchJson(`${API_BASE}/session/current`);
+      return invoke("get_current_session");
     },
   },
 
   tables: {
     async getAll(): Promise<{ tables: TableState[] }> {
-      return fetchJson(`${API_BASE}/tables`);
+      return invoke("get_all_tables");
     },
-
     async add(config: { tableIdentifier: string; tableName: string; stakes: string }): Promise<{ success: boolean; table: TableState }> {
-      return fetchJson(`${API_BASE}/tables`, {
-        method: "POST",
-        body: JSON.stringify(config),
-      });
+      return invoke("add_table", { config });
     },
-
     async remove(tableId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/tables/${tableId}`, { method: "DELETE" });
+      return invoke("remove_table", { tableId });
     },
-
     async start(tableId: string): Promise<{ success: boolean; state: TableState }> {
-      return fetchJson(`${API_BASE}/tables/${tableId}/start`, { method: "POST" });
+      return invoke("start_table", { tableId });
     },
-
     async pause(tableId: string): Promise<{ success: boolean; state: TableState }> {
-      return fetchJson(`${API_BASE}/tables/${tableId}/pause`, { method: "POST" });
+      return invoke("pause_table", { tableId });
     },
-
     async startAll(): Promise<{ success: boolean; stats: TableStats }> {
-      return fetchJson(`${API_BASE}/tables/start-all`, { method: "POST" });
+      return invoke("start_all_tables");
     },
-
     async stopAll(): Promise<{ success: boolean; stats: TableStats }> {
-      return fetchJson(`${API_BASE}/tables/stop-all`, { method: "POST" });
+      return invoke("stop_all_tables");
     },
   },
 
   humanizer: {
     async get(): Promise<{ config: HumanizerConfig; currentSettings: HumanizerSettings }> {
-      return fetchJson(`${API_BASE}/humanizer`);
+      return invoke("get_humanizer_config");
     },
-
     async update(updates: Partial<HumanizerConfig>): Promise<{ success: boolean; config: HumanizerConfig }> {
-      return fetchJson(`${API_BASE}/humanizer`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      });
+      return invoke("update_humanizer_config", { updates });
     },
   },
 
   gtoConfig: {
     async get(): Promise<{ config: GtoConfig; connected: boolean; usingSimulation: boolean }> {
-      return fetchJson(`${API_BASE}/gto-config`);
+      return invoke("get_gto_config");
     },
-
     async update(updates: Partial<GtoConfig>): Promise<{ success: boolean; config: GtoConfig }> {
-      return fetchJson(`${API_BASE}/gto-config`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      });
+      return invoke("update_gto_config", { updates });
     },
-
     async test(): Promise<{ success: boolean; error?: string }> {
-      return fetchJson(`${API_BASE}/gto-config/test`, { method: "POST" });
+      return invoke("test_gto_connection");
     },
   },
 
   platform: {
     async get(): Promise<{ config: PlatformConfig | null }> {
-      return fetchJson(`${API_BASE}/platform-config`);
+      return invoke("get_platform_config");
     },
-
     async update(updates: Partial<PlatformConfig>): Promise<{ success: boolean; config: PlatformConfig }> {
-      return fetchJson(`${API_BASE}/platform-config`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      });
+      return invoke("update_platform_config", { updates });
     },
-
-    async getStats(): Promise<{ accounts: any[] }> {
-      const res = await fetchJson<{ config: PlatformConfig | null }>(`${API_BASE}/platform-config`);
-      return { accounts: res.config ? [res.config] : [] };
-    },
-
-    async getActive(): Promise<{ configs: any[] }> {
-      const res = await fetchJson<{ config: PlatformConfig | null }>(`${API_BASE}/platform-config`);
-      return { configs: res.config ? [res.config] : [] };
-    },
-
     async connect(config: any): Promise<{ success: boolean; accountId?: string }> {
-      return fetchJson(`${API_BASE}/platform/connect`, {
-        method: "POST",
-        body: JSON.stringify(config),
-      });
+      return invoke("connect_platform", { config });
     },
-
     async disconnect(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform/disconnect`, {
-        method: "POST",
-      });
-    },
-
-    async pause(accountId: string): Promise<{ success: boolean }> {
-      return fetchJson(`${API_BASE}/platform/pause`, {
-        method: "POST",
-      });
-    },
-
-    async delete(accountId: string): Promise<{ success: boolean }> {
-      // Delete is same as disconnect since server doesn't have separate delete endpoint
-      return this.disconnect(accountId);
+      return invoke("disconnect_platform", { accountId });
     },
   },
 
   logs: {
     async getRecent(limit: number = 50): Promise<{ logs: ActionLog[] }> {
-      return fetchJson(`${API_BASE}/logs?limit=${limit}`);
+      return invoke("get_recent_logs", { limit });
     },
   },
 
@@ -210,80 +138,69 @@ export const api = {
       humanizerSettings: HumanizerSettings;
       gtoConnected: boolean;
     }> {
-      return fetchJson(`${API_BASE}/stats`);
+      return invoke("get_global_stats");
     },
   },
 
   handHistories: {
     async getRecent(limit: number = 20): Promise<{ histories: HandHistory[] }> {
-      return fetchJson(`${API_BASE}/hand-histories?limit=${limit}`);
+      return invoke("get_recent_histories", { limit });
     },
   },
 
   simulate: {
-    async hand(params: {
-      heroCards?: string[];
-      communityCards?: string[];
-      position?: string;
-      potSize?: number;
-      facingBet?: number;
-      numPlayers?: number;
-    }): Promise<{
-      recommendation: GtoRecommendation;
-      humanizedAction: any;
-      simulatedDelay: number;
-    }> {
-      return fetchJson(`${API_BASE}/simulate/hand`, {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+    async hand(params: any): Promise<any> {
+      return invoke("simulate_hand", { params });
     },
   },
-};
 
-export type WebSocketMessage = {
-  type: string;
-  payload?: any;
+  windows: {
+    async list(): Promise<any[]> {
+      return invoke("list_windows");
+    },
+    async findPoker(): Promise<any[]> {
+      return invoke("find_poker_windows");
+    },
+    async capture(hwnd: number): Promise<string> {
+      return invoke("capture_window", { hwnd });
+    },
+    async focus(hwnd: number): Promise<void> {
+      return invoke("focus_window", { hwnd });
+    },
+    async resize(hwnd: number, width: number, height: number): Promise<void> {
+      return invoke("resize_window", { hwnd, width, height });
+    },
+    async streamFrames(hwnd: number): Promise<void> {
+      return invoke("stream_window_frames", { hwnd });
+    },
+  }
 };
 
 export function createWebSocketConnection(
-  onMessage: (message: WebSocketMessage) => void,
+  onMessage: (message: any) => void,
   onOpen?: () => void,
   onClose?: () => void,
-  onError?: (error: Event) => void
-): WebSocket {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const token = "poker-bot-secure-token-2024";
-  const ws = new WebSocket(`${protocol}//${window.location.host}/ws?token=${token}`);
-
-  ws.onopen = () => {
-    console.log("WebSocket connecté");
+  onError?: (error: any) => void
+): any {
+  // En mode Tauri, on utilise l'API listen pour les événements
+  import("@tauri-apps/api/event").then(({ listen }) => {
+    listen("poker-event", (event) => {
+      onMessage(event.payload);
+    });
     onOpen?.();
-  };
+  }).catch(err => {
+    console.error("Erreur d'écoute Tauri:", err);
+    onError?.(err);
+  });
 
-  ws.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data) as WebSocketMessage;
-      onMessage(message);
-    } catch (error) {
-      console.error("Erreur parsing WebSocket:", error);
+  return {
+    close: () => {},
+    send: (data: string) => {
+      const msg = JSON.parse(data);
+      invoke("send_ws_message", { message: msg });
     }
   };
-
-  ws.onclose = () => {
-    console.log("WebSocket déconnecté");
-    onClose?.();
-  };
-
-  ws.onerror = (error) => {
-    console.error("Erreur WebSocket:", error);
-    onError?.(error);
-  };
-
-  return ws;
 }
-
-
 
 export interface PlayerProfileState {
   personality: string;
@@ -306,18 +223,13 @@ export interface PlayerProfileData {
 }
 
 export async function getPlayerProfile(): Promise<PlayerProfileData> {
-  return fetchJson<PlayerProfileData>(`${API_BASE}/player-profile`);
+  return invoke("get_player_profile");
 }
 
 export async function updatePlayerPersonality(personality: string): Promise<PlayerProfileData> {
-  return fetchJson<PlayerProfileData>(`${API_BASE}/player-profile/personality`, {
-    method: "POST",
-    body: JSON.stringify({ personality }),
-  });
+  return invoke("update_player_personality", { personality });
 }
 
 export async function resetPlayerProfile(): Promise<{ state: PlayerProfileState; message: string }> {
-  return fetchJson<{ state: PlayerProfileState; message: string }>(`${API_BASE}/player-profile/reset`, {
-    method: "POST",
-  });
+  return invoke("reset_player_profile");
 }

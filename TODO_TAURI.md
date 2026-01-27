@@ -21,7 +21,7 @@ Ce document détaille les étapes nécessaires pour transformer le bot Poker act
 - [x] Créer un composant de test Tauri (`TauriTest.tsx`).
 - [x] Intégrer le composant dans la page Debug.
 - [x] Basculement de la logique de capture vers le bridge natif Tauri (30 FPS).
-- [ ] Remplacer les appels API Backend par des invocations de commandes Tauri.
+- [x] Remplacer les appels API Backend par des invocations de commandes Tauri.
 
 ## 5. Nettoyage et Optimisation
 - [x] Supprimer les dépendances Node.js lourdes (`robotjs`, `screenshot-desktop`).
