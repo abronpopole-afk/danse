@@ -11,7 +11,7 @@
   },
   "tauri": {
     "bundle": {
-      "active": false,
+      "active": true,
       "category": "DeveloperTool",
       "copyright": "",
       "externalBin": [],
@@ -23,10 +23,10 @@
       ],
       "identifier": "com.gto.pokerbot",
       "longDescription": "",
-      "publisher": "",
+      "publisher": "GTO Poker",
       "resources": [],
       "shortDescription": "",
-      "targets": [],
+      "targets": ["msi", "nsis"],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256"

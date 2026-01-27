@@ -47,3 +47,7 @@ jobs:
           releaseBody: "Automated release from GitHub Actions"
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: true
+          includeRelease: true
+          projectPath: src-tauri
+          build_command: npm run build && npx tauri build
