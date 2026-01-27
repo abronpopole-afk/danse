@@ -59,6 +59,7 @@ fn find_poker_windows() -> Vec<WindowInfo> {
     all.into_iter()
         .filter(|w| {
             let t = w.title.to_lowercase();
+            // Détection robuste par classe Qt5 pour GGClub
             t.contains("ggclub") || t.contains("poker") || w.class_name.contains("Qt5Window")
         })
         .collect()
@@ -116,7 +117,6 @@ fn capture_window_internal(hwnd: isize) -> Result<String> {
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
 
-        // Convert captured RGB buffer to base64 string
         let base64_image = general_purpose::STANDARD.encode(&buffer);
         Ok(format!("data:image/bmp;base64,{}", base64_image))
     }
@@ -149,14 +149,14 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> Result<(), String> {
 
 #[command]
 async fn stream_window_frames(window: Window, hwnd: isize) -> Result<(), String> {
-    // Cette commande simule un flux de frames pour le frontend
-    // Dans une implémentation complète, on utiliserait DXGI ici
+    // Dans une implémentation DXGI réelle, on utiliserait IDXGIOutputDuplication
+    // Pour l'instant, on optimise le stream GDI pour la transition
     std::thread::spawn(move || {
         loop {
             if let Ok(image_data) = capture_window_internal(hwnd) {
                 let _ = window.emit("poker-frame", image_data);
             }
-            std::thread::sleep(std::time::Duration::from_millis(100)); // 10 FPS
+            std::thread::sleep(std::time::Duration::from_millis(33)); // 30 FPS pour fluidité
         }
     });
     Ok(())
