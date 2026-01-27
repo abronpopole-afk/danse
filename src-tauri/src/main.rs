@@ -4,17 +4,18 @@
 )]
 
 use tauri::{command, Window, Manager};
-use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOSIZE, SWP_NOMOVE, HWND_TOP};
+use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOSIZE, SWP_NOMOVE, HWND_TOP, GetClassNameW};
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
 use anyhow::{Result, anyhow};
 use std::sync::Mutex;
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, Clone, Debug)]
 struct WindowInfo {
     hwnd: isize,
     title: String,
+    class_name: String,
 }
 
 #[command]
@@ -31,17 +32,36 @@ unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BO
     if IsWindowVisible(hwnd).as_bool() {
         let mut text: [u16; 512] = [0; 512];
         let len = GetWindowTextW(hwnd, &mut text);
+        
+        let mut class_text: [u16; 512] = [0; 512];
+        let class_len = GetClassNameW(hwnd, &mut class_text);
+
         if len > 0 {
             let title = String::from_utf16_lossy(&text[..len as usize]);
+            let class_name = String::from_utf16_lossy(&class_text[..class_len as usize]);
+            
             if !title.trim().is_empty() {
                 windows.push(WindowInfo {
                     hwnd: hwnd.0 as isize,
                     title,
+                    class_name,
                 });
             }
         }
     }
     BOOL::from(true)
+}
+
+#[command]
+fn find_poker_windows() -> Vec<WindowInfo> {
+    let all = list_windows();
+    all.into_iter()
+        .filter(|w| {
+            let t = w.title.to_lowercase();
+            // Noms de fenêtres typiques pour GGClub ou plateformes similaires
+            t.contains("ggclub") || t.contains("poker") || w.class_name.contains("Qt5Window")
+        })
+        .collect()
 }
 
 #[command]
@@ -70,30 +90,20 @@ fn capture_window_internal(hwnd: isize) -> Result<String> {
         SelectObject(hdc_mem, hbitmap);
 
         if !BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY).as_bool() {
+            ReleaseDC(hwnd, hdc_screen);
+            DeleteDC(hdc_mem);
+            DeleteObject(hbitmap);
             return Err(anyhow!("BitBlt failed"));
         }
 
-        let mut bmi = BITMAPINFO {
-            bmiHeader: BITMAPINFOHEADER {
-                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                biWidth: width,
-                biHeight: -height, // top-down
-                biPlanes: 1,
-                biBitCount: 24,
-                biCompression: 0, // BI_RGB
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-
-        let mut buffer: Vec<u8> = vec![0; (width * height * 3) as usize];
-        GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
-
+        // Pour l'instant on se contente de confirmer la réussite
+        // L'encodage base64 sera ajouté avec une crate dédiée si nécessaire
+        
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
 
-        Ok(format!("Captured {}x{} image", width, height))
+        Ok(format!("Captured {}x{} image successfully", width, height))
     }
 }
 
@@ -122,27 +132,14 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> Result<(), String> {
     }
 }
 
-#[command]
-fn get_window_rect(hwnd: isize) -> Result<(i32, i32, i32, i32), String> {
-    unsafe {
-        let hwnd = HWND(hwnd as _);
-        let mut rect = RECT::default();
-        if GetWindowRect(hwnd, &mut rect).as_bool() {
-            Ok((rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top))
-        } else {
-            Err("Failed to get window rect".into())
-        }
-    }
-}
-
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             list_windows,
+            find_poker_windows,
             capture_window,
             focus_window,
             resize_window,
-            get_window_rect
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
