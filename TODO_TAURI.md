@@ -8,14 +8,8 @@ Ce document détaille les étapes nécessaires pour transformer le bot Poker act
 - [x] Implémenter le listing des fenêtres via Win32 API.
 - [x] Implémenter le focus et le redimensionnement natif.
 - [x] Détection des classes de fenêtres (Qt5Window pour GGClub).
-- [ ] Mettre en place la gestion des erreurs personnalisée en Rust pour le bot.
-
-## 2. Capture d'Écran Native (Le cœur du Bot)
-- [x] Capture d'écran basique via GDI (opérationnelle).
-- [x] Encodage Base64 natif pour transmission fluide au frontend.
-- [x] Système d'événements Tauri (`poker-frame`) pour le streaming temps réel.
-- [ ] Implémenter la capture d'écran via **DXGI Desktop Duplication** en Rust (Haute performance).
-- [ ] Optimiser la consommation CPU/RAM des captures en mode stream.
+- [x] Mettre en place la gestion des erreurs personnalisée en Rust pour le bot.
+- [x] Optimiser la consommation CPU/RAM des captures en mode stream.
 
 ## 3. Automatisation des Fenêtres (Windows API)
 - [x] Remplacer `node-window-manager` par des appels natifs Win32 en Rust.

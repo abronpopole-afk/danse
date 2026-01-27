@@ -8,9 +8,29 @@ use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWin
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
-use anyhow::{Result, anyhow};
 use std::sync::Mutex;
 use base64::{Engine as _, engine::general_purpose};
+use thiserror::Error;
+
+#[derive(Error, Debug, serde::Serialize)]
+pub enum PokerError {
+    #[error("Window not found: {0}")]
+    WindowNotFound(String),
+    #[error("Windows API error: {0}")]
+    Win32Error(String),
+    #[error("Invalid dimensions: {0}x{1}")]
+    InvalidDimensions(i32, i32),
+    #[error("Capture failed")]
+    CaptureFailed,
+}
+
+impl From<anyhow::Error> for PokerError {
+    fn from(err: anyhow::Error) -> Self {
+        PokerError::Win32Error(err.to_string())
+    }
+}
+
+type PokerResult<T> = std::result::Result<T, PokerError>;
 
 #[derive(serde::Serialize, Clone, Debug)]
 struct WindowInfo {
@@ -66,37 +86,37 @@ fn find_poker_windows() -> Vec<WindowInfo> {
 }
 
 #[command]
-fn capture_window(hwnd: isize) -> Result<String, String> {
-    capture_window_internal(hwnd).map_err(|e| e.to_string())
+fn capture_window(hwnd: isize) -> PokerResult<String> {
+    capture_window_internal(hwnd)
 }
 
-fn capture_window_internal(hwnd: isize) -> Result<String> {
+fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
     unsafe {
-        let hwnd = HWND(hwnd as _);
+        let hwnd = HWND(hwnd_isize as _);
         let mut rect = RECT::default();
         if !GetWindowRect(hwnd, &mut rect).as_bool() {
-            return Err(anyhow!("Failed to get window rect"));
+            return Err(PokerError::Win32Error("Failed to get window rect".into()));
         }
 
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
 
         if width <= 0 || height <= 0 {
-            return Err(anyhow!("Invalid window dimensions: {}x{}", width, height));
+            return Err(PokerError::InvalidDimensions(width, height));
         }
 
         let hdc_screen = GetDC(hwnd);
+        if hdc_screen.is_invalid() {
+            return Err(PokerError::Win32Error("Failed to get DC".into()));
+        }
+        
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
-        SelectObject(hdc_mem, hbitmap);
+        
+        let old_obj = SelectObject(hdc_mem, hbitmap);
 
-        if !BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY).as_bool() {
-            ReleaseDC(hwnd, hdc_screen);
-            DeleteDC(hdc_mem);
-            DeleteObject(hbitmap);
-            return Err(anyhow!("BitBlt failed"));
-        }
-
+        let bit_blt_res = BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY);
+        
         let mut bmi = BITMAPINFO {
             bmiHeader: BITMAPINFOHEADER {
                 biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
@@ -110,12 +130,20 @@ fn capture_window_internal(hwnd: isize) -> Result<String> {
             ..Default::default()
         };
 
-        let mut buffer: Vec<u8> = vec![0; (width * height * 3) as usize];
+        let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
+        unsafe { buffer.set_len(buffer_size); }
+        
         GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
 
+        // Cleanup
+        SelectObject(hdc_mem, old_obj);
         ReleaseDC(hwnd, hdc_screen);
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
+
+        if !bit_blt_res.as_bool() {
+            return Err(PokerError::CaptureFailed);
+        }
 
         let base64_image = general_purpose::STANDARD.encode(&buffer);
         Ok(format!("data:image/bmp;base64,{}", base64_image))
@@ -123,40 +151,50 @@ fn capture_window_internal(hwnd: isize) -> Result<String> {
 }
 
 #[command]
-fn focus_window(hwnd: isize) -> Result<(), String> {
+fn focus_window(hwnd: isize) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         if SetForegroundWindow(hwnd).as_bool() {
             Ok(())
         } else {
-            Err("Failed to focus window".into())
+            Err(PokerError::Win32Error("Failed to focus window".into()))
         }
     }
 }
 
 #[command]
-fn resize_window(hwnd: isize, width: i32, height: i32) -> Result<(), String> {
+fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
         if res.as_bool() {
             Ok(())
         } else {
-            Err("Failed to resize window".into())
+            Err(PokerError::Win32Error("Failed to resize window".into()))
         }
     }
 }
 
 #[command]
-async fn stream_window_frames(window: Window, hwnd: isize) -> Result<(), String> {
-    // Dans une implémentation DXGI réelle, on utiliserait IDXGIOutputDuplication
-    // Pour l'instant, on optimise le stream GDI pour la transition
+async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
     std::thread::spawn(move || {
+        let mut last_capture = std::time::Instant::now();
         loop {
-            if let Ok(image_data) = capture_window_internal(hwnd) {
-                let _ = window.emit("poker-frame", image_data);
+            // throttle à ~30 FPS (33ms)
+            let elapsed = last_capture.elapsed();
+            if elapsed < std::time::Duration::from_millis(33) {
+                std::thread::sleep(std::time::Duration::from_millis(33) - elapsed);
             }
-            std::thread::sleep(std::time::Duration::from_millis(33)); // 30 FPS pour fluidité
+            
+            last_capture = std::time::Instant::now();
+            if let Ok(image_data) = capture_window_internal(hwnd) {
+                if let Err(_) = window.emit("poker-frame", image_data) {
+                    break; // Fenêtre fermée ou erreur fatale
+                }
+            } else {
+                // Si la capture échoue (fenêtre fermée par ex), on arrête le thread
+                break;
+            }
         }
     });
     Ok(())
