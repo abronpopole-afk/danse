@@ -11,7 +11,7 @@
   },
   "tauri": {
     "bundle": {
-      "active": true,
+      "active": false,
       "category": "DeveloperTool",
       "copyright": "",
       "externalBin": [],
