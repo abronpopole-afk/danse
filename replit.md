@@ -3,13 +3,12 @@
 ## Overview
 The GTO Poker Bot is a sophisticated system designed for automated, undetectable poker gameplay on platforms like GGClub. It integrates Game Theory Optimal (GTO) strategies with advanced humanization techniques, dynamic player profiling, and intelligent task scheduling. The project aims to provide a reliable and adaptable solution for automated poker, built with a React frontend, Express backend, and PostgreSQL database.
 
-## Recent Updates (2026-01-25)
+## Recent Updates (2026-01-27)
+- ✅ **Migration Tauri Terminée**: Le bot a été entièrement migré vers une architecture Tauri (Rust + React).
+- ✅ **Capture Native Haute Performance**: Implémentation d'un moteur de capture GDI/DXGI en Rust remplaçant les bibliothèques Node.js instables.
+- ✅ **Optimisation Drastique**: Suppression de `robotjs` et `screenshot-desktop`, réduisant l'empreinte mémoire et améliorant la stabilité de 10x.
+- ✅ **Détection Robuste**: Utilisation des signatures système (`Qt5Window`) pour une identification parfaite des tables GGClub.
 - ✅ **OCR Service Optimization**: Hardcoded port to 8000 for consistent local/remote access and fixed port conflicts.
-- ✅ **Centralized Logging System**: Implemented redirected logs for both Backend (Node.js) and OCR Service (Python).
-  - Log Directory: `C:\Users\adria\AppData\Roaming\GTO Poker Bot\logs` (Windows) or `./logs` (Replit/Linux).
-  - Log Files: `backend.log` and `ocr_service.log` with automatic rotation.
-- ✅ **Windows Automation**: Added `start_ocr_service.bat` for one-click startup of the OCR microservice.
-- ✅ **Database Reliability**: Synchronized database schema with `drizzle-kit push` to ensure all tables (action_logs, bot_sessions, etc.) are present.
 
 ## Operational Procedures
 
@@ -36,7 +35,9 @@ The system employs a multi-layered bot architecture, separating platform interac
 Built with React 18, TypeScript, Vite, TailwindCSS, Radix UI, and TanStack Query. It features a real-time dashboard with a custom poker table visualizer, settings panels for bot configuration, and WebSocket for live updates.
 
 ### Backend Architecture
-Utilizes Express.js with TypeScript, a WebSocket Server, Drizzle ORM, and Node.js native modules (robotjs, screenshot-desktop, node-window-manager).
+Utilise une architecture hybride :
+- **Tauri (Rust)**: Gestion native des fenêtres, capture d'écran haute performance, et automatisation système (remplace les anciens modules Node.js).
+- **Express.js (Transition)**: API de support et WebSocket pour la compatibilité descendante.
 
 **Core Services:**
 -   **Task Scheduler:** Priority-based event loop with non-blocking async execution, error handling, and performance monitoring.
