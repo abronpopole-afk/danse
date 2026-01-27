@@ -3,67 +3,58 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::command;
-use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible};
-use windows::Win32::Foundation::{HWND, LPARAM, BOOL};
-
-#[derive(serde::Serialize)]
-struct WindowInfo {
-    hwnd: isize,
-    title: String,
-}
+use tauri::{command, Window};
+use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOSIZE, SWP_NOMOVE, HWND_TOP};
+use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
+use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 
 #[command]
-fn list_windows() -> Vec<WindowInfo> {
-    let mut windows: Vec<WindowInfo> = Vec::new();
+fn focus_window(hwnd: isize) -> Result<(), String> {
     unsafe {
-        let _ = EnumWindows(Some(enum_window_callback), LPARAM(&mut windows as *mut Vec<WindowInfo> as isize));
-    }
-    windows
-}
-
-unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
-    let windows = &mut *(lparam.0 as *mut Vec<WindowInfo>);
-    if IsWindowVisible(hwnd).as_bool() {
-        let mut text: [u16; 512] = [0; 512];
-        let len = GetWindowTextW(hwnd, &mut text);
-        if len > 0 {
-            let title = String::from_utf16_lossy(&text[..len as usize]);
-            if !title.trim().is_empty() {
-                windows.push(WindowInfo {
-                    hwnd: hwnd.0 as isize,
-                    title,
-                });
-            }
+        let hwnd = HWND(hwnd as _);
+        if SetForegroundWindow(hwnd).as_bool() {
+            Ok(())
+        } else {
+            Err("Failed to focus window".into())
         }
     }
-    BOOL::from(true)
 }
 
 #[command]
-fn capture_window(hwnd: isize) -> Result<String, String> {
-    // Placeholder pour la capture d'écran native (GDI/DXGI)
-    // Retourne une image en base64 pour le frontend
-    Ok(format!("Capture logic for HWND {} initiated", hwnd))
+fn resize_window(hwnd: isize, width: i32, height: i32) -> Result<(), String> {
+    unsafe {
+        let hwnd = HWND(hwnd as _);
+        let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
+        if res.as_bool() {
+            Ok(())
+        } else {
+            Err("Failed to resize window".into())
+        }
+    }
+}
+
+#[command]
+fn get_window_rect(hwnd: isize) -> Result<(i32, i32, i32, i32), String> {
+    unsafe {
+        let hwnd = HWND(hwnd as _);
+        let mut rect = RECT::default();
+        if GetWindowRect(hwnd, &mut rect).as_bool() {
+            Ok((rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top))
+        } else {
+            Err("Failed to get window rect".into())
+        }
+    }
 }
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_context!().invoke_handler(|invoke| {
-            match invoke.message.command() {
-                "list_windows" => {
-                    let windows = list_windows();
-                    invoke.resolver.respond_ok(windows);
-                }
-                "capture_window" => {
-                    // Pour l'instant on simule, car la capture DXGI complète est trop longue pour un edit
-                    invoke.resolver.respond_ok("Simulated capture".to_string());
-                }
-                _ => {
-                    invoke.resolver.reject("Unknown command");
-                }
-            }
-        }))
+        .invoke_handler(tauri::generate_handler![
+            list_windows,
+            capture_window,
+            focus_window,
+            resize_window,
+            get_window_rect
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
