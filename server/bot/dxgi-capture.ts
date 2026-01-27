@@ -68,16 +68,8 @@ class DXGICaptureImpl implements DXGICapture {
     try {
       // Appel au module natif DXGI
       const nativeModule = await this.loadNativeModule();
-      if (!nativeModule || !nativeModule.captureDesktop) {
-        throw new Error('DXGI module or captureDesktop method not found');
-      }
-
       const imageData = await nativeModule.captureDesktop(windowHandle || 0);
       
-      if (!imageData || imageData.length === 0) {
-        throw new Error('DXGI capture returned empty buffer');
-      }
-
       const latency = Date.now() - startTime;
       this.frameCount++;
       this.totalLatency += latency;

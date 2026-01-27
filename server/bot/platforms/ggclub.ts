@@ -35,9 +35,12 @@ import { visionErrorLogger } from "../vision-error-logger";
 import { PokerOCREngine, getPokerOCREngine } from "../ml-ocr";
 import { logger } from "../../logger";
 import { getHumanizer } from "../humanizer"; // Import humanizer
-import { getDXGICapture } from "../dxgi-capture";
 import { loadNativeModule, IS_PACKAGED } from "../native-loader";
+
+// Import helper functions
+import { toGrayscale } from "../image-processing";
 import { ActionPattern } from "../anti-detection-monitor";
+
 
 let screenshotDesktop: any = null;
 let robot: any = null;
@@ -887,22 +890,8 @@ export class GGClubAdapter extends PlatformAdapter {
   }
 
   private async captureScreen(windowHandle: number): Promise<Buffer> {
-    const dxgi = getDXGICapture();
-    if (dxgi.isSupported()) {
-      try {
-        const buffer = await dxgi.captureScreen(windowHandle);
-        if (this.validateImageBuffer(buffer)) {
-          logger.info("GGClubAdapter", `DXGI capture OK (${buffer.length} bytes)`);
-          return buffer;
-        } else {
-          logger.warn("GGClubAdapter", "DXGI buffer trop petit, fallback screenshot-desktop");
-        }
-      } catch (err) {
-        logger.error("GGClubAdapter", "DXGI captureScreen failed, fallback", { error: String(err) });
-      }
-    }
-
-    // Fallback screenshot-desktop si DXGI non supporté ou erreur
+    logger.debug("GGClubAdapter", `[${windowHandle}] captureScreen - tentative`);
+    
     if (screenshotDesktop) {
       try {
         const window = this.activeWindows.get(`ggclub_${windowHandle}`);
@@ -913,7 +902,7 @@ export class GGClubAdapter extends PlatformAdapter {
 
         logger.info("GGClubAdapter", `[${windowHandle}] Capture écran entier puis crop vers fenêtre: ${window.title} (${window.width}x${window.height}) position (${window.x},${window.y})`);
         
-        // Capturer l'écran ENTIER
+        // 1. Capturer l'écran ENTIER
         const fullScreenPng = await screenshotDesktop({ format: 'png' });
         
         if (!fullScreenPng || fullScreenPng.length === 0) {
@@ -921,10 +910,17 @@ export class GGClubAdapter extends PlatformAdapter {
           return Buffer.alloc(0);
         }
 
-        // Décoder et Cropper
+        logger.info("GGClubAdapter", `[${windowHandle}] PNG écran entier reçu (${fullScreenPng.length} bytes)`);
+        
+        // 2. Décoder PNG en RGBA
         const fullRgbaBuffer = await this.decodePngToRgba(fullScreenPng);
+        
+        // 3. Extraire JUSTE la région de la fenêtre
+        // On récupère les dimensions réelles du PNG décodé
         const pngWidth = fullScreenPng.readUInt32BE(16);
         const pngHeight = fullScreenPng.readUInt32BE(20);
+        
+        logger.info("GGClubAdapter", `[${windowHandle}] Écran complet décodé: ${pngWidth}x${pngHeight}, crop vers fenêtre (${window.width}x${window.height})`);
         
         const croppedBuffer = this.cropRgbaRegion(
           fullRgbaBuffer,
@@ -936,15 +932,17 @@ export class GGClubAdapter extends PlatformAdapter {
           window.height
         );
         
-        logger.info("GGClubAdapter", `screenshot-desktop capture (${croppedBuffer.length} bytes)`);
+        logger.info("GGClubAdapter", `[${windowHandle}] ✅ Capture réussie: ${croppedBuffer.length} octets (fenêtre ${window.width}x${window.height})`);
         return croppedBuffer;
+        
       } catch (error) {
-        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture/crop (fallback)`, { error: String(error) });
+        logger.error("GGClubAdapter", `[${windowHandle}] Erreur capture/crop`, { error: String(error) });
         return Buffer.alloc(0);
       }
     }
 
-    throw new Error("Aucune méthode de capture disponible");
+    logger.error("GGClubAdapter", `[${windowHandle}] screenshot-desktop indisponible`);
+    return Buffer.alloc(0);
   }
 
   private async performAutoRecalibration(windowHandle: number): Promise<void> {
