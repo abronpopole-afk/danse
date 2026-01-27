@@ -4,22 +4,25 @@ Ce document détaille les étapes nécessaires pour transformer le bot Poker act
 
 ## 1. Infrastructure Rust (`src-tauri`)
 - [x] Initialiser la structure de projet Tauri.
-- [x] Configurer `Cargo.toml` avec les crates DXGI et Windows API.
+- [x] Configurer `Cargo.toml` avec les crates DXGI, Windows API et Anyhow.
+- [x] Implémenter le listing des fenêtres via Win32 API.
+- [x] Implémenter le focus et le redimensionnement natif.
 - [ ] Mettre en place la gestion des erreurs personnalisée en Rust pour le bot.
 
 ## 2. Capture d'Écran Native (Le cœur du Bot)
-- [x] Lister les fenêtres via Win32 API (`EnumWindows`).
-- [ ] Implémenter la capture d'écran via **DXGI Desktop Duplication** en Rust.
+- [x] Capture d'écran basique via GDI (implémenté).
+- [ ] Implémenter la capture d'écran via **DXGI Desktop Duplication** en Rust (Haute performance).
 - [ ] Créer une commande Tauri pour envoyer les frames au frontend ou au service OCR.
 
 ## 3. Automatisation des Fenêtres (Windows API)
-- [x] Remplacer `node-window-manager` par des appels natifs Win32 en Rust (Débuté).
-- [ ] Implémenter le focus et le redimensionnement automatique des tables.
+- [x] Remplacer `node-window-manager` par des appels natifs Win32 en Rust.
+- [x] Implémenter le focus et le redimensionnement automatique des tables.
+- [ ] Détection robuste des processus GGClub par nom de classe.
 
 ## 4. Intégration Frontend (React)
 - [x] Installer `@tauri-apps/api`.
 - [x] Créer un composant de test Tauri (`TauriTest.tsx`).
-- [ ] Intégrer le composant dans la page Debug.
+- [x] Intégrer le composant dans la page Debug.
 - [ ] Remplacer les appels API Backend par des invocations de commandes Tauri.
 
 ## 5. Nettoyage et Optimisation

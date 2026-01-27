@@ -8,6 +8,7 @@ use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWin
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
+use anyhow::{Result, anyhow};
 use std::sync::Mutex;
 
 #[derive(serde::Serialize, Clone)]
@@ -45,15 +46,23 @@ unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BO
 
 #[command]
 fn capture_window(hwnd: isize) -> Result<String, String> {
+    capture_window_internal(hwnd).map_err(|e| e.to_string())
+}
+
+fn capture_window_internal(hwnd: isize) -> Result<String> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         let mut rect = RECT::default();
         if !GetWindowRect(hwnd, &mut rect).as_bool() {
-            return Err("Failed to get window rect".into());
+            return Err(anyhow!("Failed to get window rect"));
         }
 
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
+
+        if width <= 0 || height <= 0 {
+            return Err(anyhow!("Invalid window dimensions: {}x{}", width, height));
+        }
 
         let hdc_screen = GetDC(hwnd);
         let hdc_mem = CreateCompatibleDC(hdc_screen);
@@ -61,7 +70,7 @@ fn capture_window(hwnd: isize) -> Result<String, String> {
         SelectObject(hdc_mem, hbitmap);
 
         if !BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY).as_bool() {
-            return Err("BitBlt failed".into());
+            return Err(anyhow!("BitBlt failed"));
         }
 
         let mut bmi = BITMAPINFO {
@@ -84,8 +93,6 @@ fn capture_window(hwnd: isize) -> Result<String, String> {
         DeleteDC(hdc_mem);
         DeleteObject(hbitmap);
 
-        // Simple base64 for testing (requires base64 crate or manual)
-        // For now we just return a success message
         Ok(format!("Captured {}x{} image", width, height))
     }
 }
