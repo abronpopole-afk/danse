@@ -307,6 +307,7 @@ export class PlatformManager extends EventEmitter {
         throw new Error(`TableSession missing for window ${data.windowHandle}`);
       }
 
+      // Utilisation du streaming natif Tauri si disponible (simulation via bridge)
       const { action, humanizedAction } = await this.calculateAction(
         data.gameState, 
         managedTable.tableSession

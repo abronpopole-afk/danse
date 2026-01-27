@@ -289,11 +289,11 @@ export class TableSession extends EventEmitter {
     const handStrength = this.estimateHandStrength();
     
     // Dégrader la décision selon l'état émotionnel (tilt/fatigue)
-    selectedAction = humanizer.getDegradedDecision(selectedAction, handStrength);
+    selectedAction = await humanizer.getDegradedDecision(selectedAction, handStrength);
     const isStrongSpot = recommendation.confidence > 0.8 && context.facingBet < context.potSize * 0.5;
 
     // 1. Vérifier erreur intentionnelle (0.1-1%)
-    const errorCheck = humanizer.shouldTriggerIntentionalError(handStrength);
+    const errorCheck = await humanizer.shouldTriggerIntentionalError(handStrength);
     if (errorCheck.shouldError) {
       if (errorCheck.errorType === 'premature_fold' && handStrength > 0.8) {
         selectedAction = "FOLD";
@@ -329,7 +329,7 @@ export class TableSession extends EventEmitter {
     }
 
     // 2. Fold marginal dans strong spot (0.5%)
-    if (humanizer.shouldFoldMarginalInStrongSpot(handStrength, isStrongSpot)) {
+    if (await humanizer.shouldFoldMarginalInStrongSpot(handStrength, isStrongSpot)) {
       selectedAction = "FOLD";
       await storage.createActionLog({
         tableId: this.tableState.id,
@@ -339,7 +339,7 @@ export class TableSession extends EventEmitter {
     }
 
     // 3. Vérifier fold aléatoire rare (tilt/fatigue)
-    if (humanizer.shouldTriggerRandomFold() && handStrength < 0.6 && handStrength > 0.3) {
+    if (await humanizer.shouldTriggerRandomFold() && handStrength < 0.6 && handStrength > 0.3) {
       selectedAction = "FOLD";
       await storage.createActionLog({
         tableId: this.tableState.id,
@@ -351,7 +351,7 @@ export class TableSession extends EventEmitter {
     const isComplexDecision = recommendation.confidence < 0.7 || 
       recommendation.actions.filter(a => a.probability > 0.2).length > 2;
 
-    const humanizedAction = humanizer.humanizeAction(
+    const humanizedAction = await humanizer.humanizeAction(
       selectedAction, 
       handStrength, 
       isComplexDecision,
@@ -595,7 +595,7 @@ export class MultiTableManager extends EventEmitter {
     let sessionId = this.sessionId;
     if (!sessionId) {
       const activeSession = await storage.getActiveBotSession();
-      sessionId = activeSession?.id ?? null;
+      sessionId = activeSession?.id ?? undefined;
       if (activeSession?.id) {
         logger.warning('TableManager', `sessionId was undefined, using active session: ${activeSession.id}`);
         this.sessionId = activeSession.id;
