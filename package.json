@@ -1,5 +1,7 @@
 {
   "name": "rest-express",
+  "description": "GTO Poker Bot - Ultra High Performance",
+  "author": "GTO Poker",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
