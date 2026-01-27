@@ -111,7 +111,7 @@ fn list_windows() -> Vec<WindowInfo> {
 
 unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let windows = &mut *(lparam.0 as *mut Vec<WindowInfo>);
-    if IsWindowVisible(hwnd).is_ok() {
+    if IsWindowVisible(hwnd).as_bool() {
         let mut text: [u16; 512] = [0; 512];
         let len = GetWindowTextW(hwnd, &mut text);
         let mut class_text: [u16; 512] = [0; 512];
@@ -199,7 +199,7 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
 fn focus_window(hwnd: isize) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
-        if SetForegroundWindow(hwnd).is_ok() {
+        if SetForegroundWindow(hwnd).as_bool() {
             Ok(())
         } else {
             Err(PokerError::Win32Error("Failed to focus window".into()))
@@ -212,7 +212,7 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
-        if res.is_ok() {
+        if res.as_bool() {
             Ok(())
         } else {
             Err(PokerError::Win32Error("Failed to resize window".into()))
