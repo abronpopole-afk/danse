@@ -3,14 +3,14 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{command, Window, Manager};
+use tauri::{command, Window};
 use windows::core::ComInterface;
-use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOSIZE, SWP_NOMOVE, HWND_TOP, GetClassNameW};
+use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW};
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
-use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory, IDXGIFactory, IDXGIAdapter, IDXGIOutput, IDXGIOutput1, DXGI_OUTPUT_DESC, IDXGIResource, DXGI_OUTDUPL_DESC, DXGI_OUTDUPL_FRAME_INFO, IDXGIOutputDuplication};
-use windows::Win32::Graphics::Direct3D11::{D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, D3D11_SDK_VERSION, D3D11_CREATE_DEVICE_FLAG, ID3D11Texture2D, D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING, D3D11_CPU_ACCESS_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_MAP_READ};
+use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory, IDXGIFactory, IDXGIOutput1, IDXGIOutputDuplication};
+use windows::Win32::Graphics::Direct3D11::{D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, D3D11_SDK_VERSION, D3D11_CREATE_DEVICE_FLAG};
 use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_UNKNOWN;
 use std::sync::Mutex;
 use base64::{Engine as _, engine::general_purpose};
@@ -212,7 +212,7 @@ fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
     unsafe {
         let hwnd = HWND(hwnd as _);
         let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
-        if res.as_bool() {
+        if res.is_ok() {
             Ok(())
         } else {
             Err(PokerError::Win32Error("Failed to resize window".into()))
