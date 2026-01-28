@@ -1,0 +1,39 @@
+[2026-01-28 18:18:06] [INFO] Application starting
+[2026-01-28 18:18:07] [INFO] Connecting to database: postgresql://poker_bot:d3aXbYN7wVyOHm6f@localhost:5432/poker_bot
+[2026-01-28 18:18:07] [INFO] Database tables verified/created
+[2026-01-28 18:18:07] [INFO] Database initialization successful
+[2026-01-28 18:18:09] [INFO] [FRONTEND] Frontend: Bootstrapping application...
+[2026-01-28 18:18:09] [INFO] [FRONTEND] Frontend: Render call completed
+[[2026-01-28 18:18:09[2026-01-28 18:18:09[] [2026-01-28 18:18:09] [2026-01-28 18:18:09DEBUGDEBUG] [] [] DEBUG] DEBUGCommand: get_current_session requested] Command: get_player_profile requested] Command: get_recent_logs requested
+Command: get_global_stats requested
+
+
+[2026-01-28 18:18:09] [INFO] [FRONTEND] App: Initializing router with HashLocation
+[[2026-01-28 18:18:11] [DEBUG] Command: get_platform_config requested
+2026-01-28 18:18:11] [DEBUG] Command: get_gto_config requested
+[2026-01-28 18:18:14] [WARN] [FRONTEND] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[2026-01-28 18:18:26] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:28] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:28] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:29] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:29] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:29] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:29] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:29] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:30] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:30] [INFO] Command: connect_platform requested
+[2026-01-28 18:18:34] [DEBUG] Command: get_current_session requested
+[2026-01-28 18:18:34] [DEBUG] Command: get_global_stats requested
+[[2026-01-28 18:18:342026-01-28 18:18:34] [DEBUG] ] [Command: get_player_profile requested
+DEBUG] Command: get_recent_logs requested
+[2026-01-28 18:18:36] [INFO] Command: stop_session requested
+[2026-01-28 18:18:37] [INFO] Command: stop_session requested
+[2026-01-28 18:18:42] [WARN] Command: force_stop_session requested
+[2026-01-28 18:18:43] [INFO] Command: start_session requested
+[2026-01-28 18:18:43] [INFO] Session started successfully with ID: 9c1c537e-bff9-43be-bb84-d676b1e4b332
+[2026-01-28 18:18:43] [DEBUG] Command: get_current_session requested
+[[2026-01-28 18:18:432026-01-28 18:18:43] [DEBUG] [] DEBUGCommand: get_global_stats requested] Command: get_recent_logs requested
+
+[2026-01-28 18:18:45] [INFO] Command: stop_session requested
+[2026-01-28 18:18:46] [INFO] Command: stop_session requested
+[2026-01-28 18:18:46] [INFO] Command: stop_session requested
