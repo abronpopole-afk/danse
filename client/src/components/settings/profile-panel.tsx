@@ -35,7 +35,7 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
   }
 
   const { state, modifiers } = profile;
-  const currentPersonality = PERSONALITIES.find(p => p.value === state.personality);
+  const currentPersonality = PERSONALITIES.find(p => p.value === state?.personality);
 
   return (
     <Card className="bg-card/50 backdrop-blur border-border">
@@ -51,9 +51,9 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
           <Label className="text-sm">Personnalité Active</Label>
           <div className="flex items-center gap-2">
             <Badge className={`${currentPersonality?.color} text-white`}>
-              {currentPersonality?.label || state.personality}
+              {currentPersonality?.label || state?.personality || "Inconnue"}
             </Badge>
-            {(state.personality === "tilted" || state.personality === "tired") && (
+            {(state?.personality === "tilted" || state?.personality === "tired") && (
               <AlertTriangle className="w-4 h-4 text-yellow-500" />
             )}
           </div>
@@ -66,7 +66,7 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
             {PERSONALITIES.filter(p => p.value !== "tilted" && p.value !== "tired").map((personality) => (
               <Button
                 key={personality.value}
-                variant={state.personality === personality.value ? "default" : "outline"}
+                variant={state?.personality === personality.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => onUpdatePersonality?.(personality.value)}
                 disabled={isUpdating}

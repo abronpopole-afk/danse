@@ -94,7 +94,7 @@ export function TiltMonitor({ profile }: TiltMonitorProps) {
         </div>
 
         <div className="text-xs text-muted-foreground">
-          Personnalité: <span className="text-primary font-bold">{profile.personality}</span>
+          Personnalité: <span className="text-primary font-bold">{profile?.personality || 'N/A'}</span>
         </div>
       </CardContent>
     </Card>
