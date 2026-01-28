@@ -7,6 +7,7 @@
 ## 2. Pont IPC Tauri (Terminé)
 - [x] Finaliser `public/tauri-bridge.js` pour assurer que CHAQUE commande `invoke` appelle le backend.
 - [x] Gérer correctement les IDs de callback pour éviter les erreurs `window[a] is not a function`.
+- [x] Assurer la compatibilité avec les assets minifiés (recherche de handlers multi-noms).
 
 ## 3. Persistance et Backend (Terminé)
 - [x] Vérifier que `server/storage.ts` utilise correctement `DATABASE_URL`.

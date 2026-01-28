@@ -3,7 +3,7 @@ import {
   platformAccounts, type PlatformAccount, type InsertPlatformAccount,
   botSessions, type BotSession, type InsertBotSession,
   actionLogs, type ActionLog, type InsertActionLog
-} from "@shared/schema";
+} from "../shared/schema";
 import { eq, desc } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -78,14 +78,18 @@ export class DatabaseStorage implements IStorage {
     // File logging
     if (process.env.NODE_ENV !== 'test') {
       ensureLogDir();
-      const logFile = path.join(LOG_DIR, `log_${new Date().toISOString().split('T')[0]}.txt`);
+      // Ensure path is properly handled for different OS during development
+      let logPath = LOG_DIR;
+      if (process.platform !== "win32") {
+        logPath = "/tmp/gto_logs";
+        if (!fs.existsSync(logPath)) fs.mkdirSync(logPath, { recursive: true });
+      }
+
+      const logFile = path.join(logPath, `log_${new Date().toISOString().split('T')[0]}.txt`);
       const logLine = `[${new Date().toISOString()}] [${log.logType}] ${log.message} ${log.metadata ? JSON.stringify(log.metadata) : ''}\n`;
       
       try {
-        // Only try to write if we are on windows or the directory exists
-        if (process.platform === "win32" || fs.existsSync(LOG_DIR)) {
-          fs.appendFileSync(logFile, logLine);
-        }
+        fs.appendFileSync(logFile, logLine);
       } catch (e) {
         console.error("Failed to write to log file:", e);
       }
