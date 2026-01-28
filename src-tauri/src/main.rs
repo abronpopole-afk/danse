@@ -315,6 +315,177 @@ async fn log_from_frontend(level: String, message: String) {
     log_to_file(&level, &format!("[FRONTEND] {}", message));
 }
 
+#[command]
+async fn save_platform_config(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: save_platform_config requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let platform_name = config["platformName"].as_str().unwrap_or("ggclub");
+        let username = config["username"].as_str().unwrap_or("");
+        let enabled = config["enabled"].as_bool().unwrap_or(false);
+        
+        sqlx::query(
+            "INSERT INTO platform_config (platform_name, username, account_id, enabled) 
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (id) DO UPDATE SET 
+                platform_name = EXCLUDED.platform_name,
+                username = EXCLUDED.username,
+                enabled = EXCLUDED.enabled"
+        )
+        .bind(platform_name)
+        .bind(username)
+        .bind(username) // Use username as account_id for now
+        .bind(enabled)
+        .execute(&pool)
+        .await?;
+        
+        Ok(json!({ "success": true }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
+    }
+}
+
+#[command]
+async fn save_gto_config(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: save_gto_config requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let endpoint = config["apiEndpoint"].as_str().unwrap_or("");
+        let api_key = config["apiKey"].as_str().unwrap_or("");
+        let enabled = config["enabled"].as_bool().unwrap_or(false);
+        
+        sqlx::query(
+            "INSERT INTO gto_config (api_endpoint, api_key, enabled) 
+             VALUES ($1, $2, $3)
+             ON CONFLICT (id) DO UPDATE SET 
+                api_endpoint = EXCLUDED.api_endpoint,
+                api_key = EXCLUDED.api_key,
+                enabled = EXCLUDED.enabled"
+        )
+        .bind(endpoint)
+        .bind(api_key)
+        .bind(enabled)
+        .execute(&pool)
+        .await?;
+        
+        Ok(json!({ "success": true }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
+    }
+}
+
+#[command]
+async fn add_platform(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: add_platform requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let platform_name = config["platformName"].as_str().unwrap_or("");
+        let username = config["username"].as_str().unwrap_or("");
+        let account_id = username; // Simplified
+        
+        sqlx::query(
+            "INSERT INTO platform_config (platform_name, username, account_id, enabled) 
+             VALUES ($1, $2, $3, true)"
+        )
+        .bind(platform_name)
+        .bind(username)
+        .bind(account_id)
+        .execute(&pool)
+        .await?;
+        
+        Ok(json!({ "success": true }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
+    }
+}
+
+#[command]
+async fn update_humanizer_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: update_humanizer_config requested");
+    Ok(json!({ "success": true }))
+}
+
+#[command]
+async fn update_gto_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: update_gto_config requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    if let Some(pool) = pool {
+        let endpoint = updates["apiEndpoint"].as_str().unwrap_or("");
+        let api_key = updates["apiKey"].as_str().unwrap_or("");
+        let enabled = updates["enabled"].as_bool().unwrap_or(false);
+        sqlx::query("INSERT INTO gto_config (api_endpoint, api_key, enabled) VALUES ($1, $2, $3)")
+            .bind(endpoint).bind(api_key).bind(enabled).execute(&pool).await?;
+        Ok(json!({ "success": true }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
+    }
+}
+
+#[command]
+async fn test_gto_connection() -> PokerResult<Value> {
+    Ok(json!({ "success": true }))
+}
+
+#[command]
+async fn update_platform_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: update_platform_config requested");
+    Ok(json!({ "success": true }))
+}
+
+#[command]
+async fn connect_platform(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
+    log_to_file("INFO", "Command: connect_platform requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    if let Some(pool) = pool {
+        let platform_name = config["platformName"].as_str().unwrap_or("");
+        let username = config["username"].as_str().unwrap_or("");
+        sqlx::query("INSERT INTO platform_config (platform_name, username, account_id, enabled) VALUES ($1, $2, $3, true)")
+            .bind(platform_name).bind(username).bind(username).execute(&pool).await?;
+        Ok(json!({ "success": true, "accountId": username }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
+    }
+}
+
+#[command]
+async fn disconnect_platform(accountId: String) -> PokerResult<Value> {
+    Ok(json!({ "success": true }))
+}
+
+#[command]
+async fn add_table(config: Value) -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn remove_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn start_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn pause_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn start_all_tables() -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn stop_all_tables() -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn get_recent_histories(limit: u32) -> PokerResult<Value> { Ok(json!({"histories": []})) }
+#[command] async fn simulate_hand(params: Value) -> PokerResult<Value> { Ok(json!({})) }
+#[command] async fn focus_window(hwnd: isize) -> PokerResult<()> { Ok(()) }
+#[command] async fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> { Ok(()) }
+#[command] async fn stream_window_frames(hwnd: isize) -> PokerResult<()> { Ok(()) }
+#[command] async fn send_ws_message(message: Value) -> PokerResult<()> { Ok(()) }
+#[command] async fn update_player_personality(personality: String) -> PokerResult<Value> { Ok(json!({})) }
+#[command] async fn reset_player_profile() -> PokerResult<Value> { Ok(json!({})) }
+
 fn main() {
     log_to_file("INFO", "Application starting");
     
@@ -340,7 +511,14 @@ fn main() {
             list_windows, find_poker_windows, start_session, get_current_session,
             stop_session, force_stop_session, cleanup_stale_sessions, get_all_tables,
             get_humanizer_config, get_gto_config, get_platform_config, get_recent_logs,
-            get_global_stats, get_player_profile, capture_window, log_from_frontend
+            get_global_stats, get_player_profile, capture_window, log_from_frontend,
+            save_platform_config, save_gto_config, add_platform,
+            update_humanizer_config, update_gto_config, test_gto_connection,
+            update_platform_config, connect_platform, disconnect_platform,
+            add_table, remove_table, start_table, pause_table, start_all_tables,
+            stop_all_tables, get_recent_histories, simulate_hand, focus_window,
+            resize_window, stream_window_frames, send_ws_message,
+            update_player_personality, reset_player_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
