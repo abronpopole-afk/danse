@@ -310,6 +310,11 @@ fn capture_window_internal(hwnd: isize) -> PokerResult<String> {
     }
 }
 
+#[command]
+async fn log_from_frontend(level: String, message: String) {
+    log_to_file(&level, &format!("[FRONTEND] {}", message));
+}
+
 fn main() {
     log_to_file("INFO", "Application starting");
     
@@ -335,7 +340,7 @@ fn main() {
             list_windows, find_poker_windows, start_session, get_current_session,
             stop_session, force_stop_session, cleanup_stale_sessions, get_all_tables,
             get_humanizer_config, get_gto_config, get_platform_config, get_recent_logs,
-            get_global_stats, get_player_profile, capture_window
+            get_global_stats, get_player_profile, capture_window, log_from_frontend
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
