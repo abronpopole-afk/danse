@@ -1,0 +1,38 @@
+[2026-01-28 21:23:48] [INFO] Application starting
+[2026-01-28 21:23:49] [INFO] Connecting to database: postgresql://poker_bot:d3aXbYN7wVyOHm6f@localhost:5432/poker_bot
+[2026-01-28 21:23:49] [INFO] Database tables verified/created
+[2026-01-28 21:23:49] [INFO] Database initialization successful
+[2026-01-28 21:23:51] [DEBUG] Command: get_current_session requested
+[2026-01-28 21:23:51] [DEBUG] Command: get_global_stats requested
+[2026-01-28 21:23:51[2026-01-28 21:23:51] [DEBUG] Command: get_recent_logs requested
+] [DEBUG] Command: get_player_profile requested
+[2026-01-28 21:23:54] [INFO] Command: stop_session requested
+[2026-01-28 21:23:55] [INFO] Command: stop_session requested
+[[2026-01-28 21:25:09] [DEBUG] Command: get_platform_config requested
+2026-01-28 21:25:09] [DEBUG] Command: get_gto_config requested
+[2026-01-28 21:25:30] [DEBUG] Command: get_global_stats requested
+[[2026-01-28 21:25:30] [[2026-01-28 21:25:30DEBUG2026-01-28 21:25:30] [] ] [DEBUGCommand: get_recent_logs requestedDEBUG] 
+] Command: get_player_profile requestedCommand: get_current_session requested
+
+[2026-01-28 21:25:32] [WARN] Command: force_stop_session requested
+[2026-01-28 21:25:32] [INFO] Command: start_session requested
+[2026-01-28 21:25:32] [INFO] Session started successfully with ID: 1025f656-dc16-4098-8171-8881e52c53c9
+[2026-01-28 21:25:32] [DEBUG] Command: get_current_session requested
+[[2026-01-28 21:25:322026-01-28 21:25:32] [DEBUG] [] DEBUGCommand: get_global_stats requested] 
+Command: get_recent_logs requested
+[2026-01-28 21:25:35] [WARN] Command: force_stop_session requested
+[2026-01-28 21:25:36] [DEBUG] Command: get_gto_config requested[
+2026-01-28 21:25:36] [DEBUG] Command: get_platform_config requested
+[2026-01-28 21:25:51] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:25:52] [INFO] Command: connect_platform requested
+[2026-01-28 21:27:06[] [2026-01-28 21:27:06] [DEBUG[DEBUG] 2026-01-28 21:27:06] ] [Command: get_current_session requestedDEBUG
+] Command: get_global_stats requested
+Command: get_recent_logs requested
+[2026-01-28 21:27:06] [DEBUG] Command: get_player_profile requested
+[[2026-01-28 21:27:37] [DEBUG] Command: get_gto_config requested2026-01-28 21:27:37
+] [DEBUG] Command: get_platform_config requested
