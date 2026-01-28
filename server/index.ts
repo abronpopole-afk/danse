@@ -123,181 +123,121 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  log("🚀 Starting GTO Poker Bot Server Initialization...");
+  
   // Run database migration before anything else
   await runAutoMigration();
 
+  log("Step 7: Loading bot sessions...");
   try {
     const sessions = await storage.getAllBotSessions();
     const activeSessions = sessions.filter(s => s.status === 'running');
+    log(`Step 8: Found ${activeSessions.length} active sessions to cleanup`);
     for (const session of activeSessions) {
       await storage.updateBotSession(session.id, {
         status: "stopped",
         stoppedAt: new Date(),
       });
-      log(`🧹 Session active résiduelle nettoyée au démarrage: ${session.id}`);
+      log(`🧹 Session active résiduelle nettoyée: ${session.id}`);
     }
   } catch (error) {
-    log(`Warning: Could not cleanup active sessions: ${error}`);
+    log(`Warning: Session cleanup encountered an error: ${error}`);
   }
 
+  log("Step 9: Checking for stale sessions...");
   try {
     const staleSession = await storage.getActiveBotSession();
     if (staleSession && staleSession.startedAt) {
-      const sessionAge = Date.now() - new Date(staleSession.startedAt).getTime();
-      const MAX_STALE_AGE = 4 * 60 * 60 * 1000;
-      
-      if (sessionAge > MAX_STALE_AGE) {
-        await storage.updateBotSession(staleSession.id, {
-          status: "stopped",
-          stoppedAt: new Date(),
-        });
-        log(`🧹 Session expirée nettoyée: ${staleSession.id} (âge: ${Math.round(sessionAge / (60 * 60 * 1000))}h)`);
-      } else {
-        log(`ℹ️ Session existante trouvée: ${staleSession.id} (âge: ${Math.round(sessionAge / (60 * 1000))}min)`);
-        
-        // Initialiser PlatformManager pour session active existante
-        const platformConfig = await storage.getPlatformConfig();
-        if (platformConfig && platformConfig.platformName) {
-          const { getPlatformManager } = await import("./bot/platform-manager");
-          const { getTableManager } = await import("./bot/table-manager");
-          
-          const platformManager = getPlatformManager();
-          const tableManager = getTableManager();
-          tableManager.setSessionId(staleSession.id);
-          
-          const settings = (platformConfig.settings || {}) as Record<string, any>;
-          
-          const pmConfig = {
-            platformName: platformConfig.platformName,
-            credentials: {
-              username: platformConfig.username || "",
-              password: settings.password || "",
-            },
-            autoReconnect: settings.autoReconnect ?? true,
-            reconnectDelayMs: settings.reconnectDelayMs ?? 5000,
-            maxReconnectAttempts: settings.maxReconnectAttempts ?? 3,
-            scanIntervalMs: settings.scanIntervalMs ?? 500,
-            actionDelayMs: settings.actionDelayMs ?? 100,
-            enableAutoAction: settings.enableAutoAction ?? true,
-          };
-          
-          log(`🔌 Initialisation PlatformManager pour session existante...`);
-          const initialized = await platformManager.initialize(pmConfig);
-          
-          if (initialized) {
-            log(`✅ PlatformManager initialisé - scan des tables démarré`);
-          } else {
-            log(`⚠️ PlatformManager non initialisé - vérifiez la configuration`);
-          }
+        log(`Step 10: Processing session ${staleSession.id}`);
+        // Session age logic
+        const sessionAge = Date.now() - new Date(staleSession.startedAt).getTime();
+        const MAX_STALE_AGE = 4 * 60 * 60 * 1000;
+        if (sessionAge > MAX_STALE_AGE) {
+            await storage.updateBotSession(staleSession.id, { status: "stopped", stoppedAt: new Date() });
+            log(`🧹 Session expirée nettoyée: ${staleSession.id}`);
         } else {
-          log(`⚠️ Pas de configuration plateforme - détection de tables désactivée`);
+            log(`ℹ️ Session existante active: ${staleSession.id}`);
         }
-      }
     }
   } catch (error) {
-    log(`Warning: Could not check stale sessions: ${error}`);
+    log(`Warning: Stale session check failed: ${error}`);
   }
 
+  log("Step 11: Initializing Player Profile...");
   try {
     const { initializePlayerProfile } = await import("./bot/player-profile");
     await initializePlayerProfile();
-    log("Player profile initialized from database");
+    log("✅ Player profile initialized successfully");
   } catch (error) {
-    log(`Warning: Could not initialize player profile: ${error}`);
+    log(`Warning: Player profile initialization failed: ${error}`);
   }
 
-  // Initialize Event Bus
+  log("Step 12: Initializing Event Bus & Handlers...");
   try {
     const { initializeEventBus } = await import("./bot/event-bus");
     const { registerEventHandlers } = await import("./bot/event-handlers");
-
     const eventBus = await initializeEventBus();
     await registerEventHandlers(eventBus);
-
-    // Start consuming events in background
-    eventBus.startConsuming().catch(error => {
-      log(`Event bus consumer error: ${error}`);
-    });
-
-    log("Event bus initialized and consuming events");
+    eventBus.startConsuming().catch(err => log(`Event bus error: ${err}`));
+    log("✅ Event bus and handlers ready");
   } catch (error) {
-    log(`Warning: Could not initialize event bus: ${error}`);
+    log(`Warning: Event bus initialization failed: ${error}`);
   }
 
-  const { gtoConfig } = await import("./config");
-  const { initializeGtoAdapter } = await import("./bot/gto-adapter");
+  log("Step 13: Initializing GTO Engine & Cache...");
+  try {
+    const { gtoConfig } = await import("./config");
+    const { initializeGtoAdapter } = await import("./bot/gto-adapter");
+    await initializeGtoAdapter({
+        apiEndpoint: gtoConfig?.apiEndpoint,
+        apiKey: gtoConfig?.apiKey,
+        useSimulation: !gtoConfig?.enabled || !gtoConfig?.apiKey,
+        useAdvanced: true,
+    });
+    log("✅ GTO Adapter initialized");
 
-  // Initialize GTO adapter
-  await initializeGtoAdapter({
-    apiEndpoint: gtoConfig?.apiEndpoint,
-    apiKey: gtoConfig?.apiKey,
-    useSimulation: !gtoConfig?.enabled || !gtoConfig?.apiKey,
-    useAdvanced: true,
-  });
-
-  // Initialize and warmup GTO cache
-  if (gtoConfig?.cacheEnabled !== false) {
-    try {
-      const { getGtoCache, getCommonPreflopSituations } = await import("./bot/gto-cache");
-      const cache = getGtoCache();
-      const situations = getCommonPreflopSituations();
-
-      // Warmup in background
-      cache.warmup(situations).catch(err => {
-        console.error("[Server] GTO cache warmup failed:", err);
-      });
-    } catch (error) {
-      console.error("[Server] Failed to initialize GTO cache:", error);
+    if (gtoConfig?.cacheEnabled !== false) {
+        const { getGtoCache, getCommonPreflopSituations } = await import("./bot/gto-cache");
+        const cache = getGtoCache();
+        cache.warmup(getCommonPreflopSituations()).catch(err => log(`Cache warmup error: ${err}`));
+        log("✅ GTO cache warmup started");
     }
+  } catch (error) {
+    log(`Warning: GTO initialization failed: ${error}`);
   }
 
+  log("Step 14: Registering API Routes...");
   await registerRoutes(httpServer, app);
+  log("✅ API Routes registered");
 
   if (process.env.NODE_ENV === "development") {
-    console.log('[STARTUP] Mode développement détecté, chargement de Vite...');
-    try {
-      // Import dynamique de vite uniquement en dev (pas inclus dans le bundle prod)
-      console.log('[STARTUP] Import de ./vite...');
-      const { setupVite } = await import("./vite");
-      console.log('[STARTUP] setupVite importé, lancement...');
-      await setupVite(httpServer, app);
-      console.log('[STARTUP] Vite configuré avec succès');
-    } catch (error) {
-      console.error('[STARTUP] ERREUR lors de la configuration de Vite:', error);
-      throw error;
-    }
+    const { setupVite } = await import("./vite");
+    await setupVite(httpServer, app);
+    log("✅ Vite development server ready");
   } else {
-    console.log('[STARTUP] Mode production, chargement des fichiers statiques...');
+    log("Step 15: Production mode - serving static files");
     serveStatic(app);
   }
 
   const PORT = parseInt(process.env.PORT || "5000", 10);
   const host = process.env.HOST || "0.0.0.0";
+  
+  log(`Step 16: Attempting to listen on ${host}:${PORT}`);
   httpServer.listen(PORT, host, async () => {
-    console.log(`✓ Server running on http://${host}:${PORT}`);
+    log(`Step 17: ✓ Server successfully listening on http://${host}:${PORT}`);
 
-    // Initialize range updater
-    const { getRangeUpdater } = await import("./bot/range-updater");
-    const rangeUpdater = getRangeUpdater();
-
-    // Add default GTO Wizard source
-    rangeUpdater.addSource({
-      name: "GTO Wizard",
-      updateFrequency: "weekly",
-      enabled: false, // User must enable and configure
-    });
-
-    // Add solver-based source (always available)
-    rangeUpdater.addSource({
-      name: "Solver Simulation",
-      updateFrequency: "weekly",
-      enabled: true,
-    });
-
-    await rangeUpdater.startAutoUpdate();
-    console.log("✓ Range auto-updater started");
+    log("Step 18: Starting Range Updater...");
+    try {
+        const { getRangeUpdater } = await import("./bot/range-updater");
+        const rangeUpdater = getRangeUpdater();
+        rangeUpdater.addSource({ name: "Solver Simulation", updateFrequency: "weekly", enabled: true });
+        await rangeUpdater.startAutoUpdate();
+        log("Step 19: ✅ All systems go! Server ready.");
+    } catch (err) {
+        log(`Warning: Range updater failed: ${err}`);
+    }
   });
 })().catch(error => {
-  console.error("Fatal error during server startup:", error);
+  log(`❌ FATAL ERROR DURING STARTUP: ${error}`);
   process.exit(1);
 });
