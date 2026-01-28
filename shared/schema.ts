@@ -108,6 +108,19 @@ export const insertGtoConfigSchema = createInsertSchema(gtoConfig).omit({ id: tr
 export type InsertGtoConfig = z.infer<typeof insertGtoConfigSchema>;
 export type GtoConfig = typeof gtoConfig.$inferSelect;
 
+export const platformAccounts = pgTable("platform_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platformName: text("platform_name").notNull(),
+  username: text("username").notNull(),
+  password: text("password").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPlatformAccountSchema = createInsertSchema(platformAccounts).omit({ id: true, createdAt: true });
+export type InsertPlatformAccount = z.infer<typeof insertPlatformAccountSchema>;
+export type PlatformAccount = typeof platformAccounts.$inferSelect;
+
 export const platformConfig = pgTable("platform_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   platformName: text("platform_name").notNull(),
