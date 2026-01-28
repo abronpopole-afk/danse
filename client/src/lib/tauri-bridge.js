@@ -17,18 +17,14 @@ window.__TAURI_IPC__ = (message) => {
       }
       
       const trigger = (id, result) => {
-        // Find the callback handler - check window and prefixed versions
-        let handler = (typeof id === 'function') ? id : 
-                        (window[id] ? window[id] : 
-                        (window[`_${id}`] ? window[`_${id}`] : null));
-        
-        if (handler) {
+        if (typeof id === 'function') {
+          id(result);
+          return;
+        }
+
+        const handler = window[id] || window[`_${id}`];
+        if (typeof handler === 'function') {
           handler(result);
-        } else {
-          // Si l'ID est une chaîne, c'est probablement un nom de fonction global
-          if (typeof id === 'string' && typeof window[id] === 'function') {
-            window[id](result);
-          }
         }
       };
     

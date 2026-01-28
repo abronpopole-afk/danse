@@ -63,9 +63,9 @@ export function useBotState() {
       
       setState(prev => ({
         ...prev,
-        session: sessionData.session,
-        tables: sessionData.tables || [],
-        stats: sessionData.stats || defaultStats,
+        session: sessionData,
+        tables: sessionData?.tables || [],
+        stats: sessionData?.stats || defaultStats,
         logs: logsData.logs || [],
         humanizerSettings: statsData.humanizerSettings || defaultHumanizerSettings,
         gtoConnected: statsData.gtoConnected,
