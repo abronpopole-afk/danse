@@ -210,9 +210,36 @@ async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> 
     log_to_file("DEBUG", "Command: cleanup_stale_sessions requested");
     Ok(json!({"success": true})) 
 }
-#[command] async fn get_current_session() -> PokerResult<Value> { 
+#[command] async fn get_current_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> { 
     log_to_file("DEBUG", "Command: get_current_session requested");
-    Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}})) 
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let session = sqlx::query_as::<_, (String, String, Option<chrono::NaiveDateTime>)>(
+            "SELECT id, status, started_at FROM bot_sessions WHERE status = 'running' ORDER BY started_at DESC LIMIT 1"
+        )
+        .fetch_optional(&pool)
+        .await?;
+        
+        if let Some(row) = session {
+            Ok(json!({
+                "session": {
+                    "id": row.0,
+                    "status": row.1,
+                    "startedAt": row.2
+                },
+                "stats": {"totalTables": 0, "activeTables": 0},
+                "tables": []
+            }))
+        } else {
+            Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}, "tables": []}))
+        }
+    } else {
+        Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}, "tables": []})) 
+    }
 }
 #[command] async fn get_all_tables() -> PokerResult<Value> { 
     log_to_file("DEBUG", "Command: get_all_tables requested");
@@ -222,13 +249,67 @@ async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> 
     log_to_file("DEBUG", "Command: get_humanizer_config requested");
     Ok(json!({"enabled": true})) 
 }
-#[command] async fn get_gto_config() -> PokerResult<Value> { 
-    log_to_file("DEBUG", "Command: get_gto_config requested");
-    Ok(json!({"enabled": true})) 
-}
-#[command] async fn get_platform_config() -> PokerResult<Value> { 
+#[command]
+async fn get_platform_config(state: tauri::State<'_, AppState>) -> PokerResult<Value> {
     log_to_file("DEBUG", "Command: get_platform_config requested");
-    Ok(json!({"platformName": "GGClub"})) 
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let config = sqlx::query_as::<_, (String, String, String, bool)>(
+            "SELECT platform_name, username, account_id, enabled FROM platform_config LIMIT 1"
+        )
+        .fetch_optional(&pool)
+        .await?;
+        
+        if let Some(row) = config {
+            Ok(json!({
+                "platformName": row.0,
+                "username": row.1,
+                "accountId": row.2,
+                "enabled": row.3
+            }))
+        } else {
+            Ok(json!(null))
+        }
+    } else {
+        Ok(json!(null))
+    }
+}
+
+#[command]
+async fn get_gto_config(state: tauri::State<'_, AppState>) -> PokerResult<Value> {
+    log_to_file("DEBUG", "Command: get_gto_config requested");
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
+        let config = sqlx::query_as::<_, (String, String, bool)>(
+            "SELECT api_endpoint, api_key, enabled FROM gto_config LIMIT 1"
+        )
+        .fetch_optional(&pool)
+        .await?;
+        
+        if let Some(row) = config {
+            Ok(json!({
+                "config": {
+                    "apiEndpoint": row.0,
+                    "apiKey": row.1,
+                    "enabled": row.2
+                },
+                "connected": row.2 && !row.1.is_empty(),
+                "usingSimulation": !row.2 || row.1.is_empty()
+            }))
+        } else {
+            Ok(json!({ "config": null, "connected": false, "usingSimulation": true }))
+        }
+    } else {
+        Ok(json!({ "config": null, "connected": false, "usingSimulation": true }))
+    }
 }
 #[command] async fn get_recent_logs(_limit: u32) -> PokerResult<Value> { 
     log_to_file("DEBUG", "Command: get_recent_logs requested");
@@ -317,7 +398,7 @@ async fn log_from_frontend(level: String, message: String) {
 
 #[command]
 async fn save_platform_config(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
-    log_to_file("INFO", "Command: save_platform_config requested");
+    log_to_file("INFO", &format!("Command: save_platform_config requested with data: {:?}", config));
     let pool = {
         let pool_guard = state.db.lock().unwrap();
         pool_guard.clone()
@@ -331,14 +412,13 @@ async fn save_platform_config(state: tauri::State<'_, AppState>, config: Value) 
         sqlx::query(
             "INSERT INTO platform_config (platform_name, username, account_id, enabled) 
              VALUES ($1, $2, $3, $4)
-             ON CONFLICT (id) DO UPDATE SET 
-                platform_name = EXCLUDED.platform_name,
+             ON CONFLICT (platform_name) DO UPDATE SET 
                 username = EXCLUDED.username,
                 enabled = EXCLUDED.enabled"
         )
         .bind(platform_name)
         .bind(username)
-        .bind(username) // Use username as account_id for now
+        .bind(username) 
         .bind(enabled)
         .execute(&pool)
         .await?;
@@ -351,7 +431,7 @@ async fn save_platform_config(state: tauri::State<'_, AppState>, config: Value) 
 
 #[command]
 async fn save_gto_config(state: tauri::State<'_, AppState>, config: Value) -> PokerResult<Value> {
-    log_to_file("INFO", "Command: save_gto_config requested");
+    log_to_file("INFO", &format!("Command: save_gto_config requested with data: {:?}", config));
     let pool = {
         let pool_guard = state.db.lock().unwrap();
         pool_guard.clone()
@@ -365,8 +445,7 @@ async fn save_gto_config(state: tauri::State<'_, AppState>, config: Value) -> Po
         sqlx::query(
             "INSERT INTO gto_config (api_endpoint, api_key, enabled) 
              VALUES ($1, $2, $3)
-             ON CONFLICT (id) DO UPDATE SET 
-                api_endpoint = EXCLUDED.api_endpoint,
+             ON CONFLICT (api_endpoint) DO UPDATE SET 
                 api_key = EXCLUDED.api_key,
                 enabled = EXCLUDED.enabled"
         )

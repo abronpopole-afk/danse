@@ -1,0 +1,31 @@
+[2026-01-28 17:54:31] [INFO] Application starting
+[2026-01-28 17:54:32] [INFO] Connecting to database: postgresql://poker_bot:d3aXbYN7wVyOHm6f@localhost:5432/poker_bot
+[2026-01-28 17:54:32] [INFO] Database tables verified/created
+[2026-01-28 17:54:32] [INFO] Database initialization successful
+[2026-01-28 17:54:34[] [2026-01-28 17:54:34INFO] [] INFO[FRONTEND] Frontend: Bootstrapping application...
+] [FRONTEND] Frontend: Render call completed
+[2026-01-28 17:54:34] [DEBUG] Command: get_current_session requested
+[2026-01-28 17:54:34[] [DEBUG[2026-01-28 17:54:34] 2026-01-28 17:54:34Command: get_global_stats requested] [] [
+DEBUGDEBUG] ] Command: get_recent_logs requestedCommand: get_player_profile requested
+
+[2026-01-28 17:54:34] [INFO] [FRONTEND] App: Initializing router with HashLocation
+[2026-01-28 17:54:37] [DEBUG] Command: get_gto_config requested
+[2026-01-28 17:54:37] [DEBUG] Command: get_platform_config requested
+[2026-01-28 17:54:39] [WARN] [FRONTEND] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[2026-01-28 17:54:53] [INFO] Command: connect_platform requested
+[2026-01-28 17:54:58] [DEBUG] Command: get_global_stats requested
+[2026-01-28 17:54:58] [DEBUG] Command: get_player_profile requested
+[2026-01-28 17:54:58] [DEBUG] Command: get_recent_logs requested
+[2026-01-28 17:54:58] [DEBUG] Command: get_current_session requested
+[2026-01-28 17:54:59] [DEBUG] Command: get_gto_config requested
+[2026-01-28 17:54:59] [DEBUG] Command: get_platform_config requested
+[2026-01-28 17:55:05] [DEBUG[] 2026-01-28 17:55:05Command: get_current_session requested] [
+DEBUG] Command: get_global_stats requested
+[2026-01-28 17:55:05[] [DEBUG] 2026-01-28 17:55:05Command: get_recent_logs requested
+] [DEBUG] Command: get_player_profile requested
+[2026-01-28 17:55:07] [INFO] Command: start_session requested
+[2026-01-28 17:55:07] [INFO] Session started successfully with ID: 9a15fee7-953d-4d5a-b821-bcd0b105984c
+[2026-01-28 17:55:09] [INFO] Command: start_session requested
+[2026-01-28 17:55:09] [INFO] Session started successfully with ID: 44768f5a-0d48-41e0-9332-97a928aaa137
+[2026-01-28 17:55:10] [INFO] Command: start_session requested
+[2026-01-28 17:55:10] [INFO] Session started successfully with ID: 3b0467d9-c53b-4efc-bd2c-8c4a56b04f67

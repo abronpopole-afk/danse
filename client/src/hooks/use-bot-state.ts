@@ -195,12 +195,15 @@ export function useBotState() {
   const startSession = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      await api.session.start();
+      const response = await api.session.start();
+      if (response && response.success) {
+        await loadInitialState();
+      }
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
       throw error;
     }
-  }, []);
+  }, [loadInitialState]);
   
   const stopSession = useCallback(async () => {
     try {
