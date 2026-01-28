@@ -9,8 +9,6 @@
 
     const trigger = (id, result) => {
       if (id === undefined || id === null) return;
-
-      // The bundle might be looking for window[id] or window["_" + id]
       const handlers = [id, `_${id}`, `__tauri_cb_${id}`];
       for (const h of handlers) {
         if (typeof window[h] === 'function') {
@@ -18,33 +16,33 @@
           return;
         }
       }
-
-      // If id is a direct function reference (happens in some mock scenarios)
       if (typeof id === 'function') {
         id(result);
         return;
       }
-
       console.debug(`[Mock IPC] Handler not found for ${id}`);
     };
 
     const callApi = async (path, method = 'GET', body = null) => {
+      console.log(`[Fetch REQ] ${method} ${path}`, body);
       try {
         const res = await fetch(path, {
           method,
           headers: { 'Content-Type': 'application/json' },
           body: body ? JSON.stringify(body) : null
         });
-        if (!res.ok) return { success: false, error: res.statusText };
-        return await res.json();
+        const data = await res.json();
+        console.log(`[Fetch RES] ${path}`, data);
+        return data;
       } catch (e) {
+        console.error(`[Fetch ERR] ${path}`, e);
         return { success: false, error: e.message };
       }
     };
 
     window.__TAURI_IPC__ = async (message) => {
       const { cmd, callback, error, ...data } = message;
-      if (cmd !== 'tauri') console.log(`[IPC] ${cmd}`, data);
+      if (cmd !== 'tauri') console.log(`[IPC REQ] ${cmd}`, data);
 
       let result;
       try {
@@ -54,9 +52,7 @@
             break;
           case "create_platform_account":
           case "connect_platform":
-            // Handle both structure types (direct or wrapped in config)
-            const accountData = data.config || data;
-            result = await callApi("/api/platform-accounts", "POST", accountData);
+            result = await callApi("/api/platform-accounts", "POST", data.config || data);
             break;
           case "get_current_session":
             result = await callApi("/api/session/current");
@@ -67,11 +63,6 @@
           case "stop_session":
             const s = await callApi("/api/session/current");
             result = (s && s.id) ? await callApi(`/api/session/stop/${s.id}`, "POST") : { success: true };
-            break;
-          case "force_stop_session":
-            const fs = await callApi("/api/session/current");
-            if (fs && fs.id) await callApi(`/api/session/stop/${fs.id}`, "POST");
-            result = { success: true, forced: true };
             break;
           case "log_from_frontend":
             result = await callApi("/api/logs", "POST", {
@@ -96,8 +87,6 @@
         }
         
         if (cmd !== 'tauri') console.log(`[IPC RES] ${cmd}`, result);
-        
-        // Use setImmediate or setTimeout to ensure we don't block the loop
         setTimeout(() => trigger(callback, result), 0);
       } catch (e) {
         console.error(`[IPC ERR] ${cmd}`, e);
@@ -105,7 +94,6 @@
       }
     };
 
-    // Main Tauri entry points
     window.__TAURI__ = {
       invoke: (cmd, args) => new Promise((rs, rj) => {
         window.__TAURI_IPC__({ cmd, callback: rs, error: rj, ...args });
@@ -113,10 +101,5 @@
     };
     window.__TAURI_INVOKE__ = window.__TAURI__.invoke;
     window.tauri = window.__TAURI__;
-    
-    // Ensure we handle the event listener system
-    if (!window.__TAURI_METADATA__.__event_listeners) {
-      window.__TAURI_METADATA__.__event_listeners = {};
-    }
   }
 })();

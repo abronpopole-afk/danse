@@ -6,49 +6,80 @@ import { insertPlatformAccountSchema, insertBotSessionSchema, insertActionLogSch
 export function registerRoutes(app: Express): Server {
   // Platform Accounts
   app.get("/api/platform-accounts", async (_req, res) => {
-    const accounts = await storage.getPlatformAccounts();
-    res.json(accounts);
+    console.log("[API] Fetching platform accounts");
+    try {
+      const accounts = await storage.getPlatformAccounts();
+      console.log(`[API] Found ${accounts.length} accounts`);
+      res.json(accounts);
+    } catch (e: any) {
+      console.error("[API ERROR] getPlatformAccounts:", e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   app.post("/api/platform-accounts", async (req, res) => {
+    console.log("[API] Creating platform account:", req.body);
     const result = insertPlatformAccountSchema.safeParse(req.body);
     if (!result.success) {
+      console.warn("[API] Validation failed:", result.error);
       return res.status(400).json({ error: result.error });
     }
-    const account = await storage.createPlatformAccount(result.data);
-    await storage.appendLog({
-      logType: "INFO",
-      message: `Account created for ${account.platformName}: ${account.username}`,
-      sessionId: null,
-      tableId: null,
-      metadata: { accountId: account.id }
-    });
-    res.json(account);
+    try {
+      const account = await storage.createPlatformAccount(result.data);
+      console.log("[API] Account created successfully:", account.id);
+      await storage.appendLog({
+        logType: "INFO",
+        message: `Account created for ${account.platformName}: ${account.username}`,
+        sessionId: null,
+        tableId: null,
+        metadata: { accountId: account.id }
+      });
+      res.json(account);
+    } catch (e: any) {
+      console.error("[API ERROR] createPlatformAccount:", e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   // Bot Sessions
   app.get("/api/session/current", async (_req, res) => {
-    const session = await storage.getCurrentSession();
-    res.json(session);
+    console.log("[API] Fetching current session");
+    try {
+      const session = await storage.getCurrentSession();
+      console.log("[API] Current session:", session?.id || "none");
+      res.json(session);
+    } catch (e: any) {
+      console.error("[API ERROR] getCurrentSession:", e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   app.post("/api/session/start", async (req, res) => {
+    console.log("[API] Starting session requested");
     const result = insertBotSessionSchema.safeParse(req.body);
     if (!result.success) {
+      console.warn("[API] Session validation failed:", result.error);
       return res.status(400).json({ error: result.error });
     }
-    const session = await storage.startSession(result.data);
-    await storage.appendLog({
-      logType: "INFO",
-      message: "Session started manually",
-      sessionId: session.id,
-      tableId: null,
-      metadata: { sessionId: session.id }
-    });
-    res.json(session);
+    try {
+      const session = await storage.startSession(result.data);
+      console.log("[API] Session started:", session.id);
+      await storage.appendLog({
+        logType: "INFO",
+        message: "Session started manually",
+        sessionId: session.id,
+        tableId: null,
+        metadata: { sessionId: session.id }
+      });
+      res.json(session);
+    } catch (e: any) {
+      console.error("[API ERROR] startSession:", e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   app.post("/api/session/stop/:id", async (req, res) => {
+    console.log(`[API] Stopping session ${req.params.id}`);
     try {
       await storage.stopSession(req.params.id);
       await storage.appendLog({
@@ -58,20 +89,29 @@ export function registerRoutes(app: Express): Server {
         tableId: null,
         metadata: { sessionId: req.params.id }
       });
+      console.log(`[API] Session ${req.params.id} stopped successfully`);
       res.json({ success: true });
     } catch (e: any) {
+      console.error(`[API ERROR] stopSession ${req.params.id}:`, e);
       res.status(500).json({ error: e.message, success: false });
     }
   });
 
   // Logging
   app.post("/api/logs", async (req, res) => {
+    console.log("[API] Incoming frontend log:", req.body.message);
     const result = insertActionLogSchema.safeParse(req.body);
     if (!result.success) {
+      console.warn("[API] Log validation failed:", result.error);
       return res.status(400).json({ error: result.error });
     }
-    const log = await storage.appendLog(result.data);
-    res.json(log);
+    try {
+      const log = await storage.appendLog(result.data);
+      res.json(log);
+    } catch (e: any) {
+      console.error("[API ERROR] appendLog:", e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   const httpServer = createServer(app);

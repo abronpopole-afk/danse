@@ -38,31 +38,59 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getPlatformAccounts(): Promise<PlatformAccount[]> {
-    return await db.select().from(platformAccounts);
+    console.log("[DB] Selecting platform accounts...");
+    try {
+      const results = await db.select().from(platformAccounts);
+      console.log(`[DB] Selected ${results.length} accounts`);
+      return results;
+    } catch (e) {
+      console.error("[DB ERROR] getPlatformAccounts:", e);
+      throw e;
+    }
   }
 
   async createPlatformAccount(account: InsertPlatformAccount): Promise<PlatformAccount> {
-    const [newAccount] = await db.insert(platformAccounts).values(account).returning();
-    return newAccount;
+    console.log("[DB] Inserting platform account:", account.username);
+    try {
+      const [newAccount] = await db.insert(platformAccounts).values(account).returning();
+      console.log("[DB] Inserted account ID:", newAccount.id);
+      return newAccount;
+    } catch (e) {
+      console.error("[DB ERROR] createPlatformAccount:", e);
+      throw e;
+    }
   }
 
   async getCurrentSession(): Promise<BotSession | null> {
-    const [session] = await db
-      .select()
-      .from(botSessions)
-      .where(eq(botSessions.status, "active"))
-      .orderBy(desc(botSessions.startedAt))
-      .limit(1);
-    return session || null;
+    console.log("[DB] Fetching active session...");
+    try {
+      const [session] = await db
+        .select()
+        .from(botSessions)
+        .where(eq(botSessions.status, "active"))
+        .orderBy(desc(botSessions.startedAt))
+        .limit(1);
+      return session || null;
+    } catch (e) {
+      console.error("[DB ERROR] getCurrentSession:", e);
+      throw e;
+    }
   }
 
   async startSession(session: InsertBotSession): Promise<BotSession> {
-    const [newSession] = await db.insert(botSessions).values({
-      ...session,
-      status: "active",
-      startedAt: new Date()
-    }).returning();
-    return newSession;
+    console.log("[DB] Starting new session...");
+    try {
+      const [newSession] = await db.insert(botSessions).values({
+        ...session,
+        status: "active",
+        startedAt: new Date()
+      }).returning();
+      console.log("[DB] Session created:", newSession.id);
+      return newSession;
+    } catch (e) {
+      console.error("[DB ERROR] startSession:", e);
+      throw e;
+    }
   }
 
   async stopSession(id: string): Promise<void> {
@@ -75,23 +103,37 @@ export class DatabaseStorage implements IStorage {
   async appendLog(log: InsertActionLog): Promise<ActionLog> {
     const [newLog] = await db.insert(actionLogs).values(log).returning();
     
+    // Console logging for debugging in Replit
+    console.log(`[LOG] ${log.logType}: ${log.message}`, log.metadata);
+
     // File logging
     if (process.env.NODE_ENV !== 'test') {
       ensureLogDir();
-      // Ensure path is properly handled for different OS during development
-      let logPath = LOG_DIR;
+      
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toISOString().split('T')[1].split('.')[0];
+      
+      // We always attempt to write to the requested Windows path
+      // but provide a fallback for the Replit environment
+      const pathsToTry = [LOG_DIR];
       if (process.platform !== "win32") {
-        logPath = "/tmp/gto_logs";
-        if (!fs.existsSync(logPath)) fs.mkdirSync(logPath, { recursive: true });
+        pathsToTry.push("/tmp/gto_logs");
       }
 
-      const logFile = path.join(logPath, `log_${new Date().toISOString().split('T')[0]}.txt`);
-      const logLine = `[${new Date().toISOString()}] [${log.logType}] ${log.message} ${log.metadata ? JSON.stringify(log.metadata) : ''}\n`;
-      
-      try {
-        fs.appendFileSync(logFile, logLine);
-      } catch (e) {
-        console.error("Failed to write to log file:", e);
+      for (const logPath of pathsToTry) {
+        try {
+          if (!fs.existsSync(logPath)) {
+            fs.mkdirSync(logPath, { recursive: true });
+          }
+          const logFile = path.join(logPath, `gto_poker_bot_${dateStr}.log`);
+          const logLine = `[${dateStr} ${timeStr}] [${log.logType}] ${log.message} ${log.metadata ? JSON.stringify(log.metadata) : ''}\n`;
+          fs.appendFileSync(logFile, logLine);
+          // If we successfully wrote to one, we can stop if it's the primary one
+          if (logPath === LOG_DIR) break; 
+        } catch (e) {
+          console.error(`Failed to write to log path ${logPath}:`, e);
+        }
       }
     }
 
