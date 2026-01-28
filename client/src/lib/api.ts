@@ -57,9 +57,14 @@ export const api = {
     },
     async stop(): Promise<{ success: boolean; stats: TableStats }> {
       console.log("[API] Calling stop_session");
-      const result = await invoke("stop_session") as { success: boolean; stats: TableStats };
-      console.log("[API] stop_session result:", result);
-      return result;
+      try {
+        const result = await invoke("stop_session") as { success: boolean; stats: TableStats };
+        console.log("[API] stop_session result:", result);
+        return result;
+      } catch (error) {
+        console.error("[API] stop_session failed:", error);
+        throw error;
+      }
     },
     async forceStop(): Promise<{ success: boolean; forced: boolean }> {
       return invoke("force_stop_session");

@@ -13,7 +13,7 @@ function sendToBackend(level: string, args: any[]) {
   ).join(' ');
   
   // Utilisation directe de window.__TAURI__.invoke ou import
-  const invokePromise = (window as any).__TAURI__ ? Promise.resolve({ invoke: (window as any).__TAURI__.invoke }) : import("@tauri-apps/api/tauri");
+  const invokePromise = (window as any).__TAURI_IPC__ ? Promise.resolve({ invoke: (window as any).__TAURI__.invoke }) : import("@tauri-apps/api/tauri");
   
   invokePromise.then(({ invoke }) => {
     invoke("log_from_frontend", { level, message }).catch(() => {
