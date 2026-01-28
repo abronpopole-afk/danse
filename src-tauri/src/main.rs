@@ -125,7 +125,7 @@ async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
 }
 
 #[command]
-fn list_windows() -> Vec<WindowInfo> {
+async fn list_windows() -> Vec<WindowInfo> {
     let mut windows: Vec<WindowInfo> = Vec::new();
     unsafe {
         let _ = EnumWindows(Some(enum_window_callback), LPARAM(&mut windows as *mut Vec<WindowInfo> as isize));
@@ -156,8 +156,8 @@ unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BO
 }
 
 #[command]
-fn find_poker_windows() -> Vec<WindowInfo> {
-    let all = list_windows();
+async fn find_poker_windows() -> Vec<WindowInfo> {
+    let all = list_windows().await;
     all.into_iter()
         .filter(|w| {
             let t = w.title.to_lowercase();
