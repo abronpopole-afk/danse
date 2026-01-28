@@ -12,8 +12,10 @@ function sendToBackend(level: string, args: any[]) {
     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
   ).join(' ');
   
-  // Utilisation directe de window.__TAURI_INVOKE__ ou invoke pour assurer la redirection
-  import("@tauri-apps/api/tauri").then(({ invoke }) => {
+  // Utilisation directe de window.__TAURI__.invoke ou import
+  const invokePromise = (window as any).__TAURI__ ? Promise.resolve({ invoke: (window as any).__TAURI__.invoke }) : import("@tauri-apps/api/tauri");
+  
+  invokePromise.then(({ invoke }) => {
     invoke("log_from_frontend", { level, message }).catch(() => {
       // Fallback console si le backend n'est pas prêt
       originalLog("[LOG-FALLBACK]", level, message);

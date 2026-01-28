@@ -4,9 +4,24 @@ import { invoke } from "@tauri-apps/api/tauri";
 if (typeof window !== 'undefined' && !window.__TAURI_METADATA__ && !window.__TAURI_IPC__) {
   console.warn("Tauri IPC not found, initializing browser mock bridge");
   
-  // Use a stable property name for the bridge to avoid issues with randomized callback names
-  window.__TAURI_IPC__ = async (message) => {
-    console.log("[Tauri Mock IPC] Command:", message.cmd, message.data);
+  window.__TAURI_METADATA__ = {
+    __windows: [],
+    __currentWindow: { label: "main" }
+  };
+
+    window.__TAURI_IPC__ = (message) => {
+      const { cmd, callback, error, ...data } = message;
+      console.log(`[Tauri Mock IPC] Command: ${cmd}`, data);
+      
+      const trigger = (id, result) => {
+        if (typeof id === 'function') {
+          id(result);
+        } else if (typeof window[id] === 'function') {
+          window[id](result);
+        } else if (typeof window[`_${id}`] === 'function') {
+          window[`_${id}`](result);
+        }
+      };
     
     // Simulate responses for common commands
     const responses = {
@@ -20,12 +35,26 @@ if (typeof window !== 'undefined' && !window.__TAURI_METADATA__ && !window.__TAU
       "get_platform_config": { platformName: "GGClub" }
     };
 
-    const result = responses[message.cmd] || { success: true };
+    const result = responses[cmd] || { success: true };
     
     // Tauri invoke uses callback/error functions passed as indices into window
-    if (message.callback !== undefined && typeof window[message.callback] === 'function') {
-      window[message.callback](result);
+    setTimeout(() => {
+      if (callback !== undefined) {
+        trigger(callback, result);
+      }
+    }, 0);
+  };
+
+  window.__TAURI__ = {
+    invoke: function(cmd, args) {
+      return new Promise((resolve, reject) => {
+        window.__TAURI_IPC__({
+          cmd: cmd,
+          callback: (res) => resolve(res),
+          error: (err) => reject(err),
+          ...args
+        });
+      });
     }
-    return result;
   };
 }
