@@ -50,13 +50,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlatformAccount(account: InsertPlatformAccount): Promise<PlatformAccount> {
-    console.log("[DB] Inserting platform account:", account.username);
+    console.log("[DB] [CREATE_ACCOUNT] Attempting to insert into platform_accounts:", account.username);
     try {
       const [newAccount] = await db.insert(platformAccounts).values(account).returning();
-      console.log("[DB] Inserted account ID:", newAccount.id);
+      console.log("[DB] [CREATE_ACCOUNT] Successfully inserted account ID:", newAccount.id);
+      
+      await this.appendLog({
+        logType: "INFO",
+        message: `PLATFORM ACCOUNT PERSISTED: ${newAccount.username} on ${newAccount.platformName}`,
+        sessionId: null,
+        tableId: null,
+        metadata: { dbId: newAccount.id }
+      });
+      
       return newAccount;
     } catch (e) {
-      console.error("[DB ERROR] createPlatformAccount:", e);
+      console.error("[DB ERROR] [CREATE_ACCOUNT] Failed to insert account:", e);
       throw e;
     }
   }
@@ -84,17 +93,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async startSession(session: InsertBotSession): Promise<BotSession> {
-    console.log("[DB] Starting new session...");
+    console.log("[DB] [START_SESSION] Starting new session...");
     try {
+      // Ensure no other active session exists
+      await db.update(botSessions)
+        .set({ status: "stopped", stoppedAt: new Date() })
+        .where(eq(botSessions.status, "active"));
+
       const [newSession] = await db.insert(botSessions).values({
         ...session,
         status: "active",
         startedAt: new Date()
       }).returning();
-      console.log("[DB] Session created:", newSession.id);
+      
+      console.log("[DB] [START_SESSION] Session created with ID:", newSession.id);
+      
+      await this.appendLog({
+        logType: "INFO",
+        message: `SESSION STARTED: ${newSession.id}`,
+        sessionId: newSession.id,
+        tableId: null,
+        metadata: { status: "active", startedAt: newSession.startedAt }
+      });
+
       return newSession;
     } catch (e) {
-      console.error("[DB ERROR] startSession:", e);
+      console.error("[DB ERROR] [START_SESSION] Failed to create session:", e);
       throw e;
     }
   }

@@ -145,6 +145,7 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
 
     try {
       setIsConnecting("new");
+      console.log("[ACCOUNT_MANAGER] Adding account to DB:", newAccountForm.username);
       
       // Enregistrer d'abord le compte dans la base de données via l'API Express
       const accountResponse = await api.platform.createAccount({
@@ -154,9 +155,10 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         isActive: true
       });
       
-      console.log("Account created in DB:", accountResponse);
+      console.log("[ACCOUNT_MANAGER] DB Persistence Result:", accountResponse);
 
-      // Puis tenter la connexion via Tauri invoke
+      // Tenter la connexion via Tauri invoke
+      console.log("[ACCOUNT_MANAGER] Requesting platform connection via Tauri");
       const result = await api.platform.connect({
         platformName: newAccountForm.platformName,
         username: newAccountForm.username,
@@ -166,10 +168,10 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         enableAutoAction: newAccountForm.enableAutoAction,
       });
       
-      console.log("Connect result:", result);
+      console.log("[ACCOUNT_MANAGER] Tauri Connect Result:", result);
       
-      if (result.success || accountResponse) {
-        toast.success(`Compte ${newAccountForm.username} ajouté avec succès`);
+      if (accountResponse || result.success) {
+        toast.success(`Compte ${newAccountForm.username} enregistré avec succès`);
         setIsAddingAccount(false);
         setNewAccountForm({
           platformName: "ggclub",
@@ -182,11 +184,11 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         await loadAccounts();
         onAccountChange?.();
       } else {
-        toast.error("Échec de l'ajout du compte");
+        toast.error("Échec de l'enregistrement du compte");
       }
     } catch (error: any) {
-      console.error("Error adding account:", error);
-      toast.error("Erreur: " + error.message);
+      console.error("[ACCOUNT_MANAGER] CRITICAL ERROR adding account:", error);
+      toast.error("Erreur critique: " + error.message);
     } finally {
       setIsConnecting(null);
     }
