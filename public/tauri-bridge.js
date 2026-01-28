@@ -19,15 +19,19 @@
 
     window.__TAURI_IPC__ = (message) => {
       const { cmd, callback, error, ...data } = message;
-      console.log(`[Tauri Mock IPC] Command: ${cmd}`, data);
+      // Filter out noisy tauri events logs
+      if (cmd !== 'tauri') {
+        console.log(`[Tauri Mock IPC] Command: ${cmd}`, data);
+      }
       
       const trigger = (id, result) => {
-        if (typeof id === 'function') {
-          id(result);
-        } else if (typeof window[id] === 'function') {
-          window[id](result);
-        } else if (typeof window[`_${id}`] === 'function') {
-          window[`_${id}`](result);
+        // Find the callback handler - check window and prefixed versions
+        const handler = (typeof id === 'function') ? id : 
+                        (window[id] ? window[id] : 
+                        (window[`_${id}`] ? window[`_${id}`] : null));
+        
+        if (handler) {
+          handler(result);
         }
       };
 
