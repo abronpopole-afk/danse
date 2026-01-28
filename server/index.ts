@@ -19,21 +19,19 @@ import fs from 'fs';
 import path from 'path';
 
 async function runAutoMigration() {
-  log("Checking database schema...");
+  log("Step 1: Checking database connectivity and schema...");
   try {
-    // En production (Windows), on tente d'exécuter drizzle-kit push
-    // On suppose que drizzle-kit est accessible ou qu'on peut utiliser npx
     const command = process.platform === 'win32' 
       ? "npx drizzle-kit push" 
       : "npm run db:push";
     
-    log(`Running auto-migration: ${command}`);
+    log(`Step 2: Running auto-migration command: ${command}`);
     const { stdout, stderr } = await execAsync(command);
-    if (stdout) log(`Migration output: ${stdout}`);
-    if (stderr) log(`Migration warning/error: ${stderr}`);
-    log("✅ Database schema is up to date");
+    if (stdout) log(`Step 3: Migration stdout: ${stdout}`);
+    if (stderr) log(`Step 4: Migration stderr: ${stderr}`);
+    log("Step 5: ✅ Database schema synchronization complete");
   } catch (error) {
-    log(`⚠️ Auto-migration failed: ${error}. Attempting to continue anyway...`);
+    log(`Step 6: ❌ Auto-migration failed critical error: ${error}. Application may face issues.`);
   }
 }
 
