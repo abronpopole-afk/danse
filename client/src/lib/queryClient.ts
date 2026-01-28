@@ -1,9 +1,10 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/tauri";
 
-async function throwIfResNotOk(res: Response) {
+async function throwIfResNotOk(res: Response | { ok: boolean; statusText: string }) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const text = 'json' in res ? (await (res as Response).json()).message : (res as any).statusText;
+    throw new Error(text);
   }
 }
 
@@ -11,7 +12,17 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
+  if (url.startsWith("/api")) {
+    const command = url.replace("/api/", "").replace(/\//g, "_").replace(/-/g, "_");
+    try {
+      const result = await invoke(command, { updates: data, config: data, params: data });
+      return { ok: true, json: () => Promise.resolve(result) };
+    } catch (error) {
+      return { ok: false, statusText: String(error) };
+    }
+  }
+
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -23,19 +34,20 @@ export async function apiRequest(
   return res;
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
+  on401: "returnNull" | "throw";
 }) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+  () =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = "/" + queryKey.join("/");
+    if (url.startsWith("/api")) {
+      const command = url.replace("/api/", "").replace(/\//g, "_").replace(/-/g, "_");
+      return await invoke(command);
+    }
+
+    const res = await fetch(url, {
       credentials: "include",
     });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
 
     await throwIfResNotOk(res);
     return await res.json();

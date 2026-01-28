@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-paddlepaddle
-paddleocr
-opencv-python-headless
-numpy
-python-multipart
