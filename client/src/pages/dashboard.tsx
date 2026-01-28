@@ -322,7 +322,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <TiltMonitor profile={playerProfile} />
+            {playerProfile && <TiltMonitor profile={playerProfile} />}
             {selectedTable?.players && (
               <StackVisualizer 
                 players={selectedTable.players} 
@@ -334,12 +334,14 @@ export default function Dashboard() {
               onUpdate={handleUpdateHumanizer}
               isUpdating={isUpdatingHumanizer}
             />
-            <ProfilePanel 
-              profile={playerProfile}
-              onUpdatePersonality={handleUpdatePersonality}
-              onReset={handleResetProfile}
-              isUpdating={isUpdatingProfile}
-            />
+            {playerProfile && (
+              <ProfilePanel 
+                profile={playerProfile}
+                onUpdatePersonality={handleUpdatePersonality}
+                onReset={handleResetProfile}
+                isUpdating={isUpdatingProfile}
+              />
+            )}
           </div>
         </div>
       </div>
