@@ -29,10 +29,19 @@
         "get_all_tables": { tables: [] },
         "get_humanizer_config": { enabled: true },
         "get_gto_config": { enabled: true },
-        "get_platform_config": { platformName: "GGClub" }
+        "get_platform_config": { platformName: "GGClub" },
+        "tauri": (data) => {
+           if (data.__tauriModule === "Event" && data.message && data.message.cmd === "listen") {
+              return "mock-unlisten-id";
+           }
+           return { success: true };
+        }
       };
 
-      const result = responses[cmd] || { success: true };
+      let result = responses[cmd] || { success: true };
+      if (typeof result === 'function') {
+        result = result(data);
+      }
       
       setTimeout(() => {
         if (callback !== undefined) {
