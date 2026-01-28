@@ -5,13 +5,37 @@ if (IS_TAURI) {
 }
 
 import express, { type Request, Response, NextFunction } from "express";
+import { db } from "./db";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { storage } from "./storage";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 import fs from 'fs';
 import path from 'path';
+
+async function runAutoMigration() {
+  log("Checking database schema...");
+  try {
+    // En production (Windows), on tente d'exécuter drizzle-kit push
+    // On suppose que drizzle-kit est accessible ou qu'on peut utiliser npx
+    const command = process.platform === 'win32' 
+      ? "npx drizzle-kit push" 
+      : "npm run db:push";
+    
+    log(`Running auto-migration: ${command}`);
+    const { stdout, stderr } = await execAsync(command);
+    if (stdout) log(`Migration output: ${stdout}`);
+    if (stderr) log(`Migration warning/error: ${stderr}`);
+    log("✅ Database schema is up to date");
+  } catch (error) {
+    log(`⚠️ Auto-migration failed: ${error}. Attempting to continue anyway...`);
+  }
+}
 
 // Configuration des logs centralisée
 const LOG_DIR = process.platform === 'win32' 
@@ -101,6 +125,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run database migration before anything else
+  await runAutoMigration();
+
   try {
     const sessions = await storage.getAllBotSessions();
     const activeSessions = sessions.filter(s => s.status === 'running');
