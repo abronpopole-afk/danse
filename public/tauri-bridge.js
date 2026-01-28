@@ -8,139 +8,113 @@
     };
 
     const trigger = (id, result) => {
-      if (typeof id === 'function') {
-        id(result);
-      } else if (typeof window[id] === 'function') {
-        window[id](result);
-      } else if (typeof window[`_${id}`] === 'function') {
-        window[`_${id}`](result);
-      }
-    };
-
-    window.__TAURI_IPC__ = (message) => {
-      const { cmd, callback, error, ...data } = message;
-      // Filter out noisy tauri events logs
-      if (cmd !== 'tauri') {
-        console.log(`[Tauri Mock IPC] Command: ${cmd}`, data);
-      }
-      
-      const trigger = (id, result) => {
-        // Handle numerical IDs which are indices into window
-        if (typeof id === 'number') {
-          const callbackName = `_${id}`;
-          if (typeof window[callbackName] === 'function') {
-            window[callbackName](result);
-            return;
-          }
-        }
-
-        // Handle direct function callback
-        if (typeof id === 'function') {
-          id(result);
+      // Numerical IDs are usually callback/error indices
+      if (typeof id === 'number') {
+        const callbackName = `_${id}`;
+        if (typeof window[callbackName] === 'function') {
+          window[callbackName](result);
           return;
         }
-        
-        // Find the callback handler - check window and prefixed versions
-        const handlerName = typeof id === 'string' ? id : `_${id}`;
-        let handler = (window[handlerName] ? window[handlerName] : 
-                        (window[id] ? window[id] : null));
-        
-        if (handler) {
+        // Fallback for some assets that might not prefix with underscore
+        if (typeof window[id] === 'function') {
+          window[id](result);
+          return;
+        }
+      }
+      
+      // Some Tauri builds use direct function references
+      if (typeof id === 'function') {
+        id(result);
+        return;
+      }
+      
+      // Some use string identifiers that map to window properties
+      if (typeof id === 'string') {
+        const handler = window[id] || window[`_${id}`];
+        if (typeof handler === 'function') {
           handler(result);
-        } else {
-          console.debug(`Callback handler not found for ID: ${id}`);
+          return;
         }
-      };
+      }
+      
+      console.debug(`Callback handler not found for ID: ${id}`);
+    };
 
-      const callApi = async (path, method = 'GET', body = null) => {
-        const options = {
-          method,
-          headers: { 'Content-Type': 'application/json' }
-        };
-        if (body) options.body = JSON.stringify(body);
-        try {
-          const res = await fetch(path, options);
-          if (!res.ok) throw new Error(`API error: ${res.status}`);
-          return await res.json();
-        } catch (e) {
-          console.error(`Fetch error for ${path}:`, e);
-          throw e;
-        }
+    const callApi = async (path, method = 'GET', body = null) => {
+      const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
       };
+      if (body) options.body = JSON.stringify(body);
+      const res = await fetch(path, options);
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      return await res.json();
+    };
 
-      const handleCommand = async () => {
-        try {
-          switch (cmd) {
-            case "get_platform_accounts":
-              return await callApi("/api/platform-accounts");
-            case "create_platform_account":
-            case "connect_platform": // Map connect_platform to persistence
-              return await callApi("/api/platform-accounts", "POST", data.config || data);
-            case "get_current_session":
-              return await callApi("/api/session/current");
-            case "start_session":
-              return await callApi("/api/session/start", "POST", data);
-            case "stop_session":
-              const session = await callApi("/api/session/current");
-              if (session && session.id) {
-                return await callApi(`/api/session/stop/${session.id}`, "POST");
-              }
-              return { success: true };
-            case "force_stop_session":
-              const staleSession = await callApi("/api/session/current");
-              if (staleSession && staleSession.id) {
-                await callApi(`/api/session/stop/${staleSession.id}`, "POST");
-              }
-              return { success: true, forced: true };
-            case "log_from_frontend":
-              return await callApi("/api/logs", "POST", {
-                logType: data.level || "INFO",
-                message: data.message,
-                metadata: data.metadata || {}
-              });
-            default:
-              const responses = {
-                "get_global_stats": { totalHands: 0, totalProfit: 0 },
-                "get_recent_logs": [],
-                "get_player_profile": { personality: "TAG" },
-                "get_all_tables": { tables: [] },
-                "get_humanizer_config": { enabled: true },
-                "get_gto_config": { enabled: true },
-                "get_platform_config": { platformName: "GGClub" },
-                "tauri": (data) => {
-                  if (data.__tauriModule === "Event" && data.message && data.message.cmd === "listen") {
-                    return "mock-unlisten-id";
-                  }
-                  return { success: true };
-                }
-              };
-              let res = responses[cmd] || { success: true };
-              return (typeof res === 'function') ? res(data) : res;
-          }
-        } catch (e) {
-          console.error("IPC Command Error:", e);
-          return { error: e.message, success: false };
-        }
-      };
+    window.__TAURI_IPC__ = async (message) => {
+      const { cmd, callback, error, ...data } = message;
+      if (cmd !== 'tauri') console.log(`[IPC Request] ${cmd}`, data);
 
-      handleCommand().then(result => {
-        if (callback !== undefined) {
-          trigger(callback, result);
+      try {
+        let result;
+        switch (cmd) {
+          case "get_platform_accounts":
+            result = await callApi("/api/platform-accounts");
+            break;
+          case "create_platform_account":
+          case "connect_platform":
+            result = await callApi("/api/platform-accounts", "POST", data.config || data);
+            break;
+          case "get_current_session":
+            result = await callApi("/api/session/current");
+            break;
+          case "start_session":
+            result = await callApi("/api/session/start", "POST", data);
+            break;
+          case "stop_session":
+            const s = await callApi("/api/session/current");
+            result = s?.id ? await callApi(`/api/session/stop/${s.id}`, "POST") : { success: true };
+            break;
+          case "log_from_frontend":
+            result = await callApi("/api/logs", "POST", {
+              logType: data.level || "INFO",
+              message: data.message,
+              metadata: data.metadata || {}
+            });
+            break;
+          default:
+            const staticRes = {
+              "get_global_stats": { totalHands: 0, totalProfit: 0 },
+              "get_recent_logs": [],
+              "get_player_profile": { personality: "TAG" },
+              "get_all_tables": { tables: [] },
+              "get_humanizer_config": { enabled: true },
+              "get_gto_config": { enabled: true },
+              "get_platform_config": { platformName: "GGClub" },
+              "tauri": (d) => (d.__tauriModule === "Event" ? "mock-event-id" : { success: true })
+            };
+            result = staticRes[cmd] || { success: true };
+            if (typeof result === 'function') result = result(data);
         }
-      });
+        
+        if (cmd !== 'tauri') console.log(`[IPC Response] ${cmd}`, result);
+        trigger(callback, result);
+      } catch (e) {
+        console.error("IPC Execution Error:", e);
+        trigger(error, { error: e.message, success: false });
+      }
     };
 
     window.__TAURI__ = {
-      invoke: function(cmd, args) {
-        return new Promise((resolve, reject) => {
-          window.__TAURI_IPC__({
-            cmd: cmd,
-            callback: (res) => resolve(res),
-            error: (err) => reject(err),
-            ...args
-          });
-        });
-      }
+      invoke: (cmd, args) => new Promise((rs, rj) => {
+        window.__TAURI_IPC__({ cmd, callback: rs, error: rj, ...args });
+      })
     };
+    
+    // Polyfill window.__TAURI_INVOKE__ for older assets
+    window.__TAURI_INVOKE__ = window.__TAURI__.invoke;
+    
+    // Handle global function calls from older tauri assets
+    window.tauri = window.__TAURI__;
   }
 })();
