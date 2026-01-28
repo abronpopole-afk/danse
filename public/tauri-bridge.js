@@ -27,9 +27,6 @@
       const trigger = (id, result) => {
         // Handle numerical IDs which are indices into window
         if (typeof id === 'number') {
-          // Tauri uses these indices for its own internal callback tracking
-          // The error "window[a] is not a function" happens because we look for window[id]
-          // but Tauri might be using a different naming convention in the built assets
           const callbackName = `_${id}`;
           if (typeof window[callbackName] === 'function') {
             window[callbackName](result);
@@ -44,18 +41,14 @@
         }
         
         // Find the callback handler - check window and prefixed versions
-        let handler = (window[id] ? window[id] : 
-                        (window[`_${id}`] ? window[`_${id}`] : null));
+        const handlerName = typeof id === 'string' ? id : `_${id}`;
+        let handler = (window[handlerName] ? window[handlerName] : 
+                        (window[id] ? window[id] : null));
         
         if (handler) {
           handler(result);
         } else {
-          // Si l'ID est une chaîne, c'est probablement un nom de fonction global
-          if (typeof id === 'string' && typeof window[id] === 'function') {
-            window[id](result);
-          } else {
-            console.debug(`Callback handler not found for ID: ${id}`);
-          }
+          console.debug(`Callback handler not found for ID: ${id}`);
         }
       };
 
@@ -65,8 +58,14 @@
           headers: { 'Content-Type': 'application/json' }
         };
         if (body) options.body = JSON.stringify(body);
-        const res = await fetch(path, options);
-        return await res.json();
+        try {
+          const res = await fetch(path, options);
+          if (!res.ok) throw new Error(`API error: ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          console.error(`Fetch error for ${path}:`, e);
+          throw e;
+        }
       };
 
       const handleCommand = async () => {
@@ -75,13 +74,24 @@
             case "get_platform_accounts":
               return await callApi("/api/platform-accounts");
             case "create_platform_account":
-              return await callApi("/api/platform-accounts", "POST", data);
+            case "connect_platform": // Map connect_platform to persistence
+              return await callApi("/api/platform-accounts", "POST", data.config || data);
             case "get_current_session":
               return await callApi("/api/session/current");
             case "start_session":
               return await callApi("/api/session/start", "POST", data);
             case "stop_session":
-              return await callApi(`/api/session/stop/${data.id}`, "POST");
+              const session = await callApi("/api/session/current");
+              if (session && session.id) {
+                return await callApi(`/api/session/stop/${session.id}`, "POST");
+              }
+              return { success: true };
+            case "force_stop_session":
+              const staleSession = await callApi("/api/session/current");
+              if (staleSession && staleSession.id) {
+                await callApi(`/api/session/stop/${staleSession.id}`, "POST");
+              }
+              return { success: true, forced: true };
             case "log_from_frontend":
               return await callApi("/api/logs", "POST", {
                 logType: data.level || "INFO",
@@ -109,7 +119,7 @@
           }
         } catch (e) {
           console.error("IPC Command Error:", e);
-          return { error: e.message };
+          return { error: e.message, success: false };
         }
       };
 

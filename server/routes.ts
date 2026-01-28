@@ -49,15 +49,19 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/session/stop/:id", async (req, res) => {
-    await storage.stopSession(req.params.id);
-    await storage.appendLog({
-      logType: "INFO",
-      message: "Session stopped manually",
-      sessionId: req.params.id,
-      tableId: null,
-      metadata: { sessionId: req.params.id }
-    });
-    res.sendStatus(200);
+    try {
+      await storage.stopSession(req.params.id);
+      await storage.appendLog({
+        logType: "INFO",
+        message: "Session stopped manually",
+        sessionId: req.params.id,
+        tableId: null,
+        metadata: { sessionId: req.params.id }
+      });
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message, success: false });
+    }
   });
 
   // Logging

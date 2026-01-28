@@ -1,0 +1,34 @@
+[2026-01-28 20:11:17] [INFO] Application starting
+[2026-01-28 20:11:18] [INFO] Connecting to database: postgresql://poker_bot:d3aXbYN7wVyOHm6f@localhost:5432/poker_bot
+[2026-01-28 20:11:18] [INFO] Database tables verified/created
+[2026-01-28 20:11:18] [INFO] Database initialization successful
+[2026-01-28 20:11:20] [DEBUG] Command: get_current_session requested
+[[2026-01-28 20:11:202026-01-28 20:11:20[] [] [DEBUG2026-01-28 20:11:20DEBUG] ] [] Command: get_player_profile requestedDEBUGCommand: get_recent_logs requested
+
+] Command: get_global_stats requested
+[2026-01-28 20:11:23] [INFO] Command: stop_session requested
+[2026-01-28 20:11:23] [INFO] Command: stop_session requested
+[2026-01-28 20:11:23] [INFO] Command: stop_session requested
+[2026-01-28 20:11:24] [INFO] Command: stop_session requested
+[2026-01-28 20:11:24] [INFO] Command: stop_session requested
+[2026-01-28 20:11:25] [DEBUG] Command: get_gto_config requested
+[2026-01-28 20:11:25] [DEBUG] Command: get_platform_config requested
+[2026-01-28 20:11:40] [INFO] Command: connect_platform requested
+[2026-01-28 20:11:42] [INFO] Command: connect_platform requested
+[2026-01-28 20:11:42] [INFO] Command: connect_platform requested
+[2026-01-28 20:11:42] [INFO] Command: connect_platform requested
+[2026-01-28 20:11:42] [INFO] Command: connect_platform requested
+[2026-01-28 20:11:42] [INFO] Command: connect_platform requested
+[[2026-01-28 20:11:47] [DEBUG] Command: get_recent_logs requested
+2026-01-28 20:11:47[2026-01-28 20:11:47] [] [DEBUGDEBUG] Command: get_global_stats requested
+] Command: get_player_profile requested[2026-01-28 20:11:47
+] [DEBUG] Command: get_current_session requested
+[2026-01-28 20:11:49] [INFO] Command: stop_session requested
+[2026-01-28 20:11:49] [INFO] Command: stop_session requested
+[2026-01-28 20:11:49] [INFO] Command: stop_session requested
+[2026-01-28 20:11:50] [WARN] Command: force_stop_session requested
+[2026-01-28 20:11:52] [INFO] Command: start_session requested
+[2026-01-28 20:11:52] [INFO] Session started successfully with ID: 148be90e-f9bc-4c8e-93e9-b82c7412c97e
+[2026-01-28 20:11:52] [DEBUG] Command: get_current_session requested
+[2026-01-28 20:11:52] [DEBUG] Command: get_global_stats requested
+[2026-01-28 20:11:52] [DEBUG] Command: get_recent_logs requested
