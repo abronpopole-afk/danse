@@ -13,12 +13,24 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<any> {
-  if (url.startsWith("/api")) {
+  const isApi = url.startsWith("/api");
+  if (isApi) {
     const command = url.replace("/api/", "").replace(/\//g, "_").replace(/-/g, "_");
     try {
-      const result = await invoke(command, { updates: data, config: data, params: data });
+      // Map frontend data to Tauri command parameters
+      const params: any = {};
+      if (data) {
+        if (typeof data === 'object') {
+          Object.assign(params, data);
+        } else {
+          params.value = data;
+        }
+      }
+      
+      const result = await invoke(command, params);
       return { ok: true, json: () => Promise.resolve(result) };
     } catch (error) {
+      console.error(`Tauri invoke error [${command}]:`, error);
       return { ok: false, statusText: String(error) };
     }
   }
@@ -39,10 +51,15 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   () =>
   async ({ queryKey }) => {
-    const url = "/" + queryKey.join("/");
+    const url = queryKey[0] as string;
     if (url.startsWith("/api")) {
       const command = url.replace("/api/", "").replace(/\//g, "_").replace(/-/g, "_");
-      return await invoke(command);
+      try {
+        return await invoke(command);
+      } catch (error) {
+        console.error(`Tauri query error [${command}]:`, error);
+        throw error;
+      }
     }
 
     const res = await fetch(url, {
