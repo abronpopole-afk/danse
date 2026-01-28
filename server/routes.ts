@@ -47,7 +47,19 @@ export function registerRoutes(app: Express): Server {
     try {
       const session = await storage.getCurrentSession();
       console.log("[API] Current session:", session?.id || "none");
-      res.json(session);
+      
+      // In mock-up style, we often return stats and tables with the session
+      // to simplify frontend loading
+      res.json({
+        session: session || null,
+        stats: session ? {
+          totalTables: session.tablesActive || 0,
+          activeTables: session.tablesActive || 0,
+          totalHandsPlayed: session.handsPlayed || 0,
+          totalProfit: session.totalProfit || 0
+        } : null,
+        tables: [] // Would normally fetch tables for this session
+      });
     } catch (e: any) {
       console.error("[API ERROR] getCurrentSession:", e);
       res.status(500).json({ error: e.message });
