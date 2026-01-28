@@ -17,6 +17,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::env;
 use std::io::Write;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use dotenvy::dotenv;
 
 #[derive(Error, Debug, serde::Serialize)]
 pub enum PokerError {
@@ -30,8 +33,14 @@ pub enum PokerError {
     CaptureFailed,
     #[error("DXGI Error: {0}")]
     DxgiError(String),
-    #[error("Feature not implemented in native mode yet")]
-    NotImplemented,
+    #[error("Database error: {0}")]
+    DatabaseError(String),
+}
+
+impl From<sqlx::Error> for PokerError {
+    fn from(err: sqlx::Error) -> Self {
+        PokerError::DatabaseError(err.to_string())
+    }
 }
 
 impl From<anyhow::Error> for PokerError {
@@ -41,6 +50,10 @@ impl From<anyhow::Error> for PokerError {
 }
 
 type PokerResult<T> = std::result::Result<T, PokerError>;
+
+struct AppState {
+    db: Mutex<Option<Pool<Postgres>>>,
+}
 
 #[derive(serde::Serialize, Clone, Debug)]
 struct WindowInfo {
@@ -72,10 +85,48 @@ fn log_to_file(level: &str, message: &str) {
     }
 }
 
-// Windows Management
+async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| "postgresql://poker_bot:d3aXbYN7wVyOHm6f@localhost:5432/poker_bot".to_string());
+    
+    log_to_file("INFO", &format!("Connecting to database: {}", database_url));
+    
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
+
+    // Create tables if they don't exist
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS bot_sessions (
+            id SERIAL PRIMARY KEY,
+            status TEXT NOT NULL,
+            started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            stopped_at TIMESTAMP WITH TIME ZONE,
+            total_profit FLOAT DEFAULT 0,
+            hands_played INTEGER DEFAULT 0
+        )"
+    ).execute(&pool).await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS poker_tables (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER,
+            table_identifier TEXT,
+            table_name TEXT,
+            stakes TEXT,
+            status TEXT,
+            profit FLOAT DEFAULT 0,
+            hands_played INTEGER DEFAULT 0
+        )"
+    ).execute(&pool).await?;
+
+    log_to_file("INFO", "Database tables verified/created");
+    Ok(pool)
+}
+
 #[command]
 fn list_windows() -> Vec<WindowInfo> {
-    log_to_file("INFO", "Listing windows");
     let mut windows: Vec<WindowInfo> = Vec::new();
     unsafe {
         let _ = EnumWindows(Some(enum_window_callback), LPARAM(&mut windows as *mut Vec<WindowInfo> as isize));
@@ -117,74 +168,17 @@ fn find_poker_windows() -> Vec<WindowInfo> {
 }
 
 #[command]
-fn capture_window(hwnd: isize) -> PokerResult<String> {
-    capture_window_internal(hwnd)
-}
-
-fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
-    unsafe {
-        let hwnd = HWND(hwnd_isize as _);
-        let mut rect = RECT::default();
-        if GetWindowRect(hwnd, &mut rect).is_err() {
-            return Err(PokerError::Win32Error("Failed to get window rect".into()));
-        }
-        let width = rect.right - rect.left;
-        let height = rect.bottom - rect.top;
-        if width <= 0 || height <= 0 {
-            return Err(PokerError::InvalidDimensions(width, height));
-        }
-        let hdc_screen = GetDC(hwnd);
-        if hdc_screen.is_invalid() {
-            return Err(PokerError::Win32Error("Failed to get DC".into()));
-        }
-        let hdc_mem = CreateCompatibleDC(hdc_screen);
-        let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
-        let old_obj = SelectObject(hdc_mem, hbitmap);
-        let bit_blt_res = BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY);
-        let mut bmi = BITMAPINFO {
-            bmiHeader: BITMAPINFOHEADER {
-                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                biWidth: width,
-                biHeight: -height,
-                biPlanes: 1,
-                biBitCount: 24,
-                biCompression: 0,
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let buffer_size = (width * height * 3) as usize;
-        let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
-        buffer.set_len(buffer_size);
-        let _ = GetDIBits(hdc_screen, hbitmap, 0, height as u32, Some(buffer.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
-        SelectObject(hdc_mem, old_obj);
-        ReleaseDC(hwnd, hdc_screen);
-        DeleteDC(hdc_mem);
-        DeleteObject(hbitmap);
-        if bit_blt_res.is_err() {
-            return Err(PokerError::CaptureFailed);
-        }
-        let base64_image = general_purpose::STANDARD.encode(&buffer);
-        Ok(format!("data:image/bmp;base64,{}", base64_image))
+async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> {
+    log_to_file("INFO", "Starting session");
+    let pool_guard = state.db.lock().unwrap();
+    if let Some(pool) = &*pool_guard {
+        let row: (i32,) = sqlx::query_as("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
+            .fetch_one(pool)
+            .await?;
+        Ok(json!({ "success": true, "session": { "id": row.0, "status": "running" } }))
+    } else {
+        Err(PokerError::DatabaseError("Database not connected".into()))
     }
-}
-
-#[command]
-fn start_session() -> PokerResult<Value> {
-    log_to_file("INFO", "Starting new session");
-    Ok(json!({ "success": true, "session": { "id": "1", "status": "running" } }))
-}
-
-#[command]
-fn stop_session() -> PokerResult<Value> {
-    log_to_file("INFO", "Stopping session");
-    Ok(json!({ "success": true, "stats": { "totalProfit": 0, "totalHandsPlayed": 0 } }))
-}
-
-#[command]
-fn force_stop_session() -> PokerResult<Value> {
-    log_to_file("WARN", "Force stopping session");
-    Ok(json!({ "success": true, "forced": true }))
 }
 
 #[command]
@@ -193,48 +187,29 @@ fn get_current_session() -> PokerResult<Value> {
 }
 
 #[command]
-fn get_all_tables() -> PokerResult<Value> {
-    Ok(json!({ "tables": [] }))
-}
-
-#[command]
-fn get_humanizer_config() -> PokerResult<Value> {
-    Ok(json!({ "enabled": true }))
-}
-
-#[command]
-fn get_gto_config() -> PokerResult<Value> {
-    Ok(json!({ "enabled": true }))
-}
-
-#[command]
-fn get_platform_config() -> PokerResult<Value> {
-    Ok(json!({ "platformName": "GGClub" }))
-}
-
-#[command]
-fn get_recent_logs(_limit: u32) -> PokerResult<Value> {
-    Ok(json!([]))
-}
-
-#[command]
-fn get_global_stats() -> PokerResult<Value> {
-    Ok(json!({ "totalHands": 0, "totalProfit": 0 }))
-}
-
-#[command]
-fn get_player_profile() -> PokerResult<Value> {
-    Ok(json!({ "personality": "TAG" }))
-}
-
-#[command]
 fn main() {
     log_to_file("INFO", "Application starting");
+    
     tauri::Builder::default()
+        .manage(AppState { db: Mutex::new(None) })
+        .setup(|app| {
+            let handle = app.handle();
+            tauri::async_runtime::spawn(async move {
+                match init_db().await {
+                    Ok(pool) => {
+                        let state = handle.state::<AppState>();
+                        *state.db.lock().unwrap() = Some(pool);
+                        log_to_file("INFO", "Database initialization successful");
+                    }
+                    Err(e) => {
+                        log_to_file("ERROR", &format!("Database initialization failed: {}", e));
+                    }
+                }
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
-            list_windows, find_poker_windows, capture_window, start_session, stop_session, 
-            force_stop_session, get_current_session, get_all_tables, get_humanizer_config, 
-            get_gto_config, get_platform_config, get_recent_logs, get_global_stats, get_player_profile
+            list_windows, find_poker_windows, start_session, get_current_session
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
