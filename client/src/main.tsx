@@ -12,14 +12,15 @@ function sendToBackend(level: string, args: any[]) {
     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
   ).join(' ');
   
-  // Utilisation de l'API fetch standard pour ne pas dépendre du bridge Tauri si celui-ci échoue
-  if (window.__TAURI_IPC__) {
-    import("@tauri-apps/api/tauri").then(({ invoke }) => {
-      invoke("log_from_frontend", { level, message }).catch(() => {
-        // Fallback silencieux si invoke échoue
-      });
-    }).catch(() => {});
-  }
+  // Utilisation directe de window.__TAURI_INVOKE__ ou invoke pour assurer la redirection
+  import("@tauri-apps/api/tauri").then(({ invoke }) => {
+    invoke("log_from_frontend", { level, message }).catch(() => {
+      // Fallback console si le backend n'est pas prêt
+      originalLog("[LOG-FALLBACK]", level, message);
+    });
+  }).catch(() => {
+    originalLog("[IMPORT-FALLBACK]", level, message);
+  });
 }
 
 console.log = (...args) => {
