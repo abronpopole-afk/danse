@@ -6,7 +6,6 @@ import { HumanizerPanel } from "@/components/settings/humanizer-panel";
 import { ProfilePanel } from "@/components/settings/profile-panel";
 import { StackVisualizer } from "@/components/poker/stack-visualizer";
 import { TiltMonitor } from "@/components/poker/tilt-monitor";
-import { InteractiveTutorial } from "@/components/tutorial/interactive-tutorial";
 import { useBotState } from "@/hooks/use-bot-state";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -151,7 +150,6 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <InteractiveTutorial />
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
           <div>
