@@ -18,7 +18,7 @@ function sendToBackend(level: string, args: any[]) {
       invoke("log_from_frontend", { level, message }).catch(() => {
         // Fallback silencieux si invoke échoue
       });
-    });
+    }).catch(() => {});
   }
 }
 
