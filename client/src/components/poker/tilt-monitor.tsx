@@ -14,10 +14,10 @@ export function TiltMonitor({ profile }: TiltMonitorProps) {
     return null;
   }
 
-  const tiltLevel = profile.tiltLevel || 0;
-  const fatigueLevel = profile.fatigueLevel || 0;
-  const recentBadBeats = profile.recentBadBeats || 0;
-  const consecutiveLosses = profile.consecutiveLosses || 0;
+  const tiltLevel = profile?.tiltLevel || 0;
+  const fatigueLevel = profile?.fatigueLevel || 0;
+  const recentBadBeats = profile?.recentBadBeats || 0;
+  const consecutiveLosses = profile?.consecutiveLosses || 0;
 
   const getTiltColor = (level: number) => {
     if (level < 0.3) return "text-green-500";

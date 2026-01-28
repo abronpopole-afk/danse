@@ -86,9 +86,9 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
                 <AlertTriangle className="w-4 h-4 text-orange-500" />
                 Niveau de Tilt
               </Label>
-              <span className="font-mono text-orange-500">{Math.round(state.tiltLevel * 100)}%</span>
+              <span className="font-mono text-orange-500">{Math.round((state?.tiltLevel || 0) * 100)}%</span>
             </div>
-            <Progress value={state.tiltLevel * 100} className="h-2" />
+            <Progress value={(state?.tiltLevel || 0) * 100} className="h-2" />
           </div>
 
           <div className="space-y-1">
@@ -97,9 +97,9 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
                 <Clock className="w-4 h-4 text-yellow-500" />
                 Fatigue
               </Label>
-              <span className="font-mono text-yellow-500">{Math.round(state.fatigueLevel * 100)}%</span>
+              <span className="font-mono text-yellow-500">{Math.round((state?.fatigueLevel || 0) * 100)}%</span>
             </div>
-            <Progress value={state.fatigueLevel * 100} className="h-2" />
+            <Progress value={(state?.fatigueLevel || 0) * 100} className="h-2" />
           </div>
 
           <div className="space-y-1">
@@ -108,9 +108,9 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
                 <Brain className="w-4 h-4 text-blue-500" />
                 Focus
               </Label>
-              <span className="font-mono text-blue-500">{Math.round(state.currentFocus * 100)}%</span>
+              <span className="font-mono text-blue-500">{Math.round((state?.currentFocus || 0) * 100)}%</span>
             </div>
-            <Progress value={state.currentFocus * 100} className="h-2" />
+            <Progress value={(state?.currentFocus || 0) * 100} className="h-2" />
           </div>
         </div>
 
@@ -118,25 +118,25 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
           <div>
             <Label className="text-xs text-muted-foreground">Session</Label>
-            <p className="font-mono text-sm">{Math.round(state.sessionDuration)} min</p>
+            <p className="font-mono text-sm">{Math.round(state?.sessionDuration || 0)} min</p>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Bad Beats</Label>
-            <p className="font-mono text-sm">{state.recentBadBeats}</p>
+            <p className="font-mono text-sm">{state?.recentBadBeats || 0}</p>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground flex items-center gap-1">
               <TrendingUp className="w-3 h-3 text-green-500" />
               Wins
             </Label>
-            <p className="font-mono text-sm text-green-500">{state.consecutiveWins}</p>
+            <p className="font-mono text-sm text-green-500">{state?.consecutiveWins || 0}</p>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground flex items-center gap-1">
               <TrendingDown className="w-3 h-3 text-red-500" />
               Losses
             </Label>
-            <p className="font-mono text-sm text-red-500">{state.consecutiveLosses}</p>
+            <p className="font-mono text-sm text-red-500">{state?.consecutiveLosses || 0}</p>
           </div>
         </div>
 
@@ -144,10 +144,10 @@ export function ProfilePanel({ profile, onUpdatePersonality, onReset, isUpdating
         <div className="pt-4 border-t space-y-2">
           <Label className="text-xs text-muted-foreground">Modifiers Actifs</Label>
           <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div>Délai: {modifiers.delayMultiplier.toFixed(2)}x</div>
-            <div>Variance: {modifiers.varianceMultiplier.toFixed(2)}x</div>
-            <div>Erreurs: {(modifiers.errorProbability * 100).toFixed(1)}%</div>
-            <div>Aggression: {modifiers.aggressionShift > 0 ? '+' : ''}{(modifiers.aggressionShift * 100).toFixed(0)}%</div>
+            <div>Délai: {(modifiers?.delayMultiplier || 1).toFixed(2)}x</div>
+            <div>Variance: {(modifiers?.varianceMultiplier || 1).toFixed(2)}x</div>
+            <div>Erreurs: {((modifiers?.errorProbability || 0) * 100).toFixed(1)}%</div>
+            <div>Aggression: {(modifiers?.aggressionShift || 0) > 0 ? '+' : ''}{((modifiers?.aggressionShift || 0) * 100).toFixed(0)}%</div>
           </div>
         </div>
 
