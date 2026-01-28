@@ -45,6 +45,11 @@ export interface HumanizerSettings {
   stealthModeEnabled: boolean;
 }
 
+export interface WebSocketMessage {
+  type: string;
+  payload: any;
+}
+
 export const api = {
   session: {
     async start(): Promise<{ success: boolean; session: BotSession }> {
@@ -112,6 +117,12 @@ export const api = {
   platform: {
     async get(): Promise<{ config: PlatformConfig | null }> {
       return invoke("get_platform_config");
+    },
+    async getAccounts(): Promise<any[]> {
+      return invoke("get_platform_accounts");
+    },
+    async createAccount(account: any): Promise<any> {
+      return invoke("create_platform_account", account);
     },
     async update(updates: Partial<PlatformConfig>): Promise<{ success: boolean; config: PlatformConfig }> {
       return invoke("update_platform_config", { updates });

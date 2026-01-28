@@ -85,12 +85,26 @@ export default function SettingsPage() {
     }
   };
 
+  const [accounts, setAccounts] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const data = await api.platform.getAccounts();
+        setAccounts(data);
+      } catch (err) {
+        console.error("Failed to fetch accounts", err);
+      }
+    };
+    fetchAccounts();
+  }, []);
+
   const savePlatformConfig = async () => {
     try {
       setIsSaving(true);
-      await api.platform.update(platformForm);
-      toast.success("Configuration plateforme sauvegardée");
-      await loadConfigs();
+      await api.platform.createAccount(platformForm);
+      toast.success("Compte plateforme sauvegardé et persisté");
+      const data = await api.platform.getAccounts();
+      setAccounts(data);
     } catch (error: any) {
       toast.error("Erreur: " + error.message);
     } finally {

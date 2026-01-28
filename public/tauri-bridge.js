@@ -21,33 +21,75 @@
       const { cmd, callback, error, ...data } = message;
       console.log(`[Tauri Mock IPC] Command: ${cmd}`, data);
       
-      const responses = {
-        "get_current_session": { session: null, stats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 } },
-        "get_global_stats": { totalHands: 0, totalProfit: 0 },
-        "get_recent_logs": [],
-        "get_player_profile": { personality: "TAG" },
-        "get_all_tables": { tables: [] },
-        "get_humanizer_config": { enabled: true },
-        "get_gto_config": { enabled: true },
-        "get_platform_config": { platformName: "GGClub" },
-        "tauri": (data) => {
-           if (data.__tauriModule === "Event" && data.message && data.message.cmd === "listen") {
-              return "mock-unlisten-id";
-           }
-           return { success: true };
+      const trigger = (id, result) => {
+        if (typeof id === 'function') {
+          id(result);
+        } else if (typeof window[id] === 'function') {
+          window[id](result);
+        } else if (typeof window[`_${id}`] === 'function') {
+          window[`_${id}`](result);
         }
       };
 
-      let result = responses[cmd] || { success: true };
-      if (typeof result === 'function') {
-        result = result(data);
-      }
-      
-      setTimeout(() => {
+      const callApi = async (path, method = 'GET', body = null) => {
+        const options = {
+          method,
+          headers: { 'Content-Type': 'application/json' }
+        };
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(path, options);
+        return await res.json();
+      };
+
+      const handleCommand = async () => {
+        try {
+          switch (cmd) {
+            case "get_platform_accounts":
+              return await callApi("/api/platform-accounts");
+            case "create_platform_account":
+              return await callApi("/api/platform-accounts", "POST", data);
+            case "get_current_session":
+              return await callApi("/api/session/current");
+            case "start_session":
+              return await callApi("/api/session/start", "POST", data);
+            case "stop_session":
+              return await callApi(`/api/session/stop/${data.id}`, "POST");
+            case "log_from_frontend":
+              return await callApi("/api/logs", "POST", {
+                logType: data.level || "INFO",
+                message: data.message,
+                metadata: data.metadata || {}
+              });
+            default:
+              const responses = {
+                "get_global_stats": { totalHands: 0, totalProfit: 0 },
+                "get_recent_logs": [],
+                "get_player_profile": { personality: "TAG" },
+                "get_all_tables": { tables: [] },
+                "get_humanizer_config": { enabled: true },
+                "get_gto_config": { enabled: true },
+                "get_platform_config": { platformName: "GGClub" },
+                "tauri": (data) => {
+                  if (data.__tauriModule === "Event" && data.message && data.message.cmd === "listen") {
+                    return "mock-unlisten-id";
+                  }
+                  return { success: true };
+                }
+              };
+              let res = responses[cmd] || { success: true };
+              return (typeof res === 'function') ? res(data) : res;
+          }
+        } catch (e) {
+          console.error("IPC Command Error:", e);
+          return { error: e.message };
+        }
+      };
+
+      handleCommand().then(result => {
         if (callback !== undefined) {
           trigger(callback, result);
         }
-      }, 0);
+      });
     };
 
     window.__TAURI__ = {
