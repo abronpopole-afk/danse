@@ -126,10 +126,12 @@ async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
 
 #[command]
 async fn list_windows() -> Vec<WindowInfo> {
+    log_to_file("DEBUG", "Command: list_windows started");
     let mut windows: Vec<WindowInfo> = Vec::new();
     unsafe {
         let _ = EnumWindows(Some(enum_window_callback), LPARAM(&mut windows as *mut Vec<WindowInfo> as isize));
     }
+    log_to_file("DEBUG", &format!("Command: list_windows found {} windows", windows.len()));
     windows
 }
 
@@ -157,60 +159,111 @@ unsafe extern "system" fn enum_window_callback(hwnd: HWND, lparam: LPARAM) -> BO
 
 #[command]
 async fn find_poker_windows() -> Vec<WindowInfo> {
+    log_to_file("DEBUG", "Command: find_poker_windows started");
     let all = list_windows().await;
-    all.into_iter()
+    let filtered: Vec<_> = all.into_iter()
         .filter(|w| {
             let t = w.title.to_lowercase();
             t.contains("ggclub") || t.contains("poker") || w.class_name.contains("Qt5Window")
         })
-        .collect()
+        .collect();
+    log_to_file("DEBUG", &format!("Command: find_poker_windows filtered to {} potential poker windows", filtered.len()));
+    filtered
 }
 
 #[command]
 async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> {
-    log_to_file("INFO", "Starting session");
+    log_to_file("INFO", "Command: start_session requested");
     let pool = {
         let pool_guard = state.db.lock().unwrap();
         pool_guard.clone()
     };
     
     if let Some(pool) = pool {
-        let row: (i32,) = sqlx::query_as("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
+        match sqlx::query_as::<_, (i32,)>("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
             .fetch_one(&pool)
-            .await?;
-        Ok(json!({ "success": true, "session": { "id": row.0, "status": "running" } }))
+            .await {
+                Ok(row) => {
+                    log_to_file("INFO", &format!("Session started successfully with ID: {}", row.0));
+                    Ok(json!({ "success": true, "session": { "id": row.0, "status": "running" } }))
+                },
+                Err(e) => {
+                    log_to_file("ERROR", &format!("Failed to insert session into DB: {}", e));
+                    Err(PokerError::DatabaseError(e.to_string()))
+                }
+            }
     } else {
+        log_to_file("ERROR", "Start session failed: Database not connected");
         Err(PokerError::DatabaseError("Database not connected".into()))
     }
 }
 
-#[command] async fn stop_session() -> PokerResult<Value> { Ok(json!({"success": true})) }
-#[command] async fn force_stop_session() -> PokerResult<Value> { Ok(json!({"success": true})) }
-#[command] async fn cleanup_stale_sessions() -> PokerResult<Value> { Ok(json!({"success": true})) }
-#[command] async fn get_current_session() -> PokerResult<Value> { Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}})) }
-#[command] async fn get_all_tables() -> PokerResult<Value> { Ok(json!({"tables": []})) }
-#[command] async fn get_humanizer_config() -> PokerResult<Value> { Ok(json!({"enabled": true})) }
-#[command] async fn get_gto_config() -> PokerResult<Value> { Ok(json!({"enabled": true})) }
-#[command] async fn get_platform_config() -> PokerResult<Value> { Ok(json!({"platformName": "GGClub"})) }
-#[command] async fn get_recent_logs(_limit: u32) -> PokerResult<Value> { Ok(json!([])) }
-#[command] async fn get_global_stats() -> PokerResult<Value> { Ok(json!({"totalHands": 0, "totalProfit": 0})) }
-#[command] async fn get_player_profile() -> PokerResult<Value> { Ok(json!({"personality": "TAG"})) }
-#[command] async fn capture_window(hwnd: isize) -> PokerResult<String> { capture_window_internal(hwnd) }
+#[command] async fn stop_session() -> PokerResult<Value> { 
+    log_to_file("INFO", "Command: stop_session requested");
+    Ok(json!({"success": true})) 
+}
+#[command] async fn force_stop_session() -> PokerResult<Value> { 
+    log_to_file("WARN", "Command: force_stop_session requested");
+    Ok(json!({"success": true})) 
+}
+#[command] async fn cleanup_stale_sessions() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: cleanup_stale_sessions requested");
+    Ok(json!({"success": true})) 
+}
+#[command] async fn get_current_session() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_current_session requested");
+    Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}})) 
+}
+#[command] async fn get_all_tables() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_all_tables requested");
+    Ok(json!({"tables": []})) 
+}
+#[command] async fn get_humanizer_config() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_humanizer_config requested");
+    Ok(json!({"enabled": true})) 
+}
+#[command] async fn get_gto_config() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_gto_config requested");
+    Ok(json!({"enabled": true})) 
+}
+#[command] async fn get_platform_config() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_platform_config requested");
+    Ok(json!({"platformName": "GGClub"})) 
+}
+#[command] async fn get_recent_logs(_limit: u32) -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_recent_logs requested");
+    Ok(json!([])) 
+}
+#[command] async fn get_global_stats() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_global_stats requested");
+    Ok(json!({"totalHands": 0, "totalProfit": 0})) 
+}
+#[command] async fn get_player_profile() -> PokerResult<Value> { 
+    log_to_file("DEBUG", "Command: get_player_profile requested");
+    Ok(json!({"personality": "TAG"})) 
+}
+#[command] async fn capture_window(hwnd: isize) -> PokerResult<String> { 
+    log_to_file("DEBUG", &format!("Command: capture_window requested for HWND: {}", hwnd));
+    capture_window_internal(hwnd) 
+}
 
 fn capture_window_internal(hwnd: isize) -> PokerResult<String> {
     unsafe {
-        let hwnd = HWND(hwnd as _);
+        let hwnd_val = HWND(hwnd as _);
         let mut rect = RECT::default();
-        let _ = GetWindowRect(hwnd, &mut rect);
+        if let Err(e) = GetWindowRect(hwnd_val, &mut rect) {
+             log_to_file("ERROR", &format!("GetWindowRect failed for HWND {}: {}", hwnd, e));
+        }
         
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
         
         if width <= 0 || height <= 0 {
+            log_to_file("ERROR", &format!("Invalid window dimensions for HWND {}: {}x{}", hwnd, width, height));
             return Err(PokerError::InvalidDimensions(width, height));
         }
 
-        let hdc_screen = GetDC(hwnd);
+        let hdc_screen = GetDC(hwnd_val);
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
         
@@ -246,9 +299,10 @@ fn capture_window_internal(hwnd: isize) -> PokerResult<String> {
 
         DeleteObject(hbitmap);
         DeleteDC(hdc_mem);
-        ReleaseDC(hwnd, hdc_screen);
+        ReleaseDC(hwnd_val, hdc_screen);
 
         if lines == 0 {
+            log_to_file("ERROR", &format!("GetDIBits failed to capture any lines for HWND {}", hwnd));
             return Err(PokerError::CaptureFailed);
         }
 
