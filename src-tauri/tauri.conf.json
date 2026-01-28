@@ -51,7 +51,8 @@
         "title": "GTO Poker Bot - Ultra High Performance",
         "width": 1200,
         "decorations": true,
-        "transparent": false
+        "transparent": false,
+        "visible": true
       }
     ]
   }

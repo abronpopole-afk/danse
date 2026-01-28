@@ -12,18 +12,21 @@ import RangesPage from "@/pages/ranges";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 function Router() {
+  console.log("App: Initializing router with HashLocation");
   return (
     <WouterRouter hook={useHashLocation}>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/live" component={Dashboard} />
-        <Route path="/logs" component={Dashboard} />
-        <Route path="/settings" component={SettingsPage} />
-        <Route path="/remote" component={RemotePage} />
-        <Route path="/debug" component={DebugPage} />
-        <Route path="/ranges" component={RangesPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', color: 'white' }}>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/live" component={Dashboard} />
+          <Route path="/logs" component={Dashboard} />
+          <Route path="/settings" component={SettingsPage} />
+          <Route path="/remote" component={RemotePage} />
+          <Route path="/debug" component={DebugPage} />
+          <Route path="/ranges" component={RangesPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </WouterRouter>
   );
 }
