@@ -53,26 +53,33 @@ export function useBotState() {
   
   const loadInitialState = useCallback(async () => {
     try {
+      console.log("[FRONTEND] [STATE] Starting initial state load...");
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const [sessionData, statsData, logsData] = await Promise.all([
-        api.session.getCurrent(),
-        api.stats.get(),
-        api.logs.getRecent(50),
+        api.session.getCurrent().catch(e => { console.error("Session load error:", e); return null; }),
+        api.stats.get().catch(e => { console.error("Stats load error:", e); return null; }),
+        api.logs.getRecent(50).catch(e => { console.error("Logs load error:", e); return { logs: [] }; }),
       ]);
       
+      console.log("[FRONTEND] [STATE] Data received:", { 
+        hasSession: !!sessionData?.session, 
+        stats: !!statsData, 
+        logCount: logsData.logs.length 
+      });
+
       setState(prev => ({
         ...prev,
-        session: sessionData.session,
-        tables: sessionData.tables || [],
-        stats: sessionData.stats || defaultStats,
+        session: sessionData?.session || null,
+        tables: sessionData?.tables || [],
+        stats: sessionData?.stats || defaultStats,
         logs: logsData.logs || [],
-        humanizerSettings: statsData.humanizerSettings || defaultHumanizerSettings,
-        gtoConnected: statsData.gtoConnected,
+        humanizerSettings: statsData?.humanizerSettings || defaultHumanizerSettings,
+        gtoConnected: statsData?.gtoConnected || false,
         isLoading: false,
       }));
     } catch (error: any) {
-      console.error("Erreur chargement état initial:", error);
+      console.error("[FRONTEND] [STATE_ERROR] Critical load failure:", error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 

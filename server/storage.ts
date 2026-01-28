@@ -100,15 +100,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async stopSession(id: string): Promise<void> {
-    console.log(`[DB] Stopping session: ${id}`);
+    console.log(`[DB] [STOP_SESSION] Attempting to stop session: ${id}`);
     try {
       await db
         .update(botSessions)
         .set({ status: "stopped", stoppedAt: new Date() })
         .where(eq(botSessions.id, id));
-      console.log(`[DB] Session ${id} marked as stopped`);
+      
+      await this.appendLog({
+        logType: "WARN",
+        message: `Session ${id} marked as stopped in database`,
+        sessionId: id,
+        tableId: null,
+        metadata: { action: "stop_session", timestamp: new Date().toISOString() }
+      });
+      console.log(`[DB] [STOP_SESSION] Session ${id} successfully stopped`);
     } catch (e) {
-      console.error(`[DB ERROR] stopSession ${id}:`, e);
+      console.error(`[DB ERROR] [STOP_SESSION] Failed to stop session ${id}:`, e);
+      await this.appendLog({
+        logType: "ERROR",
+        message: `CRITICAL: Failed to stop session ${id}: ${e instanceof Error ? e.message : String(e)}`,
+        sessionId: id,
+        tableId: null,
+        metadata: { error: String(e) }
+      });
       throw e;
     }
   }
@@ -117,7 +132,7 @@ export class DatabaseStorage implements IStorage {
     const [newLog] = await db.insert(actionLogs).values(log).returning();
     
     // Console logging for debugging in Replit
-    console.log(`[LOG] ${log.logType}: ${log.message}`, log.metadata);
+    console.log(`[LOG] [${log.logType}] ${log.message}`, log.metadata);
 
     // File logging
     if (process.env.NODE_ENV !== 'test') {
@@ -127,26 +142,23 @@ export class DatabaseStorage implements IStorage {
       const dateStr = now.toISOString().split('T')[0];
       const timeStr = now.toISOString().split('T')[1].split('.')[0];
       
-      // We always attempt to write to the requested Windows path
-      // but provide a fallback for the Replit environment
-      const pathsToTry = [LOG_DIR];
-      if (process.platform !== "win32") {
-        pathsToTry.push("/tmp/gto_logs");
-      }
+      const logLine = `[${dateStr} ${timeStr}] [${log.logType}] ${log.message} ${log.metadata ? JSON.stringify(log.metadata) : ''}\n`;
 
-      for (const logPath of pathsToTry) {
-        try {
-          if (!fs.existsSync(logPath)) {
-            fs.mkdirSync(logPath, { recursive: true });
-          }
-          const logFile = path.join(logPath, `gto_poker_bot_${dateStr}.log`);
-          const logLine = `[${dateStr} ${timeStr}] [${log.logType}] ${log.message} ${log.metadata ? JSON.stringify(log.metadata) : ''}\n`;
-          fs.appendFileSync(logFile, logLine);
-          // If we successfully wrote to one, we can stop if it's the primary one
-          if (logPath === LOG_DIR) break; 
-        } catch (e) {
-          console.error(`Failed to write to log path ${logPath}:`, e);
+      // CRITICAL: Force write to the specific Windows path requested by user if on Windows
+      // In Replit (Linux), we use the fallback but log the intention
+      const primaryLogDir = "C:\\Users\\adria\\AppData\\Roaming\\GTO Poker Bot\\logs";
+      const fallbackLogDir = "/tmp/gto_logs";
+      
+      const targetDir = process.platform === "win32" ? primaryLogDir : fallbackLogDir;
+
+      try {
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
         }
+        const logFile = path.join(targetDir, `gto_poker_bot_${dateStr}.log`);
+        fs.appendFileSync(logFile, logLine);
+      } catch (e) {
+        console.error(`[CRITICAL LOG ERROR] Failed to write to ${targetDir}:`, e);
       }
     }
 

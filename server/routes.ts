@@ -6,37 +6,37 @@ import { insertPlatformAccountSchema, insertBotSessionSchema, insertActionLogSch
 export function registerRoutes(app: Express): Server {
   // Platform Accounts
   app.get("/api/platform-accounts", async (_req, res) => {
-    console.log("[API] Fetching platform accounts");
+    console.log("[API] [GET_ACCOUNTS] Fetching platform accounts from DB");
     try {
       const accounts = await storage.getPlatformAccounts();
-      console.log(`[API] Found ${accounts.length} accounts`);
+      console.log(`[API] [GET_ACCOUNTS] Found ${accounts.length} accounts in DB`);
       res.json(accounts);
     } catch (e: any) {
-      console.error("[API ERROR] getPlatformAccounts:", e);
+      console.error("[API ERROR] [GET_ACCOUNTS] Failed:", e);
       res.status(500).json({ error: e.message });
     }
   });
 
   app.post("/api/platform-accounts", async (req, res) => {
-    console.log("[API] Creating platform account:", req.body);
+    console.log("[API] [CREATE_ACCOUNT] Payload received:", JSON.stringify(req.body));
     const result = insertPlatformAccountSchema.safeParse(req.body);
     if (!result.success) {
-      console.warn("[API] Validation failed:", result.error);
+      console.warn("[API] [CREATE_ACCOUNT] Validation failed:", JSON.stringify(result.error.format()));
       return res.status(400).json({ error: result.error });
     }
     try {
       const account = await storage.createPlatformAccount(result.data);
-      console.log("[API] Account created successfully:", account.id);
+      console.log("[API] [CREATE_ACCOUNT] Successfully created account in DB with ID:", account.id);
       await storage.appendLog({
         logType: "INFO",
-        message: `Account created for ${account.platformName}: ${account.username}`,
+        message: `Platform account registered: ${account.platformName} (${account.username})`,
         sessionId: null,
         tableId: null,
-        metadata: { accountId: account.id }
+        metadata: { accountId: account.id, username: account.username }
       });
       res.json(account);
     } catch (e: any) {
-      console.error("[API ERROR] createPlatformAccount:", e);
+      console.error("[API ERROR] [CREATE_ACCOUNT] Failed persistence:", e);
       res.status(500).json({ error: e.message });
     }
   });
