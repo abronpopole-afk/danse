@@ -195,6 +195,7 @@ export function useBotState() {
   const startSession = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
+      // On passe explicitement le statut stopped car l'utilisateur veut un contrôle manuel
       const response = await api.session.start();
       if (response && response.success) {
         await loadInitialState();

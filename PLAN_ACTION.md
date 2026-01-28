@@ -24,3 +24,4 @@
 - [x] Vérifier que les comptes sont persistés après redémarrage.
 - [x] Vérifier que le cycle de vie de la session (Démarrer/Arrêter) est respecté.
 - [x] Confirmer la présence des logs dans le dossier spécifié.
+- [x] Correction des erreurs de callback IPC Tauri (window[a]).

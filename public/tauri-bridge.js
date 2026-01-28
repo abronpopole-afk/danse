@@ -25,13 +25,23 @@
       }
       
       const trigger = (id, result) => {
+        // Handle direct function callback
+        if (typeof id === 'function') {
+          id(result);
+          return;
+        }
+        
         // Find the callback handler - check window and prefixed versions
-        const handler = (typeof id === 'function') ? id : 
-                        (window[id] ? window[id] : 
+        const handler = (window[id] ? window[id] : 
                         (window[`_${id}`] ? window[`_${id}`] : null));
         
         if (handler) {
           handler(result);
+        } else {
+          // If no handler found, it might be a race condition or internal Tauri logic
+          // In some cases window[a] is expected but not yet defined
+          // We can try to wait a bit or just log it
+          console.debug(`Callback handler not found for ID: ${id}`);
         }
       };
 

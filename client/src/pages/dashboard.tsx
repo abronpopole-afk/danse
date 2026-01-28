@@ -64,8 +64,11 @@ export default function Dashboard() {
 
   const handleStartSession = async () => {
     try {
+      // S'assurer que les données réelles sont chargées
       await startSession();
-      toast.success("Session démarrée");
+      toast.success("Session démarrée avec succès");
+      // Log explicite de l'action utilisateur
+      console.log("[USER_ACTION] Démarrage manuel de la session");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors du démarrage");
     }
