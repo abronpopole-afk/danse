@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
 // Mock Tauri IPC for browser environment
-if (typeof window !== 'undefined' && !window.__TAURI_IPC__) {
+if (typeof window !== 'undefined' && !window.__TAURI_METADATA__ && !window.__TAURI_IPC__) {
   console.warn("Tauri IPC not found, initializing browser mock bridge");
   
   // Use a stable property name for the bridge to avoid issues with randomized callback names
