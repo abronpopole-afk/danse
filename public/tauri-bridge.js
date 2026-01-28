@@ -25,6 +25,18 @@
       }
       
       const trigger = (id, result) => {
+        // Handle numerical IDs which are indices into window
+        if (typeof id === 'number') {
+          // Tauri uses these indices for its own internal callback tracking
+          // The error "window[a] is not a function" happens because we look for window[id]
+          // but Tauri might be using a different naming convention in the built assets
+          const callbackName = `_${id}`;
+          if (typeof window[callbackName] === 'function') {
+            window[callbackName](result);
+            return;
+          }
+        }
+
         // Handle direct function callback
         if (typeof id === 'function') {
           id(result);
@@ -32,16 +44,18 @@
         }
         
         // Find the callback handler - check window and prefixed versions
-        const handler = (window[id] ? window[id] : 
+        let handler = (window[id] ? window[id] : 
                         (window[`_${id}`] ? window[`_${id}`] : null));
         
         if (handler) {
           handler(result);
         } else {
-          // If no handler found, it might be a race condition or internal Tauri logic
-          // In some cases window[a] is expected but not yet defined
-          // We can try to wait a bit or just log it
-          console.debug(`Callback handler not found for ID: ${id}`);
+          // Si l'ID est une chaîne, c'est probablement un nom de fonction global
+          if (typeof id === 'string' && typeof window[id] === 'function') {
+            window[id](result);
+          } else {
+            console.debug(`Callback handler not found for ID: ${id}`);
+          }
         }
       };
 

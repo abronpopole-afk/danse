@@ -25,3 +25,4 @@
 - [x] Vérifier que le cycle de vie de la session (Démarrer/Arrêter) est respecté.
 - [x] Confirmer la présence des logs dans le dossier spécifié.
 - [x] Correction des erreurs de callback IPC Tauri (window[a]).
+- [x] Vérification finale de l'intégrité de l'implémentation.
