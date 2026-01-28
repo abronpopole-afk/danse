@@ -1,0 +1,92 @@
+warning: unused import: `Window`
+ --> src\main.rs:6:22
+  |
+6 | use tauri::{command, Window};
+  |                      ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+warning: unused imports: `HWND_TOP`, `SWP_NOMOVE`, `SetForegroundWindow`, and `SetWindowPos`
+ --> src\main.rs:7:93
+  |
+7 | ...dows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW};
+  |                                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^
+warning: unused import: `RECT`
+ --> src\main.rs:8:54
+  |
+8 | use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
+  |                                                      ^^^^
+warning: unused import: `windows::Win32::UI::WindowsAndMessaging::GetWindowRect`
+ --> src\main.rs:9:5
+  |
+9 | use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+warning: unused imports: `BITMAPINFOHEADER`, `BITMAPINFO`, `BitBlt`, `CreateCompatibleBitmap`, `CreateCompatibleDC`, `DIB_RGB_COLORS`, `DeleteDC`, `DeleteObject`, `GetDC`, `GetDIBits`, `ReleaseDC`, `SRCCOPY`, and `SelectObject`
+  --> src\main.rs:10:37
+   |
+10 | ...::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
+   |       ^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+warning: unused imports: `Engine as _` and `engine::general_purpose`
+  --> src\main.rs:12:14
+   |
+12 | use base64::{Engine as _, engine::general_purpose};
+   |              ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+warning: unused import: `lazy_static::lazy_static`
+  --> src\main.rs:14:5
+   |
+14 | use lazy_static::lazy_static;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+error[E0599]: no method named `state` found for struct `AppHandle<R>` in the current scope
+   --> src\main.rs:200:44
+    |
+200 |                         let state = handle.state::<AppState>();
+    |                                            ^^^^^
+    |
+   ::: C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-1.8.3\src\lib.rs:905:6
+    |
+905 |   fn state<T>(&self) -> State<'_, T>
+    |      ----- the method is available for `AppHandle` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `Manager` which provides `state` is implemented but not in scope; perhaps you want to import it
+    |
+  6 + use tauri::Manager;
+    |
+help: there is a method `try_state` with a similar name
+    |
+200 |                         let state = handle.try_state::<AppState>();
+    |                                            ++++
+error: future cannot be sent between threads safely
+   --> src\main.rs:170:1
+    |
+170 |   #[command]
+    |   ^^^^^^^^^^ future returned by `start_session` is not `Send`
+...
+211 |           .invoke_handler(tauri::generate_handler![
+    |  _________________________-
+212 | |             list_windows, find_poker_windows, start_session, get_current_session
+213 | |         ])
+    | |_________- in this macro invocation
+    |
+    = help: within `impl Future<Output = Result<JsonValue, PokerError>>`, the trait `Send` is not implemented for `std::sync::MutexGuard<'_, std::option::Option<Pool<Postgres>>>`
+note: future is not `Send` as this value is used across an await
+   --> src\main.rs:177:14
+    |
+173 |     let pool_guard = state.db.lock().unwrap();
+    |         ---------- has type `std::sync::MutexGuard<'_, std::option::Option<Pool<Postgres>>>` which is not `Send`
+...
+177 |             .await?;
+    |              ^^^^^ await occurs here, with `pool_guard` maybe used later
+note: required by a bound in `ResultFutureTag::future`
+   --> C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-1.8.3\src\command.rs:293:42
+    |
+289 |     pub fn future<T, E, F>(self, value: F) -> impl Future<Output = Result<Value, InvokeError>>
+    |            ------ required by a bound in this associated function
+...
+293 |       F: Future<Output = Result<T, E>> + Send,
+    |                                          ^^^^ required by this bound in `ResultFutureTag::future`
+    = note: this error originates in the macro `__cmd__start_session` which comes from the expansion of the macro `tauri::generate_handler` (in Nightly builds, run with -Z macro-backtrace for more info)
+For more information about this error, try `rustc --explain E0599`.
+warning: `gto-poker-bot` (bin "gto-poker-bot") generated 7 warnings
+error: could not compile `gto-poker-bot` (bin "gto-poker-bot") due to 2 previous errors; 7 warnings emitted
+       Error failed to build app: failed to build app
+Error: Command "tauri ["build"]" failed with exit code 1

@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{command, Window};
+use tauri::{command, Window, Manager};
 use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW};
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
@@ -96,7 +96,6 @@ async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
         .connect(&database_url)
         .await?;
 
-    // Create tables if they don't exist
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS bot_sessions (
             id SERIAL PRIMARY KEY,
@@ -170,10 +169,14 @@ fn find_poker_windows() -> Vec<WindowInfo> {
 #[command]
 async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> {
     log_to_file("INFO", "Starting session");
-    let pool_guard = state.db.lock().unwrap();
-    if let Some(pool) = &*pool_guard {
+    let pool = {
+        let pool_guard = state.db.lock().unwrap();
+        pool_guard.clone()
+    };
+    
+    if let Some(pool) = pool {
         let row: (i32,) = sqlx::query_as("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
-            .fetch_one(pool)
+            .fetch_one(&pool)
             .await?;
         Ok(json!({ "success": true, "session": { "id": row.0, "status": "running" } }))
     } else {
@@ -181,12 +184,19 @@ async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> 
     }
 }
 
-#[command]
-fn get_current_session() -> PokerResult<Value> {
-    Ok(json!({ "session": null, "stats": { "totalTables": 0, "activeTables": 0 } }))
-}
+#[command] async fn stop_session() -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn force_stop_session() -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn cleanup_stale_sessions() -> PokerResult<Value> { Ok(json!({"success": true})) }
+#[command] async fn get_current_session() -> PokerResult<Value> { Ok(json!({"session": null, "stats": {"totalTables": 0, "activeTables": 0}})) }
+#[command] async fn get_all_tables() -> PokerResult<Value> { Ok(json!({"tables": []})) }
+#[command] async fn get_humanizer_config() -> PokerResult<Value> { Ok(json!({"enabled": true})) }
+#[command] async fn get_gto_config() -> PokerResult<Value> { Ok(json!({"enabled": true})) }
+#[command] async fn get_platform_config() -> PokerResult<Value> { Ok(json!({"platformName": "GGClub"})) }
+#[command] async fn get_recent_logs(_limit: u32) -> PokerResult<Value> { Ok(json!([])) }
+#[command] async fn get_global_stats() -> PokerResult<Value> { Ok(json!({"totalHands": 0, "totalProfit": 0})) }
+#[command] async fn get_player_profile() -> PokerResult<Value> { Ok(json!({"personality": "TAG"})) }
+#[command] async fn capture_window(hwnd: isize) -> PokerResult<String> { capture_window_internal(hwnd) }
 
-#[command]
 fn main() {
     log_to_file("INFO", "Application starting");
     
@@ -209,7 +219,10 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            list_windows, find_poker_windows, start_session, get_current_session
+            list_windows, find_poker_windows, start_session, get_current_session,
+            stop_session, force_stop_session, cleanup_stale_sessions, get_all_tables,
+            get_humanizer_config, get_gto_config, get_platform_config, get_recent_logs,
+            get_global_stats, get_player_profile, capture_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
