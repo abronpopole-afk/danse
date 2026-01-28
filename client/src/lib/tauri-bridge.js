@@ -1,42 +1,31 @@
-(function() {
-  if (typeof window !== 'undefined' && !window.__TAURI_IPC__) {
-    console.warn('Tauri IPC not found, initializing browser mock bridge');
+import { invoke } from "@tauri-apps/api/tauri";
+
+// Mock Tauri IPC for browser environment
+if (typeof window !== 'undefined' && !window.__TAURI_IPC__) {
+  console.warn("Tauri IPC not found, initializing browser mock bridge");
+  
+  // Use a stable property name for the bridge to avoid issues with randomized callback names
+  window.__TAURI_IPC__ = async (message) => {
+    console.log("[Tauri Mock IPC] Command:", message.cmd, message.data);
     
-    window.__TAURI_METADATA__ = {
-      __windows: [],
-      __currentWindow: { label: 'main' }
+    // Simulate responses for common commands
+    const responses = {
+      "get_current_session": { session: null, stats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 } },
+      "get_global_stats": { totalHands: 0, totalProfit: 0 },
+      "get_recent_logs": [],
+      "get_player_profile": { personality: "TAG" },
+      "get_all_tables": { tables: [] },
+      "get_humanizer_config": { enabled: true },
+      "get_gto_config": { enabled: true },
+      "get_platform_config": { platformName: "GGClub" }
     };
 
-    window.__TAURI_IPC__ = function(message) {
-      const { cmd, callback, error, ...payload } = message;
-      console.log(`[Tauri Mock IPC] Command: ${cmd}`, payload);
-      
-      // Handle known commands with mock data
-      setTimeout(() => {
-        if (cmd === 'list_windows' || cmd === 'find_poker_windows') {
-          window[callback]([]);
-        } else if (cmd.startsWith('get_') || cmd.startsWith('start_') || cmd.startsWith('stop_')) {
-          window[callback]({ success: true, mock: true });
-        } else if (cmd === 'listen') {
-          window[callback]('mock-unlisten-id');
-        } else {
-          window[callback]({ message: 'Command not implemented in browser mock' });
-        }
-      }, 0);
-    };
-
-    // Mock internal __TAURI__ object for some APIs
-    window.__TAURI__ = {
-      invoke: function(cmd, args) {
-        return new Promise((resolve) => {
-          window.__TAURI_IPC__({
-            cmd,
-            callback: (res) => resolve(res),
-            error: (err) => console.error(err),
-            ...args
-          });
-        });
-      }
-    };
-  }
-})();
+    const result = responses[message.cmd] || { success: true };
+    
+    // Tauri invoke uses callback/error functions passed as indices into window
+    if (message.callback !== undefined && typeof window[message.callback] === 'function') {
+      window[message.callback](result);
+    }
+    return result;
+  };
+}

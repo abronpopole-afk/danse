@@ -8,15 +8,15 @@ use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWin
 use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
-use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory, IDXGIFactory, IDXGIOutput1, IDXGIOutputDuplication};
-use windows::Win32::Graphics::Direct3D11::{D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, D3D11_SDK_VERSION, D3D11_CREATE_DEVICE_FLAG};
-use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_UNKNOWN;
 use std::sync::Mutex;
 use base64::{Engine as _, engine::general_purpose};
 use thiserror::Error;
 use lazy_static::lazy_static;
 use serde_json::{json, Value};
-use windows::core::ComInterface;
+use std::fs;
+use std::path::PathBuf;
+use std::env;
+use std::io::Write;
 
 #[derive(Error, Debug, serde::Serialize)]
 pub enum PokerError {
@@ -49,61 +49,33 @@ struct WindowInfo {
     class_name: String,
 }
 
-#[allow(dead_code)]
-struct DxgiState {
-    device: ID3D11Device,
-    context: ID3D11DeviceContext,
-    dupl: Option<IDXGIOutputDuplication>,
+fn get_app_dir() -> PathBuf {
+    let mut path = env::var("APPDATA").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("."));
+    path.push("GTO Poker Bot");
+    if !path.exists() {
+        let _ = fs::create_dir_all(&path);
+    }
+    path
 }
 
-lazy_static! {
-    static ref DXGI_STATE: Mutex<Option<DxgiState>> = Mutex::new(None);
-}
-
-fn init_dxgi() -> PokerResult<()> {
-    let mut state = DXGI_STATE.lock().unwrap();
-    if state.is_some() {
-        return Ok(());
+fn log_to_file(level: &str, message: &str) {
+    let mut log_path = get_app_dir();
+    log_path.push("logs");
+    if !log_path.exists() {
+        let _ = fs::create_dir_all(&log_path);
     }
+    log_path.push("backend.log");
 
-    unsafe {
-        let mut device: Option<ID3D11Device> = None;
-        let mut context: Option<ID3D11DeviceContext> = None;
-        
-        D3D11CreateDevice(
-            None,
-            D3D_DRIVER_TYPE_UNKNOWN,
-            None,
-            D3D11_CREATE_DEVICE_FLAG(0),
-            None,
-            D3D11_SDK_VERSION,
-            Some(&mut device),
-            None,
-            Some(&mut context),
-        ).map_err(|e| PokerError::DxgiError(format!("D3D11 Device Creation Failed: {}", e)))?;
-
-        let device = device.unwrap();
-        let context = context.unwrap();
-
-        let factory: IDXGIFactory = CreateDXGIFactory().map_err(|e| PokerError::DxgiError(format!("DXGI Factory Failed: {}", e)))?;
-        let adapter = factory.EnumAdapters(0).map_err(|e| PokerError::DxgiError(format!("EnumAdapters Failed: {}", e)))?;
-        let output = adapter.EnumOutputs(0).map_err(|e| PokerError::DxgiError(format!("EnumOutputs Failed: {}", e)))?;
-        let output1: IDXGIOutput1 = output.cast().map_err(|e| PokerError::DxgiError(format!("Cast to Output1 Failed: {}", e)))?;
-        
-        let dupl = output1.DuplicateOutput(&device).map_err(|e| PokerError::DxgiError(format!("DuplicateOutput Failed: {}", e)))?;
-
-        *state = Some(DxgiState {
-            device,
-            context,
-            dupl: Some(dupl),
-        });
+    if let Ok(mut file) = fs::OpenOptions::new().append(true).create(true).open(log_path) {
+        let now = chrono::Local::now();
+        let _ = writeln!(file, "[{}] [{}] {}", now.format("%Y-%m-%d %H:%M:%S"), level, message);
     }
-    Ok(())
 }
 
 // Windows Management
 #[command]
 fn list_windows() -> Vec<WindowInfo> {
+    log_to_file("INFO", "Listing windows");
     let mut windows: Vec<WindowInfo> = Vec::new();
     unsafe {
         let _ = EnumWindows(Some(enum_window_callback), LPARAM(&mut windows as *mut Vec<WindowInfo> as isize));
@@ -198,77 +170,26 @@ fn capture_window_internal(hwnd_isize: isize) -> PokerResult<String> {
 }
 
 #[command]
-fn focus_window(hwnd: isize) -> PokerResult<()> {
-    unsafe {
-        let hwnd = HWND(hwnd as _);
-        if SetForegroundWindow(hwnd).as_bool() {
-            Ok(())
-        } else {
-            Err(PokerError::Win32Error("Failed to focus window".into()))
-        }
-    }
-}
-
-#[command]
-fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> {
-    unsafe {
-        let hwnd = HWND(hwnd as _);
-        let res = SetWindowPos(hwnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
-        if res.is_ok() {
-            Ok(())
-        } else {
-            Err(PokerError::Win32Error("Failed to resize window".into()))
-        }
-    }
-}
-
-#[command]
-async fn stream_window_frames(window: Window, hwnd: isize) -> PokerResult<()> {
-    let _ = init_dxgi(); 
-    std::thread::spawn(move || {
-        let mut last_capture = std::time::Instant::now();
-        loop {
-            let elapsed = last_capture.elapsed();
-            if elapsed < std::time::Duration::from_millis(33) {
-                std::thread::sleep(std::time::Duration::from_millis(33) - elapsed);
-            }
-            last_capture = std::time::Instant::now();
-            if let Ok(image_data) = capture_window_internal(hwnd) {
-                if let Err(_) = window.emit("poker-frame", image_data) {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-    });
-    Ok(())
-}
-
-// Re-implementing simplified logic for all required endpoints in Rust
-#[command]
 fn start_session() -> PokerResult<Value> {
-    Ok(json!({ "success": true, "session": { "id": "1", "status": "running", "startedAt": chrono::Utc::now().to_rfc3339() } }))
+    log_to_file("INFO", "Starting new session");
+    Ok(json!({ "success": true, "session": { "id": "1", "status": "running" } }))
 }
 
 #[command]
 fn stop_session() -> PokerResult<Value> {
+    log_to_file("INFO", "Stopping session");
     Ok(json!({ "success": true, "stats": { "totalProfit": 0, "totalHandsPlayed": 0 } }))
 }
 
 #[command]
 fn force_stop_session() -> PokerResult<Value> {
+    log_to_file("WARN", "Force stopping session");
     Ok(json!({ "success": true, "forced": true }))
 }
 
 #[command]
-fn cleanup_stale_sessions() -> PokerResult<Value> {
-    Ok(json!({ "success": true, "cleaned": false }))
-}
-
-#[command]
 fn get_current_session() -> PokerResult<Value> {
-    Ok(json!({ "session": null, "stats": { "totalTables": 0, "activeTables": 0, "totalHandsPlayed": 0, "totalProfit": 0 } }))
+    Ok(json!({ "session": null, "stats": { "totalTables": 0, "activeTables": 0 } }))
 }
 
 #[command]
@@ -277,78 +198,18 @@ fn get_all_tables() -> PokerResult<Value> {
 }
 
 #[command]
-fn add_table(_params: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true, "table": { "id": "table_1", "status": "waiting" } }))
-}
-
-#[command]
-fn remove_table(_table_id: String) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn start_table(_table_id: String) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn pause_table(_table_id: String) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn start_all_tables() -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn stop_all_tables() -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
 fn get_humanizer_config() -> PokerResult<Value> {
-    Ok(json!({ "enabled": true, "mouseJitter": true }))
-}
-
-#[command]
-fn update_humanizer_config(_updates: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
+    Ok(json!({ "enabled": true }))
 }
 
 #[command]
 fn get_gto_config() -> PokerResult<Value> {
-    Ok(json!({ "enabled": true, "apiKey": "****" }))
-}
-
-#[command]
-fn update_gto_config(_updates: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn test_gto_connection() -> PokerResult<Value> {
-    Ok(json!({ "success": true, "latency": 120 }))
+    Ok(json!({ "enabled": true }))
 }
 
 #[command]
 fn get_platform_config() -> PokerResult<Value> {
-    Ok(json!({ "platformName": "GGClub", "username": "player" }))
-}
-
-#[command]
-fn update_platform_config(_updates: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn connect_platform(_config: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn disconnect_platform(_account_id: String) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
+    Ok(json!({ "platformName": "GGClub" }))
 }
 
 #[command]
@@ -362,45 +223,18 @@ fn get_global_stats() -> PokerResult<Value> {
 }
 
 #[command]
-fn get_recent_histories(_limit: u32) -> PokerResult<Value> {
-    Ok(json!([]))
-}
-
-#[command]
-fn simulate_hand(_params: Value) -> PokerResult<Value> {
-    Ok(json!({ "action": "fold", "confidence": 0.99 }))
-}
-
-#[command]
 fn get_player_profile() -> PokerResult<Value> {
-    Ok(json!({ "personality": "TAG", "aggression": 0.6 }))
+    Ok(json!({ "personality": "TAG" }))
 }
 
 #[command]
-fn update_player_personality(_personality: String) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn reset_player_profile() -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
-#[command]
-fn send_ws_message(_message: Value) -> PokerResult<Value> {
-    Ok(json!({ "success": true }))
-}
-
 fn main() {
+    log_to_file("INFO", "Application starting");
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            list_windows, find_poker_windows, capture_window, focus_window, resize_window, stream_window_frames,
-            start_session, stop_session, force_stop_session, cleanup_stale_sessions, get_current_session,
-            get_all_tables, add_table, remove_table, start_table, pause_table, start_all_tables, stop_all_tables,
-            get_humanizer_config, update_humanizer_config, get_gto_config, update_gto_config, test_gto_connection,
-            get_platform_config, update_platform_config, connect_platform, disconnect_platform,
-            get_recent_logs, get_global_stats, get_recent_histories, simulate_hand,
-            get_player_profile, update_player_personality, reset_player_profile, send_ws_message
+            list_windows, find_poker_windows, capture_window, start_session, stop_session, 
+            force_stop_session, get_current_session, get_all_tables, get_humanizer_config, 
+            get_gto_config, get_platform_config, get_recent_logs, get_global_stats, get_player_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
