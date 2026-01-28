@@ -56,7 +56,10 @@ export const api = {
       return invoke("start_session");
     },
     async stop(): Promise<{ success: boolean; stats: TableStats }> {
-      return invoke("stop_session");
+      console.log("[API] Calling stop_session");
+      const result = await invoke("stop_session") as { success: boolean; stats: TableStats };
+      console.log("[API] stop_session result:", result);
+      return result;
     },
     async forceStop(): Promise<{ success: boolean; forced: boolean }> {
       return invoke("force_stop_session");
@@ -118,6 +121,9 @@ export const api = {
     async get(): Promise<{ config: PlatformConfig | null }> {
       return invoke("get_platform_config");
     },
+    async getActive(): Promise<{ configs: any[] }> {
+      return invoke("get_platform_accounts");
+    },
     async getAccounts(): Promise<any[]> {
       return invoke("get_platform_accounts");
     },
@@ -132,6 +138,12 @@ export const api = {
     },
     async disconnect(accountId: string): Promise<{ success: boolean }> {
       return invoke("disconnect_platform", { accountId });
+    },
+    async pause(accountId: string): Promise<{ success: boolean }> {
+      return invoke("pause_platform", { accountId });
+    },
+    async delete(accountId: string): Promise<{ success: boolean }> {
+      return invoke("delete_platform_account", { accountId });
     },
   },
 

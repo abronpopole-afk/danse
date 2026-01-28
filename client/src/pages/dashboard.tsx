@@ -76,18 +76,23 @@ export default function Dashboard() {
 
   const handleStopSession = async () => {
     try {
-      await stopSession();
+      console.log("[USER_ACTION] Attempting stop_session");
+      const result = await stopSession();
+      console.log("[USER_ACTION] stop_session result:", result);
       toast.success("Session arrêtée");
     } catch (error: any) {
+      console.error("[USER_ACTION] stop_session error:", error);
       toast.error(error.message || "Erreur lors de l'arrêt");
     }
   };
 
   const handleForceStop = async () => {
     try {
+      console.log("[USER_ACTION] Attempting force_stop_session");
       await forceStopSession();
       toast.success("Session arrêtée de force");
     } catch (error: any) {
+      console.error("[USER_ACTION] force_stop_session error:", error);
       toast.error(error.message || "Erreur lors de l'arrêt forcé");
     }
   };

@@ -30,14 +30,21 @@ window.__TAURI_IPC__ = (message) => {
     
     // Simulate responses for common commands
     const responses = {
-      "get_current_session": { session: null, stats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 } },
-      "get_global_stats": { totalHands: 0, totalProfit: 0 },
-      "get_recent_logs": [],
+      "get_current_session": { session: null, stats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 }, tables: [] },
+      "get_global_stats": { session: null, tableStats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 }, dbStats: null, humanizerSettings: { minDelayMs: 1500, maxDelayMs: 4200, enableBezierMouse: true, enableMisclicks: false, misclickProbability: 0.0001, enableRandomFolds: false, randomFoldProbability: 0.001, thinkingTimeVariance: 0.3, preActionDelay: 500, postActionDelay: 300, stealthModeEnabled: true }, gtoConnected: false },
+      "get_recent_logs": { logs: [] },
       "get_player_profile": { personality: "TAG" },
       "get_all_tables": { tables: [] },
-      "get_humanizer_config": { enabled: true },
-      "get_gto_config": { enabled: true },
-      "get_platform_config": { platformName: "GGClub" }
+      "get_humanizer_config": { config: { minDelayMs: 1500, maxDelayMs: 4200 }, currentSettings: { minDelayMs: 1500, maxDelayMs: 4200 } },
+      "get_gto_config": { config: { enabled: true }, connected: true, usingSimulation: false },
+      "get_platform_config": { config: { platformName: "GGClub", enabled: true, connectionStatus: "disconnected" } },
+      "get_platform_accounts": { configs: [] },
+      "connect_platform": { success: true, accountId: "mock-account-id" },
+      "start_session": { success: true, session: { id: "mock-session-id", status: "active", startedAt: new Date().toISOString() } },
+      "stop_session": { success: true, stats: { totalTables: 0, activeTables: 0, totalHandsPlayed: 0, totalProfit: 0 } },
+      "force_stop_session": { success: true, forced: true },
+      "pause_platform": { success: true },
+      "delete_platform_account": { success: true }
     };
 
     const result = responses[cmd] || { success: true };

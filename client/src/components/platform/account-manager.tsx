@@ -48,8 +48,29 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
   const loadAccounts = async () => {
     try {
       setIsLoading(true);
-      const response = await api.platform.getActive();
-      setAccounts(response.configs);
+      // Try to load from both DB and Tauri to ensure we see everything
+      const [tauriResponse, dbResponse] = await Promise.all([
+        api.platform.getActive(),
+        api.platform.getAccounts() // This might hit the Express API
+      ]);
+      
+      const combinedConfigs = [...(tauriResponse.configs || [])];
+      
+      // If we have DB accounts not in Tauri, add them as disconnected
+      if (Array.isArray(dbResponse)) {
+        dbResponse.forEach(dbAcc => {
+          if (!combinedConfigs.find(c => c.username === dbAcc.username)) {
+            combinedConfigs.push({
+              ...dbAcc,
+              accountId: dbAcc.id,
+              currentStatus: "disconnected",
+              managedTables: 0
+            });
+          }
+        });
+      }
+
+      setAccounts(combinedConfigs);
     } catch (error: any) {
       toast.error("Erreur lors du chargement: " + error.message);
     } finally {
@@ -124,6 +145,18 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
 
     try {
       setIsConnecting("new");
+      
+      // Enregistrer d'abord le compte dans la base de données via l'API Express
+      const accountResponse = await api.platform.createAccount({
+        platformName: newAccountForm.platformName,
+        username: newAccountForm.username,
+        password: newAccountForm.password,
+        isActive: true
+      });
+      
+      console.log("Account created in DB:", accountResponse);
+
+      // Puis tenter la connexion via Tauri invoke
       const result = await api.platform.connect({
         platformName: newAccountForm.platformName,
         username: newAccountForm.username,
@@ -133,8 +166,10 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         enableAutoAction: newAccountForm.enableAutoAction,
       });
       
-      if (result.success) {
-        toast.success(`Compte ${newAccountForm.username} ajouté et connecté`);
+      console.log("Connect result:", result);
+      
+      if (result.success || accountResponse) {
+        toast.success(`Compte ${newAccountForm.username} ajouté avec succès`);
         setIsAddingAccount(false);
         setNewAccountForm({
           platformName: "ggclub",
@@ -146,8 +181,11 @@ export function AccountManager({ onAccountChange }: AccountManagerProps) {
         });
         await loadAccounts();
         onAccountChange?.();
+      } else {
+        toast.error("Échec de l'ajout du compte");
       }
     } catch (error: any) {
+      console.error("Error adding account:", error);
       toast.error("Erreur: " + error.message);
     } finally {
       setIsConnecting(null);

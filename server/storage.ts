@@ -70,6 +70,12 @@ export class DatabaseStorage implements IStorage {
         .where(eq(botSessions.status, "active"))
         .orderBy(desc(botSessions.startedAt))
         .limit(1);
+      
+      if (session) {
+        console.log("[DB] Found active session:", session.id);
+      } else {
+        console.log("[DB] No active session found in database");
+      }
       return session || null;
     } catch (e) {
       console.error("[DB ERROR] getCurrentSession:", e);
@@ -94,10 +100,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async stopSession(id: string): Promise<void> {
-    await db
-      .update(botSessions)
-      .set({ status: "stopped", stoppedAt: new Date() })
-      .where(eq(botSessions.id, id));
+    console.log(`[DB] Stopping session: ${id}`);
+    try {
+      await db
+        .update(botSessions)
+        .set({ status: "stopped", stoppedAt: new Date() })
+        .where(eq(botSessions.id, id));
+      console.log(`[DB] Session ${id} marked as stopped`);
+    } catch (e) {
+      console.error(`[DB ERROR] stopSession ${id}:`, e);
+      throw e;
+    }
   }
 
   async appendLog(log: InsertActionLog): Promise<ActionLog> {
