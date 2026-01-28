@@ -98,7 +98,7 @@ async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
 
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS bot_sessions (
-            id SERIAL PRIMARY KEY,
+            id varchar(255) PRIMARY KEY DEFAULT gen_random_uuid(),
             status TEXT NOT NULL,
             started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             stopped_at TIMESTAMP WITH TIME ZONE,
@@ -109,8 +109,8 @@ async fn init_db() -> Result<Pool<Postgres>, sqlx::Error> {
 
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS poker_tables (
-            id SERIAL PRIMARY KEY,
-            session_id INTEGER,
+            id varchar(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+            session_id varchar(255) REFERENCES bot_sessions(id),
             table_identifier TEXT,
             table_name TEXT,
             stakes TEXT,
@@ -180,7 +180,7 @@ async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> 
     };
     
     if let Some(pool) = pool {
-        match sqlx::query_as::<_, (i32,)>("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
+        match sqlx::query_as::<_, (String,)>("INSERT INTO bot_sessions (status) VALUES ('running') RETURNING id")
             .fetch_one(&pool)
             .await {
                 Ok(row) => {
