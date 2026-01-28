@@ -1,0 +1,55 @@
+warning: unused import: `Window`
+ --> src\main.rs:6:22
+  |
+6 | use tauri::{command, Window, Manager};
+  |                      ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `HWND_TOP`, `SWP_NOMOVE`, `SetForegroundWindow`, and `SetWindowPos`
+ --> src\main.rs:7:93
+  |
+7 | ...dows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW};
+  |                                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `RECT`
+ --> src\main.rs:8:54
+  |
+8 | use windows::Win32::Foundation::{HWND, LPARAM, BOOL, RECT};
+  |                                                      ^^^^
+
+warning: unused import: `windows::Win32::UI::WindowsAndMessaging::GetWindowRect`
+ --> src\main.rs:9:5
+  |
+9 | use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BITMAPINFOHEADER`, `BITMAPINFO`, `BitBlt`, `CreateCompatibleBitmap`, `CreateCompatibleDC`, `DIB_RGB_COLORS`, `DeleteDC`, `DeleteObject`, `GetDC`, `GetDIBits`, `ReleaseDC`, `SRCCOPY`, and `SelectObject`
+  --> src\main.rs:10:37
+   |
+10 | ...::{GetDC, ReleaseDC, CreateCompatibleDC, CreateCompatibleBitmap, SelectObject, BitBlt, SRCCOPY, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS};
+   |       ^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+
+warning: unused imports: `Engine as _` and `engine::general_purpose`
+  --> src\main.rs:12:14
+   |
+12 | use base64::{Engine as _, engine::general_purpose};
+   |              ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `lazy_static::lazy_static`
+  --> src\main.rs:14:5
+   |
+14 | use lazy_static::lazy_static;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0425]: cannot find function `capture_window_internal` in this scope
+   --> src\main.rs:198:74
+    |
+198 | #[command] async fn capture_window(hwnd: isize) -> PokerResult<String> { capture_window_internal(hwnd) }
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+
+For more information about this error, try `rustc --explain E0425`.
+warning: `gto-poker-bot` (bin "gto-poker-bot") generated 7 warnings
+error: could not compile `gto-poker-bot` (bin "gto-poker-bot") due to 1 previous error; 7 warnings emitted
+       Error failed to build app: failed to build app
+Error: Command "tauri ["build"]" failed with exit code 1

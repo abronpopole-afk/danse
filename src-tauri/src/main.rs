@@ -197,6 +197,65 @@ async fn start_session(state: tauri::State<'_, AppState>) -> PokerResult<Value> 
 #[command] async fn get_player_profile() -> PokerResult<Value> { Ok(json!({"personality": "TAG"})) }
 #[command] async fn capture_window(hwnd: isize) -> PokerResult<String> { capture_window_internal(hwnd) }
 
+fn capture_window_internal(hwnd: isize) -> PokerResult<String> {
+    unsafe {
+        let hwnd = HWND(hwnd as _);
+        let mut rect = RECT::default();
+        let _ = GetWindowRect(hwnd, &mut rect);
+        
+        let width = rect.right - rect.left;
+        let height = rect.bottom - rect.top;
+        
+        if width <= 0 || height <= 0 {
+            return Err(PokerError::InvalidDimensions(width, height));
+        }
+
+        let hdc_screen = GetDC(hwnd);
+        let hdc_mem = CreateCompatibleDC(hdc_screen);
+        let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
+        
+        let old_obj = SelectObject(hdc_mem, hbitmap);
+        let _ = BitBlt(hdc_mem, 0, 0, width, height, hdc_screen, 0, 0, SRCCOPY);
+        SelectObject(hdc_mem, old_obj);
+
+        let mut bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: width,
+                biHeight: -height, // top-down
+                biPlanes: 1,
+                biBitCount: 24,
+                biCompression: 0, // BI_RGB
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let data_size = (width * 3 + 3) & !3;
+        let mut buffer = vec![0u8; (data_size * height) as usize];
+        
+        let lines = GetDIBits(
+            hdc_screen,
+            hbitmap,
+            0,
+            height as u32,
+            Some(buffer.as_mut_ptr() as *mut _),
+            &mut bmi,
+            DIB_RGB_COLORS,
+        );
+
+        DeleteObject(hbitmap);
+        DeleteDC(hdc_mem);
+        ReleaseDC(hwnd, hdc_screen);
+
+        if lines == 0 {
+            return Err(PokerError::CaptureFailed);
+        }
+
+        Ok(general_purpose::STANDARD.encode(&buffer))
+    }
+}
+
 fn main() {
     log_to_file("INFO", "Application starting");
     
