@@ -33,10 +33,14 @@
         "../suit_weights.json"
       ],
       "shortDescription": "",
-      "targets": ["msi", "nsis"],
+      "targets": ["nsis"],
       "windows": {
         "certificateThumbprint": null,
-        "digestAlgorithm": "sha256"
+        "digestAlgorithm": "sha256",
+        "nsis": {
+          "oneClick": false,
+          "allowToChangeInstallationDirectory": true
+        }
       }
     },
     "allowlist": {
