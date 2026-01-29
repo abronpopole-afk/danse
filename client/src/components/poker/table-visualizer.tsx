@@ -82,7 +82,7 @@ export function TableVisualizer({ table }: TableVisualizerProps) {
       name: "HERO",
       chips: `$${table.heroStack?.toFixed(2) || 0}`,
       cards: table.heroCards,
-      active: table.isHeroTurn,
+      active: !!table.isHeroTurn,
     };
   }
   

@@ -68,7 +68,7 @@ export function ActionLog({ logs, isLoading = false }: ActionLogProps) {
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-red-500/50" />
               <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
-              <div className={`w-2 h-2 rounded-full ${logs.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-green-500/50'}`} />
+              <div className={`w-2 h-2 rounded-full ${(logs?.length || 0) > 0 ? 'bg-green-500 animate-pulse' : 'bg-green-500/50'}`} />
             </div>
           </div>
         </div>

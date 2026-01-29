@@ -301,7 +301,7 @@ export default function Dashboard() {
           gtoPrecision={98.2}
         />
 
-        {tables.length > 1 && (
+        {(tables?.length || 0) > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-2">
             {tables.map((table, index) => (
               <Button
