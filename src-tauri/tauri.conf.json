@@ -33,15 +33,7 @@
         "../suit_weights.json"
       ],
       "shortDescription": "",
-      "targets": ["nsis"],
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "nsis": {
-          "oneClick": false,
-          "allowToChangeInstallationDirectory": true
-        }
-      }
+      "targets": ["nsis"]
     },
     "allowlist": {
       "all": true
