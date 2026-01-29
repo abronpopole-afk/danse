@@ -1,0 +1,23 @@
+The failure is caused by a Rust lifetime error (E0716) inThe job failed due to a Rust compilation error E0716 in the gThe job failed due to a Rust compiler lifetime error (E0716)The failing job is caused by a Rust lifetime error E0716 in theThe job failed due to a Rust lifetime error (E0716) into-poker-bot binary. The relevant log section shows:
+
+error: could not compile gto-poker-bot (bin "gto-poker-bot") due to 1 previous error; 21 warnings emitted For more information about this error, try rustc --explain E0716.
+
+Error E0716 typically means a value does not live long enough (lifetime issue), often related to async traits or futures requiring static lifetimes. The problematic function signature highlighted is the gto-poker-bot binary. Specifically, this happens where a generic type F: Future + Send + 'static is used, but a value of type F does not satisfy the required 'static lifetime bound.
+
+Solution: Ensure that all futures used for the F generic type have the 'static lifetime. If you're capturing references in async blocks, you need to clone or own the data inside the block instead. For example:
+
+// Before (incorrect if self or any reference may not be 'static) in the gto-poker-bot binary. The error occurred at or around line 270, involving a trait bound with F: Future + Send + 'static. This means a Future type parameter is being required to have a 'static lifetime, but a value passed does not meet that constraint.
+
+Solution:
+
+Ensure all captured references in async blocks or Future types used in that function are either 'static or do not borrow any non-static data.
+Refactor code such that any async move block gto-poker-bot binary. The error message points to this line:
+F: Future + Send + 'static,
+
+This means a generic Future type parameter F must declare the 'static lifetime because its value might be held across .await points. To resolve this, ensure that any Future passed to or returned by functions is 'static and all references captured in the future are valid for the 'static lifetime (such as Arc<T> or owned types instead of short-lived borrows).
+
+If possible,The job failed due to a Rust E0716 error when compiling the gasync fn run<F: Future + Send + 'static>(&self) -> F { ... }
+
+// Solution: Move necessary data into the async block let owned_data = self.data.clone(); // or however you need to own the data async move { // use owned_data here }
+
+Check the location in gto-poker-bot (around line 270) and refactor async code so all captured variables are 'static or owned values. This should resolve the compile error and the job will pass.

@@ -571,18 +571,19 @@ fn main() {
     tauri::Builder::default()
         .manage(AppState { db: Mutex::new(None) })
         .setup(|app| {
-        let state = app.handle().state::<AppState>();
-        tauri::async_runtime::spawn(async move {
-            match init_db().await {
-                Ok(pool) => {
-                    *state.db.lock().unwrap() = Some(pool);
-                    log_to_file("INFO", "Database initialization successful");
+            let handle = app.handle();
+            tauri::async_runtime::spawn(async move {
+                let state = handle.state::<AppState>();
+                match init_db().await {
+                    Ok(pool) => {
+                        *state.db.lock().unwrap() = Some(pool);
+                        log_to_file("INFO", "Database initialization successful");
+                    }
+                    Err(e) => {
+                        log_to_file("ERROR", &format!("Database initialization failed: {}", e));
+                    }
                 }
-                Err(e) => {
-                    log_to_file("ERROR", &format!("Database initialization failed: {}", e));
-                }
-            }
-        });
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
