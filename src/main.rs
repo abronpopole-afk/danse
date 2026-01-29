@@ -1,7 +1,7 @@
-use tauri::{command, Window, Manager};
-use windows::Win32::Foundation::{HWND, RECT};
+use tauri::{command, Manager};
+use windows::Win32::Foundation::RECT;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetWindowRect, FindWindowW, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW
+    GetWindowRect, FindWindowW, GetWindowTextW, IsWindowVisible, GetClassNameW
 };
 use windows::Win32::Graphics::Dxgi::{
     IDXGIFactory1, CreateDXGIFactory1, IDXGIAdapter1, IDXGIOutput1, DXGI_OUTPUT_DESC, IDXGIResource, DXGI_OUTDUPL_DESC, DXGI_OUTDUPL_FRAME_INFO, IDXGIOutputDuplication
@@ -12,7 +12,6 @@ use windows::Win32::Graphics::Direct3D11::{
 use windows_core::ComInterface;
 use std::sync::Mutex;
 use thiserror::Error;
-use lazy_static::lazy_static;
 
 #[derive(Error, Debug)]
 pub enum PokerError {
