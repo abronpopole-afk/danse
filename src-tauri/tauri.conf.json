@@ -3,7 +3,7 @@
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
     "devPath": "http://localhost:5000",
-    "distDir": "../dist"
+    "distDir": "../dist/public"
   },
   "package": {
     "productName": "GTO Poker Bot",
@@ -27,7 +27,7 @@
       "longDescription": "",
       "publisher": "GTO Poker",
       "resources": [
-        "../dist/**/*",
+        "../dist/public/**/*",
         "../digit_weights.json",
         "../rank_weights.json",
         "../suit_weights.json"
