@@ -1,0 +1,134 @@
+warning: unused import: `Window`
+ --> src\main.rs:6:22
+  |
+6 | use tauri::{command, Window, Manager};
+  |                      ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+warning: unused imports: `HWND_TOP`, `SWP_NOMOVE`, `SetForegroundWindow`, and `SetWindowPos`
+ --> src\main.rs:7:93
+  |
+7 | ...dows, GetWindowTextW, IsWindowVisible, SetForegroundWindow, SetWindowPos, SWP_NOMOVE, HWND_TOP, GetClassNameW};
+  |                                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^
+warning: unused import: `lazy_static::lazy_static`
+  --> src\main.rs:14:5
+   |
+14 | use lazy_static::lazy_static;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+warning: unused variable: `state`
+   --> src\main.rs:494:34
+    |
+494 | async fn update_humanizer_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+warning: unused variable: `updates`
+   --> src\main.rs:494:69
+    |
+494 | async fn update_humanizer_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    |                                                                     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_updates`
+warning: unused variable: `state`
+   --> src\main.rs:524:33
+    |
+524 | async fn update_platform_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    |                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+warning: unused variable: `updates`
+   --> src\main.rs:524:68
+    |
+524 | async fn update_platform_config(state: tauri::State<'_, AppState>, updates: Value) -> PokerResult<Value> {
+    |                                                                    ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_updates`
+warning: unused variable: `accountId`
+   --> src\main.rs:548:30
+    |
+548 | async fn disconnect_platform(accountId: String) -> PokerResult<Value> {
+    |                              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_accountId`
+warning: unused variable: `config`
+   --> src\main.rs:553:20
+    |
+553 | async fn add_table(config: Value) -> PokerResult<Value> { Ok(json!({"success": true})) }
+    |                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_config`
+warning: unused variable: `tableId`
+   --> src\main.rs:554:34
+    |
+554 | #[command] async fn remove_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+    |                                  ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tableId`
+warning: unused variable: `tableId`
+   --> src\main.rs:555:33
+    |
+555 | #[command] async fn start_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+    |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tableId`
+warning: unused variable: `tableId`
+   --> src\main.rs:556:33
+    |
+556 | #[command] async fn pause_table(tableId: String) -> PokerResult<Value> { Ok(json!({"success": true})) }
+    |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tableId`
+warning: unused variable: `limit`
+   --> src\main.rs:559:42
+    |
+559 | #[command] async fn get_recent_histories(limit: u32) -> PokerResult<Value> { Ok(json!({"histories": []})) }
+    |                                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_limit`
+warning: unused variable: `params`
+   --> src\main.rs:560:35
+    |
+560 | #[command] async fn simulate_hand(params: Value) -> PokerResult<Value> { Ok(json!({})) }
+    |                                   ^^^^^^ help: if this is intentional, prefix it with an underscore: `_params`
+warning: unused variable: `hwnd`
+   --> src\main.rs:561:34
+    |
+561 | #[command] async fn focus_window(hwnd: isize) -> PokerResult<()> { Ok(()) }
+    |                                  ^^^^ help: if this is intentional, prefix it with an underscore: `_hwnd`
+warning: unused variable: `hwnd`
+   --> src\main.rs:562:35
+    |
+562 | #[command] async fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> { Ok(()) }
+    |                                   ^^^^ help: if this is intentional, prefix it with an underscore: `_hwnd`
+warning: unused variable: `width`
+   --> src\main.rs:562:48
+    |
+562 | #[command] async fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> { Ok(()) }
+    |                                                ^^^^^ help: if this is intentional, prefix it with an underscore: `_width`
+warning: unused variable: `height`
+   --> src\main.rs:562:60
+    |
+562 | #[command] async fn resize_window(hwnd: isize, width: i32, height: i32) -> PokerResult<()> { Ok(()) }
+    |                                                            ^^^^^^ help: if this is intentional, prefix it with an underscore: `_height`
+warning: unused variable: `hwnd`
+   --> src\main.rs:563:42
+    |
+563 | #[command] async fn stream_window_frames(hwnd: isize) -> PokerResult<()> { Ok(()) }
+    |                                          ^^^^ help: if this is intentional, prefix it with an underscore: `_hwnd`
+warning: unused variable: `message`
+   --> src\main.rs:564:37
+    |
+564 | #[command] async fn send_ws_message(message: Value) -> PokerResult<()> { Ok(()) }
+    |                                     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_message`
+warning: unused variable: `personality`
+   --> src\main.rs:565:47
+    |
+565 | #[command] async fn update_player_personality(personality: String) -> PokerResult<Value> { Ok(json!({})) }
+    |                                               ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_personality`
+error[E0716]: temporary value dropped while borrowed
+   --> src\main.rs:574:21
+    |
+574 |           let state = app.handle().state::<AppState>();
+    |                       ^^^^^^^^^^^^                    - temporary value is freed at the end of this statement
+    |                       |
+    |                       creates a temporary value which is freed while still in use
+575 | /         tauri::async_runtime::spawn(async move {
+576 | |             match init_db().await {
+577 | |                 Ok(pool) => {
+578 | |                     *state.db.lock().unwrap() = Some(pool);
+...   |
+585 | |         });
+    | |__________- argument requires that borrow lasts for `'static`
+    |
+note: requirement that the value outlives `'static` introduced here
+   --> C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-1.8.3\src\async_runtime.rs:270:22
+    |
+270 |   F: Future + Send + 'static,
+    |                      ^^^^^^^
+For more information about this error, try `rustc --explain E0716`.
+warning: `gto-poker-bot` (bin "gto-poker-bot") generated 21 warnings
+error: could not compile `gto-poker-bot` (bin "gto-poker-bot") due to 1 previous error; 21 warnings emitted
+       Error failed to build app: failed to build app
+Error: Command "tauri ["build"]" failed with exit code 1
