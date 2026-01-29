@@ -36,11 +36,11 @@
       "targets": ["nsis"],
       "windows": {
         "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "nsis": {
-          "oneClick": false,
-          "allowToChangeInstallationDirectory": true
-        }
+        "digestAlgorithm": "sha256"
+      },
+      "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true
       }
     },
     "allowlist": {
