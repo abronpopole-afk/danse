@@ -33,7 +33,7 @@
         "../suit_weights.json"
       ],
       "shortDescription": "",
-      "targets": ["all"]
+      "targets": ["nsis"]
     },
     "allowlist": {
       "all": true
