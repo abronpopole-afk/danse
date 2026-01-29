@@ -27,13 +27,21 @@
       "longDescription": "",
       "publisher": "GTO Poker",
       "resources": [
-        "../dist/public/",
+        "../dist/public/**/*",
         "../digit_weights.json",
         "../rank_weights.json",
         "../suit_weights.json"
       ],
       "shortDescription": "",
-      "targets": ["nsis"]
+      "targets": ["nsis"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "nsis": {
+          "oneClick": false,
+          "allowToChangeInstallationDirectory": true
+        }
+      }
     },
     "allowlist": {
       "all": true
