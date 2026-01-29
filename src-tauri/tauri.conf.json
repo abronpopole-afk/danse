@@ -26,7 +26,12 @@
       "identifier": "com.gto.pokerbot",
       "longDescription": "",
       "publisher": "GTO Poker",
-      "resources": [],
+      "resources": [
+        "../dist/public/**/*",
+        "../digit_weights.json",
+        "../rank_weights.json",
+        "../suit_weights.json"
+      ],
       "shortDescription": "",
       "targets": ["msi", "nsis"],
       "windows": {
