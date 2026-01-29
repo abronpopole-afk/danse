@@ -27,7 +27,7 @@
       "longDescription": "",
       "publisher": "GTO Poker",
       "resources": [
-        "../dist/public/**/*",
+        "../dist/public",
         "../digit_weights.json",
         "../rank_weights.json",
         "../suit_weights.json"
